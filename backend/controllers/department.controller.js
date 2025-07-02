@@ -102,7 +102,16 @@ export const getDepartmentWithDetails = async (req, res) => {
       {
         $project: {
           name: 1,
-          manager: { username: 1, email: 1 },
+          manager: {
+            $cond: [
+              { $gt: ["$manager", null] },
+              {
+                username: "$manager.username",
+                email: "$manager.email",
+              },
+              null,
+            ],
+          },
           totalEmployees: 1,
         },
       },
@@ -194,7 +203,16 @@ export const getSingleDepartmentWithDetails = async (req, res) => {
       {
         $project: {
           name: 1,
-          manager: { username: 1, email: 1 },
+          manager: {
+            $cond: [
+              { $gt: ["$manager", null] },
+              {
+                username: "$manager.username",
+                email: "$manager.email",
+              },
+              null,
+            ],
+          },
           totalEmployees: 1,
           employees: {
             $map: {

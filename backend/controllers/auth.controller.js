@@ -5,8 +5,8 @@ import jwt from "jsonwebtoken";
 import Department from "../models/department.model.js";
 import { sendPasswordResetEmail } from "../utils/send.mail.js";
 import crypto from "crypto";
-import dotenv from 'dotenv';
-dotenv.config()
+import dotenv from "dotenv";
+dotenv.config();
 
 export const registerOrg = async (req, res) => {
   try {
@@ -95,9 +95,15 @@ export const registerOrg = async (req, res) => {
       { expiresIn: "1d" }
     );
 
+    // res.cookie("token", token, {
+    //   httpOnly: true,
+    //   secure: false,
+    // });
+
     res.cookie("token", token, {
       httpOnly: true,
-      secure: false,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax",
     });
 
     res.status(201).json({
@@ -146,7 +152,7 @@ export const login = async (req, res) => {
   res
     .cookie("token", token, {
       httpOnly: true,
-      secure: false,
+      secure: true,
     })
     .json({ message: "Login successful", user });
 };
@@ -164,7 +170,7 @@ export const logout = async (req, res) => {
       io.to(user.organizationId.toString()).emit("statusUpdate", {
         userId: user._id,
         status: "Inactive",
-      })
+      });
     }
 
     res.clearCookie("token", {
