@@ -13,8 +13,8 @@ router.post('/:taskId/milestone', verifyToken, authorizeRole("Manager"), addMile
 router.put('/:taskId/milestone/:milestoneIndex', verifyToken, updateMilestone);
 router.delete('/:taskId', verifyToken, authorizeRole("Boss"), deleteTask);
 
-router.get('/task/boss', verifyToken, getTasksByBoss);
-router.get('/task/manager', verifyToken, getTasksByManager);
-router.get('/task/employee', verifyToken, getTasksByEmployee);
+router.get('/boss', verifyToken, getTasksByBoss);
+router.get('/manager', verifyToken, getTasksByManager);
+router.get('/employee', verifyToken, getTasksByEmployee);
 
 export default router;
