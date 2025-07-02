@@ -1,9 +1,10 @@
 import express from 'express';
+const router = express.Router();
+
 import verifyToken from '../middlewares/verifyToken.js';
 import authorizeRole from '../middlewares/authorizeRole.js'
 import { createDepartment, deleteDepartment, getDepartment, getDepartmentWithDetails, getSingleDepartmentWithDetails } from '../controllers/department.controller.js';
 
-const router = express.Router();
 
 router.post('/', verifyToken, authorizeRole("Boss"), createDepartment);
 router.get('/', verifyToken, getDepartment);
