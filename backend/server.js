@@ -15,6 +15,8 @@ import employeeRoute from "./routes/employee.route.js";
 import departmentRoute from "./routes/department.route.js";
 import taskRouter from './routes/task.route.js';
 
+import listEndpoints from 'express-list-endpoints';
+
 dotenv.config();
 connectDB();
 
@@ -76,6 +78,8 @@ app.use((err, req, res, next) => {
   console.error("Server error: ", err.stack);
   res.status(500).json({ message: "Something went wrong" });
 });
+
+console.log("All Routes:", listEndpoints(app));
 
 const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => {
