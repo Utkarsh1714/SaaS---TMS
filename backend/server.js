@@ -63,7 +63,10 @@ app.use("/api/department", departmentRoute);
 app.use("/api/task", taskRouter);
 
 // Static file handling for production
-const __dirname = path.resolve();
+import { fileURLToPath } from 'url';
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 if (process.env.NODE_ENV === "production") {
   app.use(express.static(path.join(__dirname, "frontend/dist")));
   app.get("*", (req, res) =>

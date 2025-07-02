@@ -7,7 +7,7 @@ export const getAllEmployees = async (req, res) => {
   try {
     const users = await User.find({
       organizationId: req.user.organizationId,
-      role: { $ne: "boss" },
+      role: { $ne: "Boss" },
     })
       .select("-password")
       .populate("departmentId", "name");
@@ -84,7 +84,7 @@ export const createEmployee = async (req, res) => {
         message: "This email is already registered in another organization.",
       });
     }
-    
+
     res.status(500).json({ message: "Internal server error" });
   }
 };
@@ -101,6 +101,10 @@ export const updateEmployee = async (req, res) => {
 
     if (!employee)
       return res.status(404).json({ message: "Employee not found" });
+
+    if (employee.role === "Boss") {
+      return res.status(403).json({ message: "Cannot modify Boss account" });
+    }
 
     employee.username = username || employee.username;
     employee.role = role || employee.role;

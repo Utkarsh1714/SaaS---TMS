@@ -30,6 +30,27 @@ export const createTask = async (req, res) => {
   }
 };
 
+// export const addEmployeeToTask = async (req, res) => {
+//   const { taskId } = req.params;
+//   const { employeeIds } = req.body;
+
+//   try {
+//     const task = await Task.findById(taskId);
+//     if (!task) return res.status(404).json({ message: "Task not found" });
+
+//     if (task.assignedManager.toString() !== req.user._id.toString())
+//       return res.status(403).json({ message: "Not authorized" });
+
+//     task.assignedEmployees.push(...employeeIds);
+//     await task.save();
+
+//     res.status(200).json(task);
+//   } catch (error) {
+//     console.log(error);
+//     res.status(500).json({ message: "Failed to add employee to task" });
+//   }
+// };
+
 export const addEmployeeToTask = async (req, res) => {
   const { taskId } = req.params;
   const { employeeIds } = req.body;
@@ -38,18 +59,32 @@ export const addEmployeeToTask = async (req, res) => {
     const task = await Task.findById(taskId);
     if (!task) return res.status(404).json({ message: "Task not found" });
 
-    if (task.assignedManager.toString() !== req.user._id.toString())
-      return res.status(403).json({ message: "Not authorized" });
+    // Check if the current user is the assigned manager
+    if (task.assignedManager.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: "Not authorized to add employees to this task" });
+    }
 
-    task.assignedEmployees.push(...employeeIds);
+    // Merge existing and new employees, avoiding duplicates
+    const existingIds = task.assignedEmployees.map(id => id.toString());
+    const incomingIds = employeeIds.map(id => id.toString());
+
+    const combinedUniqueIds = [...new Set([...existingIds, ...incomingIds])];
+
+    // Convert back to ObjectIds
+    task.assignedEmployees = combinedUniqueIds.map(id => new mongoose.Types.ObjectId(id));
+
     await task.save();
 
-    res.status(200).json(task);
+    res.status(200).json({
+      message: "Employees added to task successfully",
+      task,
+    });
   } catch (error) {
-    console.log(error);
-    res.status(500).json({ message: "Failed to add employee to task" });
+    console.error("Error adding employees to task:", error);
+    res.status(500).json({ message: "Failed to add employees to task" });
   }
 };
+
 
 export const removeEmployeeFromTask = async (req, res) => {
   const { taskId, employeeId } = req.params;
@@ -86,7 +121,7 @@ export const updateTaskStatus = async (req, res) => {
 
     res.status(200).json(task);
   } catch (error) {
-    console.log(error);
+    console.log(error); 
     res.status(500).json({ message: "Failed to update task status" });
   }
 };
