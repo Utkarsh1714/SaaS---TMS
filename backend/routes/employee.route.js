@@ -10,4 +10,4 @@ router.get('/', verifyToken, getAllEmployees);
 router.put('/:id', verifyToken, authorizeRole("Boss"), updateEmployee);
 router.delete("/:id", verifyToken, authorizeRole("Boss"), deleteEmployee);
 
-export default router
+export default router;
