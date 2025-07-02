@@ -47,7 +47,7 @@ const Layout = () => {
       </header>
       <div className="w-full flex items-start justify-center">
         <div className="Sidebar w-[10%] lg:w-1/4 py-2">
-          <nav className="flex flex-col gap-5 md:gap-10 md:px-3">
+          <nav className="flex flex-col items-start justify-start gap-5 md:gap-10 md:px-3">
             <NavLink
               to={"/"}
               end
