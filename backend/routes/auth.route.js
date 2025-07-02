@@ -1,8 +1,9 @@
 import express from 'express';
+const router = express.Router();
+
 import { forgotPassword, login, logout, registerOrg, resetPassword } from '../controllers/auth.controller.js';
 import verifyToken from '../middlewares/verifyToken.js';
 
-const router = express.Router();
 
 router.post('/register-org', registerOrg);
 router.post('/login', login);
