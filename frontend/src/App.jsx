@@ -16,6 +16,7 @@ import { Toaster as HotToast } from 'react-hot-toast'
 import Profile from "./pages/Profile";
 import ForgotPassword from "./pages/ForgotPassword";
 import DeptDetails from "./pages/DeptDetails";
+import EmpDetails from "./pages/EmpDetails";
 
 function App() {
   const { loading } = useAuth(); // 👈 Add loading here
@@ -39,6 +40,7 @@ function App() {
             <Route path="/departments" element={<Departments />} />
             <Route path="/departments/:id" element={<DeptDetails />} />
             <Route path="/employees" element={<Employees />} />
+            <Route path="/employees/:id" element={<EmpDetails />} />
             <Route path="/chat" element={<Chat />} />
             <Route path="/reports" element={<Reports />} />
             <Route path="/profile" element={<Profile />} />
