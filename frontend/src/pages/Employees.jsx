@@ -27,11 +27,13 @@ import { toast } from "sonner";
 import { toast as hotToast } from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 import socket from "@/utils/socket";
+import { FaUserEdit } from "react-icons/fa";
 
 const Employees = () => {
   const { user } = useAuth();
   const [open, setOpen] = useState(false);
   const [deleteAlert, setDeleteAlert] = useState(false);
+  const [editAlert, setEditAlert] = useState(false);
   const [selectedRoles, setSelectedRoles] = useState(null);
   const [selectedDept, setSelectedDept] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -142,7 +144,6 @@ const Employees = () => {
     if (!user?.organizationId) return;
 
     const handleConnect = () => {
-      console.log("🔗 Socket connected:", socket.id);
       socket.emit("joinOrgRoom", user.organizationId);
     };
 
@@ -268,7 +269,7 @@ const Employees = () => {
             return (
               <div
                 key={emp._id}
-                className="bg-white rounded-xl shadow-md border p-5 flex flex-col gap-3 hover:shadow-lg transition duration-300 relative"
+                className="bg-white rounded-xl shadow-md border p-5 flex justify-between hover:shadow-lg transition duration-300"
               >
                 <div className="flex items-center gap-4">
                   <div className="bg-slate-200 text-slate-800 font-bold rounded-full w-12 h-12 flex items-center justify-center text-xl">
@@ -292,30 +293,49 @@ const Employees = () => {
                   </div>
                 </div>
 
-                {user.role === "Boss" && (
-                  <Dialog open={deleteAlert} onOpenChange={setDeleteAlert}>
-                    <DialogTrigger asChild>
-                      <Button className="absolute top-3 right-3 bg-red-500 hover:bg-red-600 text-white cursor-pointer">
-                        <MdDelete className="w-4 h-4" />
+                <div className="flex flex-col items-start justify-start gap-2">
+                  {user.role === "Boss" && (
+                    <>
+                      <Button
+                        onClick={() => navigate(`/employees/${emp._id}`)}
+                        className={
+                          "cursor-pointer bg-green-600 hover:bg-green-600 hover:opacity-70"
+                        }
+                      >
+                        <FaUserEdit className="w-4 h-4" />
                       </Button>
-                    </DialogTrigger>
-                    <DialogContent className="sm:max-w-[500px]">
-                      <DialogHeader>
-                        <DialogTitle>
-                          Are you sure you want to delete this user?
-                        </DialogTitle>
-                      </DialogHeader>
-                      <div>
-                        <Button
-                          onClick={() => handleDelete(emp._id)}
-                          className={"cursor-pointer"}
-                        >
-                          Delete
-                        </Button>
-                      </div>
-                    </DialogContent>
-                  </Dialog>
-                )}
+                      <Dialog open={deleteAlert} onOpenChange={setDeleteAlert}>
+                        <DialogTrigger asChild>
+                          <Button className=" bg-red-500 hover:bg-red-600 text-white cursor-pointer">
+                            <MdDelete className="w-4 h-4" />
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent className="sm:max-w-[500px]">
+                          <DialogHeader>
+                            <DialogTitle>
+                              Are you sure you want to delete this user?
+                            </DialogTitle>
+                          </DialogHeader>
+                          <div className="space-x-3">
+                            <Button
+                              onClick={() => handleDelete(emp._id)}
+                              className={"cursor-pointer"}
+                            >
+                              Delete
+                            </Button>
+                            <Button
+                              variant={"outline"}
+                              onClick={() => setDeleteAlert(!deleteAlert)}
+                              className={"cursor-pointer"}
+                            >
+                              Cancel
+                            </Button>
+                          </div>
+                        </DialogContent>
+                      </Dialog>
+                    </>
+                  )}
+                </div>
               </div>
             );
           })}
