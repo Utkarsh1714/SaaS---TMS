@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { IoIosArrowBack } from "react-icons/io";
 import { MdEdit, MdDelete, MdOutlineCreate } from "react-icons/md";
-import { FaUserEdit } from "react-icons/fa";
+import { FaPlus, FaUserEdit } from "react-icons/fa";
 import {
   Dialog,
   DialogContent,
@@ -128,11 +128,11 @@ const DepartmentDetails = () => {
         <Button
           onClick={() => navigate(-1)}
           variant="outline"
-          className="bg-slate-200"
+          className="bg-slate-200 cursor-pointer"
         >
           <IoIosArrowBack className="mr-1" /> Back
         </Button>
-        <Button onClick={() => navigate(-1)} variant="outline">
+        <Button onClick={() => navigate(-1)} variant="outline" className={'cursor-pointer'}>
           <MdEdit className="mr-1" /> Edit
         </Button>
       </div>
@@ -284,7 +284,7 @@ const DepartmentDetails = () => {
           <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
               <Button className="bg-slate-200 text-black hover:text-white rounded-md cursor-pointer">
-                <MdOutlineCreate className="mr-1" />
+                <FaPlus />
                 Add Employee
               </Button>
             </DialogTrigger>
