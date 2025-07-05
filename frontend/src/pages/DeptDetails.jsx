@@ -282,7 +282,7 @@ const DepartmentDetails = () => {
 
       {/* Add Employee Button at Bottom */}
       {user.role === "Boss" && (
-        <div className=" flex justify-center absolute bottom-0 right-0 m-10">
+        <div className=" flex justify-center absolute bottom-0 right-0 m-5">
           <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
               <Button className="bg-slate-200 text-black hover:text-white rounded-md cursor-pointer">
