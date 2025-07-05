@@ -9,7 +9,7 @@ import { createDepartment, deleteDepartment, getDepartment, getDepartmentWithDet
 router.post('/', verifyToken, authorizeRole("Boss"), createDepartment);
 router.get('/', verifyToken, getDepartment);
 router.get('/details', verifyToken, getDepartmentWithDetails)
-router.get('/details/:id', verifyToken, authorizeRole("Boss"), getSingleDepartmentWithDetails)
+router.get('/details/:id', verifyToken, getSingleDepartmentWithDetails)
 router.delete('/:id', verifyToken, authorizeRole("Boss"), deleteDepartment);
 
 export default router;
