@@ -3,13 +3,13 @@ import dotenv from "dotenv";
 dotenv.config();
 
 const transporter = nodemailer.createTransport({
-    host: process.env.SMTP_HOST,
-    port: process.env.SMTP_PORT,
-    secure: false,
-    auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS
-    }
+  host: process.env.SMTP_HOST,
+  port: process.env.SMTP_PORT,
+  secure: false,
+  auth: {
+    user: process.env.SMTP_USER,
+    pass: process.env.SMTP_PASS,
+  },
 });
 
 export const sendPasswordResetEmail = async ({ email, name, resetLink }) => {
@@ -26,12 +26,19 @@ export const sendPasswordResetEmail = async ({ email, name, resetLink }) => {
   });
 };
 
-export const sendWelcomeEmail = async ({ email, name, role, tempPassword, resetLink }) => {
-    await transporter.sendMail({
-    from: `"Taskify Team" <${process.env.SMTP_USER}>`,
-    to: email,
-    subject: "Welcome to Taskify - Your Credentials",
-    html: `
+export const sendWelcomeEmail = async ({
+  email,
+  name,
+  role,
+  tempPassword,
+  resetLink,
+}) => {
+  try {
+    const result = await transporter.sendMail({
+      from: `"Taskify Team" <${process.env.SMTP_USER}>`,
+      to: email,
+      subject: "Welcome to Taskify - Your Credentials",
+      html: `
       <div style="font-family: Arial, sans-serif; line-height: 1.6;">
         <h2>Welcome, ${name} 👋</h2>
         <p>You have been registered as a <strong>${role}</strong> in your organization on <strong>Taskify</strong>.</p>
@@ -46,5 +53,11 @@ export const sendWelcomeEmail = async ({ email, name, role, tempPassword, resetL
         <p>– The Taskify Team</p>
       </div>
     `,
-  });
-}
+    });
+
+    return result;
+  } catch (error) {
+    console.error("❌ Failed to send welcome email:", error);
+    throw new Error("Email failed to send");
+  }
+};

@@ -74,13 +74,15 @@ export const createEmployee = async (req, res) => {
 
     const resetLink = `${process.env.FRONTEND_URL}/reset-password?email=${email}&token=${resetToken}`;
 
-    await sendWelcomeEmail({
+    const emailResponse = await sendWelcomeEmail({
       email,
       name: username,
       role,
       tempPassword,
       resetLink,
     });
+
+    console.log("✅ Email sent:", emailResponse?.messageId);
 
     const populatedEmployee = await User.findById(newEmployee._id)
       .select("-password -resetToken -resetTokenExpires")

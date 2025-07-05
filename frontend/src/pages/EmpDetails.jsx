@@ -83,7 +83,7 @@ const EmpDetails = () => {
         <Button
           variant={"outline"}
           onClick={() => navigate(-1)}
-          className="bg-slate-200"
+          className="bg-slate-200 cursor-pointer"
         >
           <IoIosArrowBack className="mr-1" /> Back
         </Button>
