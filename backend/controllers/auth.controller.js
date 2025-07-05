@@ -95,11 +95,6 @@ export const registerOrg = async (req, res) => {
       { expiresIn: "1d" }
     );
 
-    // res.cookie("token", token, {
-    //   httpOnly: true,
-    //   secure: false,
-    // });
-
     res.cookie("token", token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
