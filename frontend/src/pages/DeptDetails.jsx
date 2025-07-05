@@ -72,7 +72,7 @@ const DepartmentDetails = () => {
         ...prev,
         employees: [...prev.employees, newEmployee],
         totalEmployees: prev.totalEmployees + 1,
-      }))
+      }));
     } catch (err) {
       console.error(err);
 
@@ -132,7 +132,11 @@ const DepartmentDetails = () => {
         >
           <IoIosArrowBack className="mr-1" /> Back
         </Button>
-        <Button onClick={() => navigate(-1)} variant="outline" className={'cursor-pointer'}>
+        <Button
+          onClick={() => navigate(-1)}
+          variant="outline"
+          className={"cursor-pointer"}
+        >
           <MdEdit className="mr-1" /> Edit
         </Button>
       </div>
@@ -160,14 +164,13 @@ const DepartmentDetails = () => {
         </div>
         {department.manager ? (
           <div className="flex items-start justify-start gap-2 py-3 md:py-0">
-            
-              <Button
-                onClick={() => navigate(`/employees/${department.manager.id}`)}
-                variant={"outline"}
-                className="cursor-pointer bg-orange-400 text-white"
-              >
-                View Manager
-              </Button>
+            <Button
+              onClick={() => navigate(`/employees/${department.manager.id}`)}
+              variant={"outline"}
+              className="cursor-pointer bg-orange-400 text-white"
+            >
+              View Manager
+            </Button>
             <Button className={"cursor-pointer"}>Chat with Manager</Button>
           </div>
         ) : (
@@ -202,17 +205,19 @@ const DepartmentDetails = () => {
           return (
             <div
               key={emp._id}
-              className="bg-white rounded-xl shadow-md border p-5 flex justify-between hover:shadow-lg transition duration-300"
+              className="w-full bg-white rounded-xl shadow-md border p-5 flex justify-between hover:shadow-lg transition duration-300"
             >
               {/* Left - Employee Info */}
-              <div className="flex items-center gap-4">
-                <div className="bg-slate-200 text-slate-800 font-bold rounded-full w-12 h-12 flex items-center justify-center text-xl">
-                  {initials}
-                </div>
-                <div className="flex-1">
-                  <h3 className="text-lg font-semibold text-slate-800">
-                    {emp.username}
-                  </h3>
+              <div className="w-full flex items-center gap-2">
+                <div className="w-full">
+                  <div className="flex items-start justify-start gap-2">
+                    <div className=" bg-slate-200 text-slate-800 font-bold rounded-full w-8 h-8 flex items-center justify-center text-sm">
+                      {initials}
+                    </div>
+                    <h3 className="text-xl font-semibold text-slate-800">
+                      {emp.username}
+                    </h3>
+                  </div>
                   <p className="text-sm text-gray-500">{emp.email}</p>
                   <p className="text-sm text-gray-500">
                     Role: {emp.role || "—"}

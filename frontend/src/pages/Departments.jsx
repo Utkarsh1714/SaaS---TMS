@@ -87,7 +87,7 @@ const Departments = () => {
   }, []);
   return (
     <div className="w-full h-[90vh] px-4 py-5">
-      <div className="w-full flex items-center justify-between">
+      <div className="w-full flex items-center justify-between gap-3">
         <div>
           <h1 className="text-xl md:text-2xl font-semibold">Departments</h1>
         </div>
