@@ -7,7 +7,7 @@ import { createEmployee, deleteEmployee, getAllEmployees, getSingleEmployee, upd
 
 
 router.get('/', verifyToken, getAllEmployees);
-router.get('/:id', verifyToken, authorizeRole("Boss"), getSingleEmployee);
+router.get('/:id', verifyToken, getSingleEmployee);
 router.post('/', verifyToken, authorizeRole("Boss"), createEmployee);
 router.put('/:id', verifyToken, authorizeRole("Boss"), updateEmployee);
 router.delete("/:id", verifyToken, authorizeRole("Boss"), deleteEmployee);

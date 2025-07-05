@@ -160,7 +160,7 @@ const DepartmentDetails = () => {
         </div>
         {department.manager ? (
           <div className="flex items-start justify-start gap-2 py-3 md:py-0">
-            {user.role === "Boss" ? (
+            
               <Button
                 onClick={() => navigate(`/employees/${department.manager.id}`)}
                 variant={"outline"}
@@ -168,9 +168,6 @@ const DepartmentDetails = () => {
               >
                 View Manager
               </Button>
-            ) : (
-              ""
-            )}
             <Button className={"cursor-pointer"}>Chat with Manager</Button>
           </div>
         ) : (
