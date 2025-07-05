@@ -209,6 +209,7 @@ export const getSingleDepartmentWithDetails = async (req, res) => {
               {
                 username: "$manager.username",
                 email: "$manager.email",
+                id: "$manager._id"
               },
               null,
             ],
@@ -222,6 +223,7 @@ export const getSingleDepartmentWithDetails = async (req, res) => {
                 username: "$$emp.username",
                 email: "$$emp.email",
                 role: "$$emp.role",
+                _id: "$$emp._id"
               },
             },
           },
