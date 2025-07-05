@@ -126,11 +126,15 @@ const EmpDetails = () => {
       </div>
       <div className="w-full flex items-center justify-center">
         TODO: Show assigned and completed task
-        <div className=" absolute right-0 bottom-0 mb-10 mr-10">
-          <Button className={"cursor-pointer bg-orange-400"}>
-            Promote {employee?.username}
-          </Button>
-        </div>
+        {employee.role === "Boss" ? (
+          <div className=" absolute right-0 bottom-0 mb-10 mr-10">
+            <Button className={"cursor-pointer bg-orange-400"}>
+              Promote {employee?.username}
+            </Button>
+          </div>
+        ) : (
+          ""
+        )}
       </div>
     </div>
   );
