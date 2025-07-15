@@ -9,7 +9,7 @@ export default function DeptOption({ selectedDept, setSelectedDept }) {
   const fetchDepartment = async () => {
     try {
       const res = await axios.get(
-        `${import.meta.env.VITE_API_URL}/api/department`,
+        `${import.meta.env.VITE_API_URL}/api/department/details`,
         {
           withCredentials: true,
         }
@@ -18,6 +18,7 @@ export default function DeptOption({ selectedDept, setSelectedDept }) {
       const formatted = res.data.map((dept) => ({
         value: dept._id,
         label: dept.name,
+        manager: dept.manager
       }));
       
       setOptions(formatted);

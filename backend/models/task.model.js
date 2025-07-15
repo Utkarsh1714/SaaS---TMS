@@ -15,7 +15,7 @@ const taskSchema = new mongoose.Schema({
     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
     assignedManager: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
     assignedEmployees: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
-    prioritiy: { type: String, enum: ["Low", "Medium", "High"], default: "Medium" },
+    priority: { type: String, enum: ["Low", "Medium", "High"], default: "Medium" },
     status: { type: String, enum: ["Pending", "In Progress", "Completed"], default: "Pending" },
     deadline: Date,
     milestones: [mileStoneSchema],
