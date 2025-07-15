@@ -12,7 +12,6 @@ export const AuthProvider = ({ children }) => {
       const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/auth/me`, {
         withCredentials: true,
       });
-      console.log(res.data.user);
       setUser(res.data.user);
     } catch (error) {
       if (error.response?.status === 401) {

@@ -106,6 +106,7 @@ export const getDepartmentWithDetails = async (req, res) => {
             $cond: [
               { $gt: ["$manager", null] },
               {
+                _id: "$manager._id",
                 username: "$manager.username",
                 email: "$manager.email",
               },

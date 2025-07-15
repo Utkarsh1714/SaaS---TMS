@@ -209,6 +209,7 @@ const Registration = () => {
             <DepartmentSelect
               selectedDepartments={departments}
               setSelectedDepartments={setDepartments}
+              isMulti={true}
             />
           </div>
           <div className="w-full flex justify-center mt-8">

@@ -17,6 +17,7 @@ import Profile from "./pages/Profile";
 import ForgotPassword from "./pages/ForgotPassword";
 import DeptDetails from "./pages/DeptDetails";
 import EmpDetails from "./pages/EmpDetails";
+import TaskDetails from "./pages/TaskDetails";
 
 function App() {
   const { loading } = useAuth(); // 👈 Add loading here
@@ -37,6 +38,7 @@ function App() {
           <Route path="/" element={<Layout />}>
             <Route index element={<Home />} />
             <Route path="/tasks" element={<Tasks />} />
+            <Route path="/tasks/:id" element={<TaskDetails />} />
             <Route path="/departments" element={<Departments />} />
             <Route path="/departments/:id" element={<DeptDetails />} />
             <Route path="/employees" element={<Employees />} />
