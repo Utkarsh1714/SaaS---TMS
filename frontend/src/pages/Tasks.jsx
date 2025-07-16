@@ -1,3 +1,4 @@
+import AddEmpToTaskBtn from "@/components/AddEmpToTaskBtn";
 import DepartmentSelect from "@/components/DepartmentSelect";
 import DeptOption from "@/components/DeptOption";
 import { Button } from "@/components/ui/button";
@@ -12,6 +13,7 @@ import {
 import { useAuth } from "@/context/AuthContext";
 import axios from "axios";
 import React, { useEffect, useState } from "react";
+import { IoMdAdd } from "react-icons/io";
 import { MdDeleteForever, MdOutlineCreate } from "react-icons/md";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -20,6 +22,7 @@ const Tasks = () => {
   const { user } = useAuth();
   const [tasks, setTasks] = useState([]);
   const [open, setOpen] = useState(false);
+  const [addEmployeeOpen, setAddEmployeeOpen] = useState(false);
   const [hasManager, setHasManager] = useState(true);
   const [selectedDepartment, setSelectedDepartment] = useState([]);
   const [mileStoneInput, setMileStoneInput] = useState("");
@@ -47,6 +50,8 @@ const Tasks = () => {
         endpoint = `api/task/employee`;
       }
 
+      setLoading(true);
+
       const res = await axios.get(
         `${import.meta.env.VITE_API_URL}/${endpoint}`,
         {
@@ -54,9 +59,13 @@ const Tasks = () => {
         }
       );
 
+      setLoading(false);
       setTasks(res.data);
+      console.log(res.data);
     } catch (error) {
       console.error("Failed to fetch tasks:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -70,7 +79,7 @@ const Tasks = () => {
         taskData,
         { withCredentials: true }
       );
-      
+
       const newTask = res.data.task;
 
       setTasks((prev) => [newTask, ...prev]);
@@ -281,44 +290,112 @@ const Tasks = () => {
         )}
       </div>
 
-      {tasks.length === 0 ? (
-        <p className="text-gray-500">No tasks available.</p>
+      {loading ? (
+        <p>Loading task</p>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-          {tasks.map((task) => (
-            <div
-              key={task._id}
-              className="p-4 border rounded-lg shadow-sm bg-white"
-            >
-              <h2 className="text-lg font-semibold text-yellow-700">
-                {task.title}
-              </h2>
-              <p className="text-sm text-gray-600">Status: {task.status}</p>
-              <p className="text-sm">Deadline: {task.deadline?.slice(0, 10)}</p>
-              <p className="text-sm">
-                Employees: {task.assignedEmployees?.length || 0}
-              </p>
-
-              {/* Show "Add Employee" only if logged-in user is the assignedManager */}
-              {user.role === "Manager" && task.assignedManager === user._id && (
-                <Button
-                  className="mt-2 bg-blue-600 hover:bg-blue-700"
-                  onClick={() => navigate(`/tasks/${task._id}/add-employee`)}
+        <>
+          {tasks.length === 0 ? (
+            <p className="text-gray-500">No tasks available.</p>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+              {tasks.map((task) => (
+                <div
+                  key={task._id}
+                  className="relative p-4 border rounded-r-lg shadow-sm bg-white hover:shadow-xl hover:scale-3d duration-150 ease-in-out"
                 >
-                  + Add Employee
-                </Button>
-              )}
+                  <div
+                    className={`absolute left-0 top-0 h-full w-1 rounded ${
+                      task.priority === "High"
+                        ? "bg-red-600"
+                        : task.priority === "Medium"
+                        ? "bg-yellow-500"
+                        : "bg-green-500"
+                    }`}
+                  />
+                  <div className="w-full flex items-center justify-between">
+                    <div>
+                      <h2 className="text-2xl font-bold text-slate-700">
+                        {task.title}
+                      </h2>
+                      <p className="text-xl font-semibold text-gray-600">
+                        {task.description}
+                      </p>
+                    </div>
+                    <div className="flex gap-1">
+                      {[
+                        ...Array(
+                          task.priority === "High"
+                            ? 3
+                            : task.priority === "Medium"
+                            ? 2
+                            : 1
+                        ),
+                      ].map((_, i) => (
+                        <span key={i} className="text-yellow-400 text-2xl">
+                          ★
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                  {user.role !== "Manager" && (
+                    <h4 className={`text-md mt-2 text-gray-600`}>
+                      <span className="font-semibold">Assigned manager</span> :-{" "}
+                      {task.assignedManager?.username}
+                    </h4>
+                  )}
 
-              <Button
-                variant="outline"
-                className="mt-2 w-full"
-                onClick={() => navigate(`/tasks/${task._id}`)}
-              >
-                View Task
-              </Button>
+                  <div className="w-full flex items-center justify-between gap-5">
+                    <p className="text-md text-gray-600">
+                      <span className="font-semibold">Deadline :- </span>{" "}
+                      {task.deadline?.slice(0, 10)}
+                    </p>
+                    <p>
+                      Priority :-{" "}
+                      <span
+                        className={`${
+                          task.priority === "High"
+                            ? "text-red-600"
+                            : task.priority === "Medium"
+                            ? "text-yellow-500"
+                            : "text-green-500"
+                        }`}
+                      >
+                        {task.priority}
+                      </span>
+                    </p>
+                  </div>
+                  <div className="flex flex-col items-center justify-center space-y-2 mt-4">
+                    {user.role === "Manager" &&
+                      task.assignedManager?._id === user._id && (
+                        <AddEmpToTaskBtn taskId={task._id} taskData={tasks} />
+                      )}
+
+                    <Button
+                      variant="default"
+                      className={`w-full cursor-pointer ${
+                        task.status === "In Progress"
+                          ? "bg-yellow-500 hover:bg-yellow-500/65 hover:text-white"
+                          : task.status === "Completed"
+                          ? "bg-green-500 hover:bg-green-500/65 hover:text-white"
+                          : ""
+                      }`}
+                    >
+                      {task.status}
+                    </Button>
+
+                    <Button
+                      variant="outline"
+                      className="cursor-pointer w-full shadow-xl hover:shadow-gray-400 hover:shadow-lg hover:scale-3d duration-150 ease-in-out"
+                      onClick={() => navigate(`/tasks/${task._id}`)}
+                    >
+                      View Task
+                    </Button>
+                  </div>
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
+          )}
+        </>
       )}
     </div>
   );

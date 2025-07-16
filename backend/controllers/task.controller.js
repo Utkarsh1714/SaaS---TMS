@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import Task from "../models/task.model.js";
 
 export const createTask = async (req, res) => {
@@ -186,8 +187,12 @@ export const getTaskById = async (req, res) => {
 export const getTasksByBoss = async (req, res) => {
   try {
     const task = await Task.find({
-      createdBy: req.user._id
-    });
+      createdBy: req.user._id,
+    })
+      .populate("department", "name")
+      .populate("assignedManager", "username email")
+      .populate("assignedEmployees", "username email role");
+
     if (!task) return res.status(404).json({ message: "No task found" });
 
     res.status(200).json(task);
@@ -199,7 +204,9 @@ export const getTasksByBoss = async (req, res) => {
 
 export const getTasksByManager = async (req, res) => {
   try {
-    const task = await Task.find({ assignedManager: req.user._id });
+    const task = await Task.find({ assignedManager: req.user._id }).populate("department", "name")
+      .populate("assignedManager", "username email")
+      .populate("assignedEmployees", "username email role");
     if (!task) return res.status(404).json({ message: "No task found" });
 
     res.status(200).json(task);
@@ -211,7 +218,9 @@ export const getTasksByManager = async (req, res) => {
 
 export const getTasksByEmployee = async (req, res) => {
   try {
-    const task = await Task.find({ assignedEmployees: req.user._id });
+    const task = await Task.find({ assignedEmployees: req.user._id }).populate("department", "name")
+      .populate("assignedManager", "username email")
+      .populate("assignedEmployees", "username email role");
     if (!task) return res.status(404).json({ message: "No task found" });
 
     res.status(200).json(task);
