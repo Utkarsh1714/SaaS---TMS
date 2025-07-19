@@ -28,8 +28,10 @@ function App() {
   if (loading)
     return (
       <div className="flex items-center justify-center w-full h-full gap-3">
-        <p className="text-lg">Loading task</p>
-        <span className="loading loading-dots loading-xl"></span>
+        <div>
+          <p className="text-lg">Loading task</p>
+          <span className="loading loading-dots loading-xl"></span>
+        </div>
       </div>
     ); // ✅ Prevent early rendering
   return (
