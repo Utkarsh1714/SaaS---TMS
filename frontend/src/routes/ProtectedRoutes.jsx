@@ -14,7 +14,13 @@ const ProtectedRoute = () => {
       </div>
     );
 
-  return user ? <Outlet /> : <Navigate to={"/login"} replace />;
+  // If not loading and user is null, redirect to login
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
+
+  // If user is present, render the child routes
+  return <Outlet />;
 };
 
 export default ProtectedRoute;
