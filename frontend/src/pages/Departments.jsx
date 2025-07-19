@@ -75,11 +75,21 @@ const Departments = () => {
   };
 
   const fetchDepartmentDetails = async () => {
-    const res = await axios.get(
-      `${import.meta.env.VITE_API_URL}/api/department/details`,
-      { withCredentials: true }
-    );
-    setDepartments(res.data);
+    setLoading(true);
+
+    try {
+      const res = await axios.get(
+        `${import.meta.env.VITE_API_URL}/api/department/details`,
+        { withCredentials: true }
+      );
+      setLoading(false);
+      setDepartments(res.data);
+    } catch (error) {
+      console.error("Error fetching department details:", error);
+      toast.error("Failed to fetch department details");
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -132,77 +142,90 @@ const Departments = () => {
           </Button>
         </div>
       </div>
-      <div className="Departments-cards w-full grid sm:grid-cols-2 md:grid-cols-2 gap-4 mt-6">
-        {departments.map((dept) => (
-          <div
-            key={dept._id}
-            className="p-4 bg-white shadow-md rounded-lg flex items-center justify-between gap-0.5"
-          >
-            <div>
-              <h2 className="text-xl font-semibold text-yellow-600">
-                {dept.name}
-              </h2>
-              <div className="mt-2 text-gray-700 text-sm space-y-1">
-                <p>
-                  <span className="font-medium">Manager:</span>{" "}
-                  {dept.manager ? dept.manager.username : "Not assigned"}
-                </p>
-                {dept.manager?.email && (
-                  <p>
-                    <span className="font-medium">Email:</span>{" "}
-                    {dept.manager ? dept.manager.email : ""}
-                  </p>
-                )}
-                <p>
-                  <span className="font-medium">Total Employees:</span>{" "}
-                  {dept.totalEmployees}
-                </p>
-              </div>
-            </div>
-            <div className="flex items-center justify-center flex-col gap-2">
-              <Button
-              onClick={() => navigate(`/departments/${dept._id}`)}
-                className={
-                  "cursor-pointer bg-green-600 hover:bg-green-600 hover:opacity-70 w-full"
-                }
-              >
-                Edit
-              </Button>
-              <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>
-                <DialogTrigger asChild>
-                  <Button className="cursor-pointer bg-red-600 w-full">
-                    Delete
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="sm:max-w-[500px]">
-                  <DialogHeader>
-                    <DialogTitle>Delete Department</DialogTitle>
-                    <DialogDescription>
-                      Are you sure you want to delete the department?
-                    </DialogDescription>
-                  </DialogHeader>
-                  <div className="flex items-end justify-end gap-4">
+      {loading ? (
+        <div className="flex items-center justify-center h-full gap-3">
+          <p className="text-lg">Loading departments data</p>
+          <span className="loading loading-dots loading-xl"></span>
+        </div>
+      ) : (
+        <>
+          {departments.length === 0 ? (
+            <p>No department found. Please create an department!</p>
+          ) : (
+            <div className="Departments-cards w-full grid sm:grid-cols-2 md:grid-cols-2 gap-4 mt-6">
+              {departments.map((dept) => (
+                <div
+                  key={dept._id}
+                  className="p-4 bg-white shadow-md rounded-lg flex items-center justify-between gap-0.5"
+                >
+                  <div>
+                    <h2 className="text-xl font-semibold text-yellow-600">
+                      {dept.name}
+                    </h2>
+                    <div className="mt-2 text-gray-700 text-sm space-y-1">
+                      <p>
+                        <span className="font-medium">Manager:</span>{" "}
+                        {dept.manager ? dept.manager.username : "Not assigned"}
+                      </p>
+                      {dept.manager?.email && (
+                        <p>
+                          <span className="font-medium">Email:</span>{" "}
+                          {dept.manager ? dept.manager.email : ""}
+                        </p>
+                      )}
+                      <p>
+                        <span className="font-medium">Total Employees:</span>{" "}
+                        {dept.totalEmployees}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-center flex-col gap-2">
                     <Button
-                      onClick={() => setDeleteOpen(!deleteOpen)}
+                      onClick={() => navigate(`/departments/${dept._id}`)}
                       className={
-                        "cursor-pointer bg-red-600 hover:bg-red-600 hover:opacity-60"
+                        "cursor-pointer bg-green-600 hover:bg-green-600 hover:opacity-70 w-full"
                       }
                     >
-                      Cancel
+                      Edit
                     </Button>
-                    <Button
-                      onClick={() => handleDelete(dept._id)}
-                      className={"cursor-pointer"}
-                    >
-                      Delete
-                    </Button>
+                    <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+                      <DialogTrigger asChild>
+                        <Button className="cursor-pointer bg-red-600 w-full">
+                          Delete
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent className="sm:max-w-[500px]">
+                        <DialogHeader>
+                          <DialogTitle>Delete Department</DialogTitle>
+                          <DialogDescription>
+                            Are you sure you want to delete the department?
+                          </DialogDescription>
+                        </DialogHeader>
+                        <div className="flex items-end justify-end gap-4">
+                          <Button
+                            onClick={() => setDeleteOpen(!deleteOpen)}
+                            className={
+                              "cursor-pointer bg-red-600 hover:bg-red-600 hover:opacity-60"
+                            }
+                          >
+                            Cancel
+                          </Button>
+                          <Button
+                            onClick={() => handleDelete(dept._id)}
+                            className={"cursor-pointer"}
+                          >
+                            Delete
+                          </Button>
+                        </div>
+                      </DialogContent>
+                    </Dialog>
                   </div>
-                </DialogContent>
-              </Dialog>
+                </div>
+              ))}
             </div>
-          </div>
-        ))}
-      </div>
+          )}
+        </>
+      )}
     </div>
   );
 };

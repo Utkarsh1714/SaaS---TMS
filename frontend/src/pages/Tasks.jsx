@@ -99,7 +99,6 @@ const Tasks = () => {
 
       setLoading(false);
       setTasks(res.data);
-      console.log(res.data);
     } catch (error) {
       console.error("Failed to fetch tasks:", error);
     } finally {
@@ -422,14 +421,14 @@ const Tasks = () => {
             variant={"ghost"}
             className={"cursor-pointer"}
           >
-            <RefreshCcw /> Refresh
+            <RefreshCcw /> <span className="hidden md:block">Refresh</span>
           </Button>
         </div>
       </div>
 
       {loading ? (
         <div className="flex items-center justify-center h-full gap-3">
-          <p className="text-lg">Loading task</p>
+          <p className="text-lg">Loading task data</p>
           <span className="loading loading-dots loading-xl"></span>
         </div>
       ) : (
