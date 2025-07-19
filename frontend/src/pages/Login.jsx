@@ -16,6 +16,7 @@ import { Button } from "@/components/ui/button";
 const Login = () => {
   const [email, setEmail] = useState("");
   const { user, loading, login } = useAuth();
+  const [Loading, setLoading] = useState(false);
   const [passwordSaving, setPasswordSaving] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
   const navigate = useNavigate();
@@ -34,6 +35,7 @@ const Login = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
     try {
       const response = await axios.post(
         `${import.meta.env.VITE_API_URL}/api/auth/login`,
@@ -41,12 +43,15 @@ const Login = () => {
         { withCredentials: true }
       );
       const { user } = response.data;
+      setLoading(false);
       toast.success("Login successful!");
       login(user);
       navigate("/");
     } catch (error) {
       console.error("Login failed:", error);
       toast.error(error?.response?.data?.message || "Login failed");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -63,7 +68,7 @@ const Login = () => {
 
       toast.success(response?.data?.message || "Reset link sent to your email");
       setEmail("");
-      setDialogOpen(false)
+      setDialogOpen(false);
     } catch (error) {
       console.error("Reset failed:", error);
       toast.error(
@@ -116,7 +121,11 @@ const Login = () => {
                 type="submit"
                 className="bg-yellow-400 hover:bg-yellow-400 hover:text-black duration-150 ease-linear w-full mt-5 py-2 rounded-md text-lg cursor-pointer"
               >
-                Login
+                {!Loading ? (
+                  "Login"
+                ) : (
+                  <span className="loading loading-spinner loading-lg"></span>
+                )}
               </button>
             </form>
 

@@ -10,12 +10,17 @@ import axios from "axios";
 import { useAuth } from "../context/AuthContext";
 import { toast } from "sonner";
 import { Button } from "./ui/button";
+import { useState } from "react";
 
 const Layout = () => {
   const navigate = useNavigate();
   const { logout } = useAuth();
 
+  const [loading, setLoading] = useState(false);
+
   const handleLogout = async () => {
+    setLoading(true);
+
     try {
       await axios.post(
         `${import.meta.env.VITE_API_URL}/api/auth/logout`,
@@ -24,12 +29,15 @@ const Layout = () => {
       );
 
       logout();
+      setLoading(false);
 
       toast("Logged out successfully!");
-      navigate('/login');
+      navigate("/login");
     } catch (error) {
       console.error("Logout failed:", error);
       alert("Logout failed");
+    } finally {
+      setLoading(false);
     }
   };
   return (
@@ -39,12 +47,22 @@ const Layout = () => {
           <h1 className="Headline text-3xl font-semibold">Taskify</h1>
         </div>
         <div className="space-x-4 flex items-center justify-center">
-          <Button variant={"outline"} className={'cursor-pointer hover:animate-in'}>
+          <Button
+            variant={"outline"}
+            className={"cursor-pointer hover:animate-in"}
+          >
             <FaRegBell />
           </Button>
           <NavLink to={"/login"}>
-            <button onClick={handleLogout} className="px-4 py-2 bg-red-500 text-white rounded-md hover:shadow-gray-400 hover:shadow-lg hover:scale-105 duration-150 ease-in-out cursor-pointer">
-              Logout
+            <button
+              onClick={handleLogout}
+              className="px-4 py-2 bg-red-500 text-white rounded-md hover:shadow-gray-400 hover:shadow-lg hover:scale-105 duration-150 ease-in-out cursor-pointer"
+            >
+              {loading ? (
+                <span className="loading loading-spinner loading-lg"></span>
+              ) : (
+                "Log Out"
+              )}
             </button>
           </NavLink>
         </div>
