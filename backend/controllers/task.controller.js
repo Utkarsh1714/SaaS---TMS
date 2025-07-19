@@ -6,7 +6,7 @@ const applyTaskFilters = async (
   baseQuery,
   req,
   res,
-  noTaskMessage = "No task found" // This message is now less critical
+  noTaskMessage = "No task found"
 ) => {
   try {
     const { sort, order, status } = req.query;
@@ -66,13 +66,18 @@ const applyTaskFilters = async (
             { $unwind: { path: '$createdBy', preserveNullAndEmptyArrays: true } }
         );
 
+        // Project to match original populate structure
         pipeline.push({
             $project: {
+                _id: 1, // Include _id of the task itself
                 title: 1,
                 description: 1,
                 department: { _id: '$department._id', name: '$department.name' },
-                createdBy: { _id: '$createdBy._id', username: '$$createdBy.username', email: '$$createdBy.email' }, // Fixed syntax for createdBy and manager
-                assignedManager: { _id: '$assignedManager._id', username: '$$assignedManager.username', email: '$$assignedManager.email' },
+                // FIX HERE: Use $createdBy.field, not $$createdBy.field
+                createdBy: { _id: '$createdBy._id', username: '$createdBy.username', email: '$createdBy.email' },
+                // FIX HERE: Use $assignedManager.field, not $$assignedManager.field
+                assignedManager: { _id: '$assignedManager._id', username: '$assignedManager.username', email: '$assignedManager.email' },
+                // assignedEmployees still uses $map and $$emp for iteration over the array
                 assignedEmployees: { $map: {
                     input: '$assignedEmployees',
                     as: 'emp',
@@ -106,17 +111,13 @@ const applyTaskFilters = async (
             .sort(sortOptionsForFind);
     }
 
-    // --- CRUCIAL CHANGE HERE ---
-    // Instead of sending 404, send 200 OK with an empty array if no tasks are found.
-    // The frontend will handle displaying the specific message based on tasks.length.
     res.status(200).json(tasks);
 
   } catch (error) {
     console.error("Error fetching tasks with filters:", error);
-    // For actual server errors, still send a 500
     res.status(500).json({ message: "Failed to fetch tasks" });
   }
-};   
+}; 
 
 export const createTask = async (req, res) => {
   const {

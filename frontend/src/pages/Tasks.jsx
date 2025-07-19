@@ -169,37 +169,34 @@ const Tasks = () => {
     if (activeFilter === "None") {
       return "No tasks available.";
     } else if (activeFilter === "Completed") {
-      toast.error("No tasks found with the status 'Completed'.")
       return "No tasks found with the status 'Completed'.";
     } else if (activeFilter === "In Progress") {
-      toast.error("No tasks found with the status 'In Progress'.")
       return "No tasks found with the status 'In Progress'.";
     } else if (activeFilter === "Overdue") {
-      toast.error("No tasks found that are 'Overdue'.")
       return "No tasks found that are 'Overdue'.";
     } else if (activeFilter.includes("priority")) {
-      toast.error(`No tasks found when filtered by '${activeFilter}'.`)
       // Catches both Low/High priority filters
       return `No tasks found when filtered by '${activeFilter}'.`;
     } else if (activeFilter.includes("Created")) {
       // Catches Recently/Oldest created
       return `No tasks found when filtered by '${activeFilter}'.`;
     }
-    toast.error("No tasks available for this filter.")
     return "No tasks available for this filter."; // Fallback message
   };
 
   return (
     <div className="w-full h-full p-5">
       <div className="flex justify-between items-center mb-5">
-        <h1 className="text-2xl font-bold">Tasks</h1>
-        <div className="flex items-center justify-center space-x-3">
+        <div>
+          <h1 className="text-2xl font-bold">Tasks</h1>
+        </div>
+        <div className="flex items-center justify-center space-x-1 md:space-x-3">
           {user.role === "Boss" && (
             <Dialog open={open} onOpenChange={setOpen}>
               <DialogTrigger asChild>
                 <Button className={"cursor-pointer rounded-md"}>
                   <MdOutlineCreate />
-                  Create task
+                  Create <span className="hidden md:block">task</span>
                 </Button>
               </DialogTrigger>
               <DialogContent className={"sm:max-w-[500px]"}>
@@ -370,8 +367,8 @@ const Tasks = () => {
           <DropdownMenu>
             <DropdownMenuTrigger>
               <Button variant="outline" className={"cursor-pointer"}>
-                <FaFilter className="mr-2" />
-                Filter {activeFilter !== "None" ? activeFilter : ""}
+                <FaFilter />
+                Filter
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start">
