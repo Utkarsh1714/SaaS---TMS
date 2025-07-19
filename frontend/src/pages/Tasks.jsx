@@ -167,7 +167,6 @@ const Tasks = () => {
   // Helper function to get the appropriate "No tasks" message
   const getNoTasksMessage = () => {
     if (activeFilter === "None") {
-      toast.error("No tasks available.")
       return "No tasks available.";
     } else if (activeFilter === "Completed") {
       toast.error("No tasks found with the status 'Completed'.")
