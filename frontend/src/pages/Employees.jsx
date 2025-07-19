@@ -106,6 +106,7 @@ const Employees = () => {
   };
 
   const getAllEmployee = async (e) => {
+    setLoading(true);
     try {
       const res = await axios.get(
         `${import.meta.env.VITE_API_URL}/api/employee`,
@@ -114,9 +115,12 @@ const Employees = () => {
         }
       );
 
+      setLoading(false);
       setEmployee(res.data);
     } catch (error) {
       console.log("Error fetching employee", error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -248,98 +252,112 @@ const Employees = () => {
         </Button>
       </div>
 
-      {/* Employee List */}
-      <div className="w-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 py-5">
-        {employee.length === 0 && (
-          <p className="text-gray-500 text-center col-span-full">
-            No employees found.
-          </p>
-        )}
+      {loading ? (
+        <div className="flex items-center justify-center h-full gap-3">
+          <p className="text-lg">Loading employee data</p>
+          <span className="loading loading-dots loading-xl"></span>
+        </div>
+      ) : (
+        <div className="w-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 py-5">
+          {employee.length === 0 ? (
+            <p className="text-gray-500 text-center col-span-full">
+              No employees found.
+            </p>
+          ) : (
+            <>
+              {employee
+                .filter((emp) => emp._id?.toString() !== user._id?.toString())
+                .map((emp) => {
+                  const initials = emp.username
+                    .split(" ")
+                    .map((word) => word[0])
+                    .join("")
+                    .toUpperCase();
 
-        {/* Card One */}
-        {employee
-          .filter((emp) => emp._id?.toString() !== user._id?.toString())
-          .map((emp) => {
-            const initials = emp.username
-              .split(" ")
-              .map((word) => word[0])
-              .join("")
-              .toUpperCase();
-
-            return (
-              <div
-                key={emp._id}
-                className="bg-white rounded-xl shadow-md border p-5 flex justify-between hover:shadow-lg transition duration-300"
-              >
-                <div className="flex items-center gap-4">
-                  <div className="bg-slate-200 text-slate-800 font-bold rounded-full w-12 h-12 flex items-center justify-center text-xl">
-                    {initials}
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="text-lg font-semibold text-slate-800">
-                      {emp.username}
-                    </h3>
-                    <p className="text-sm text-gray-500">{emp.email}</p>
-                    <p className="text-sm text-gray-500">
-                      Department: {emp.departmentId?.name || "—"}
-                    </p>
-                    <p className="text-sm text-gray-500">Role: {emp.role}</p>
-                    <div className="flex items-start justify-start gap-4">
-                      <span className="inline-block mt-1 text-sm font-medium text-green-600 bg-green-100 px-3 py-2 rounded">
-                        {emp.status}
-                      </span>
-                      <Button className={"mt-1 cursor-pointer"}>Message</Button>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex flex-col items-start justify-start gap-2">
-                  {user.role === "Boss" && (
-                    <>
-                      <Button
-                        onClick={() => navigate(`/employees/${emp._id}`)}
-                        className={
-                          "cursor-pointer bg-green-600 hover:bg-green-600 hover:opacity-70"
-                        }
-                      >
-                        <FaUserEdit className="w-4 h-4" />
-                      </Button>
-                      <Dialog open={deleteAlert} onOpenChange={setDeleteAlert}>
-                        <DialogTrigger asChild>
-                          <Button className=" bg-red-500 hover:bg-red-600 text-white cursor-pointer">
-                            <MdDelete className="w-4 h-4" />
-                          </Button>
-                        </DialogTrigger>
-                        <DialogContent className="sm:max-w-[500px]">
-                          <DialogHeader>
-                            <DialogTitle>
-                              Are you sure you want to delete this user?
-                            </DialogTitle>
-                          </DialogHeader>
-                          <div className="space-x-3">
-                            <Button
-                              onClick={() => handleDelete(emp._id)}
-                              className={"cursor-pointer"}
-                            >
-                              Delete
-                            </Button>
-                            <Button
-                              variant={"outline"}
-                              onClick={() => setDeleteAlert(!deleteAlert)}
-                              className={"cursor-pointer"}
-                            >
-                              Cancel
+                  return (
+                    <div
+                      key={emp._id}
+                      className="bg-white rounded-xl shadow-md border p-5 flex justify-between hover:shadow-lg transition duration-300"
+                    >
+                      <div className="flex items-center gap-4">
+                        <div className="bg-slate-200 text-slate-800 font-bold rounded-full w-12 h-12 flex items-center justify-center text-xl">
+                          {initials}
+                        </div>
+                        <div className="flex-1">
+                          <h3 className="text-lg font-semibold text-slate-800">
+                            {emp.username}
+                          </h3>
+                          <p className="text-sm text-gray-500">{emp.email}</p>
+                          <p className="text-sm text-gray-500">
+                            Department: {emp.departmentId?.name || "—"}
+                          </p>
+                          <p className="text-sm text-gray-500">
+                            Role: {emp.role}
+                          </p>
+                          <div className="flex items-start justify-start gap-4">
+                            <span className="inline-block mt-1 text-sm font-medium text-green-600 bg-green-100 px-3 py-2 rounded">
+                              {emp.status}
+                            </span>
+                            <Button className={"mt-1 cursor-pointer"}>
+                              Message
                             </Button>
                           </div>
-                        </DialogContent>
-                      </Dialog>
-                    </>
-                  )}
-                </div>
-              </div>
-            );
-          })}
-      </div>
+                        </div>
+                      </div>
+
+                      <div className="flex flex-col items-start justify-start gap-2">
+                        {user.role === "Boss" && (
+                          <>
+                            <Button
+                              onClick={() => navigate(`/employees/${emp._id}`)}
+                              className={
+                                "cursor-pointer bg-green-600 hover:bg-green-600 hover:opacity-70"
+                              }
+                            >
+                              <FaUserEdit className="w-4 h-4" />
+                            </Button>
+                            <Dialog
+                              open={deleteAlert}
+                              onOpenChange={setDeleteAlert}
+                            >
+                              <DialogTrigger asChild>
+                                <Button className=" bg-red-500 hover:bg-red-600 text-white cursor-pointer">
+                                  <MdDelete className="w-4 h-4" />
+                                </Button>
+                              </DialogTrigger>
+                              <DialogContent className="sm:max-w-[500px]">
+                                <DialogHeader>
+                                  <DialogTitle>
+                                    Are you sure you want to delete this user?
+                                  </DialogTitle>
+                                </DialogHeader>
+                                <div className="space-x-3">
+                                  <Button
+                                    onClick={() => handleDelete(emp._id)}
+                                    className={"cursor-pointer"}
+                                  >
+                                    Delete
+                                  </Button>
+                                  <Button
+                                    variant={"outline"}
+                                    onClick={() => setDeleteAlert(!deleteAlert)}
+                                    className={"cursor-pointer"}
+                                  >
+                                    Cancel
+                                  </Button>
+                                </div>
+                              </DialogContent>
+                            </Dialog>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+            </>
+          )}
+        </div>
+      )}
     </div>
   );
 };

@@ -29,7 +29,7 @@ function App() {
     return (
       <div className="flex items-center justify-center w-full h-full gap-3">
         <div>
-          <p className="text-lg">Loading task</p>
+          <p className="text-lg">Loading app</p>
           <span className="loading loading-dots loading-xl"></span>
         </div>
       </div>
