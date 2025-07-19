@@ -6,9 +6,11 @@ const ProtectedRoute = () => {
 
   if (loading)
     return (
-      <div className="flex items-center justify-center w-full h-full gap-3">
-        <p className="text-lg">Loading task</p>
-        <span className="loading loading-dots loading-xl"></span>
+      <div className="flex items-center justify-center w-full min-h-screen gap-3">
+        <div>
+          <p className="text-lg">Loading app</p>
+          <span className="loading loading-dots loading-xl"></span>
+        </div>
       </div>
     );
 
