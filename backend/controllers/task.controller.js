@@ -1,6 +1,123 @@
 import mongoose from "mongoose";
 import Task from "../models/task.model.js";
 
+// Helper function to apply common filtering/sorting logic
+const applyTaskFilters = async (
+  baseQuery,
+  req,
+  res,
+  noTaskMessage = "No task found" // This message is now less critical
+) => {
+  try {
+    const { sort, order, status } = req.query;
+
+    const sortOrder = order === "desc" ? -1 : 1;
+
+    let filter = { ...baseQuery };
+    let pipeline = [];
+
+    if (status) {
+      if (status === "Overdue") {
+        filter.deadline = { $lt: new Date() };
+        filter.status = { $ne: "Completed" };
+      } else {
+        filter.status = status;
+      }
+    }
+
+    if (Object.keys(filter).length > 0) {
+        pipeline.push({ $match: filter });
+    }
+
+    let tasks;
+
+    if (sort === "priority") {
+        pipeline.push({
+            $addFields: {
+                priorityValue: {
+                    $switch: {
+                        branches: [
+                            { case: { $eq: ["$priority", "Low"] }, then: 1 },
+                            { case: { $eq: ["$priority", "Medium"] }, then: 2 },
+                            { case: { $eq: ["$priority", "High"] }, then: 3 },
+                        ],
+                        default: 0,
+                    },
+                },
+            },
+        });
+
+        pipeline.push({ $sort: { priorityValue: sortOrder } });
+
+        // Add $lookup stages for population
+        pipeline.push(
+            { $lookup: { from: 'departments', localField: 'department', foreignField: '_id', as: 'department' } },
+            { $unwind: { path: '$department', preserveNullAndEmptyArrays: true } }
+        );
+        pipeline.push(
+            { $lookup: { from: 'users', localField: 'assignedManager', foreignField: '_id', as: 'assignedManager' } },
+            { $unwind: { path: '$assignedManager', preserveNullAndEmptyArrays: true } }
+        );
+        pipeline.push(
+            { $lookup: { from: 'users', localField: 'assignedEmployees', foreignField: '_id', as: 'assignedEmployees' } }
+        );
+        pipeline.push(
+            { $lookup: { from: 'users', localField: 'createdBy', foreignField: '_id', as: 'createdBy' } },
+            { $unwind: { path: '$createdBy', preserveNullAndEmptyArrays: true } }
+        );
+
+        pipeline.push({
+            $project: {
+                title: 1,
+                description: 1,
+                department: { _id: '$department._id', name: '$department.name' },
+                createdBy: { _id: '$createdBy._id', username: '$$createdBy.username', email: '$$createdBy.email' }, // Fixed syntax for createdBy and manager
+                assignedManager: { _id: '$assignedManager._id', username: '$$assignedManager.username', email: '$$assignedManager.email' },
+                assignedEmployees: { $map: {
+                    input: '$assignedEmployees',
+                    as: 'emp',
+                    in: { _id: '$$emp._id', username: '$$emp.username', email: '$$emp.email', role: '$$emp.role' }
+                }},
+                priority: 1,
+                status: 1,
+                deadline: 1,
+                milestones: 1,
+                dependencies: 1,
+                createdAt: 1,
+                updatedAt: 1,
+            }
+        });
+
+        tasks = await Task.aggregate(pipeline);
+
+    } else {
+        let sortOptionsForFind = {};
+        if (sort === "createdAt") {
+            sortOptionsForFind.createdAt = sortOrder;
+        } else {
+            sortOptionsForFind.createdAt = -1; // Default
+        }
+
+        tasks = await Task.find(filter)
+            .populate("department", "name")
+            .populate("assignedManager", "username email")
+            .populate("assignedEmployees", "username email role")
+            .populate("createdBy", "username email")
+            .sort(sortOptionsForFind);
+    }
+
+    // --- CRUCIAL CHANGE HERE ---
+    // Instead of sending 404, send 200 OK with an empty array if no tasks are found.
+    // The frontend will handle displaying the specific message based on tasks.length.
+    res.status(200).json(tasks);
+
+  } catch (error) {
+    console.error("Error fetching tasks with filters:", error);
+    // For actual server errors, still send a 500
+    res.status(500).json({ message: "Failed to fetch tasks" });
+  }
+};   
+
 export const createTask = async (req, res) => {
   const {
     title,
@@ -185,47 +302,67 @@ export const getTaskById = async (req, res) => {
 };
 
 export const getTasksByBoss = async (req, res) => {
-  try {
-    const task = await Task.find({
-      createdBy: req.user._id,
-    })
-      .populate("department", "name")
-      .populate("assignedManager", "username email")
-      .populate("assignedEmployees", "username email role");
+  // try {
+  //   const task = await Task.find({
+  //     createdBy: req.user._id,
+  //   })
+  //     .populate("department", "name")
+  //     .populate("assignedManager", "username email")
+  //     .populate("assignedEmployees", "username email role");
 
-    if (!task) return res.status(404).json({ message: "No task found" });
+  //   if (!task) return res.status(404).json({ message: "No task found" });
 
-    res.status(200).json(task);
-  } catch (error) {
-    console.log(error);
-    res.status(500).json({ message: "Failed to fetch task" });
-  }
+  //   res.status(200).json(task);
+  // } catch (error) {
+  //   console.log(error);
+  //   res.status(500).json({ message: "Failed to fetch task" });
+  // }
+  await applyTaskFilters(
+    { createdBy: req.user._id },
+    req,
+    res,
+    "No tasks created by boss found"
+  );
 };
 
 export const getTasksByManager = async (req, res) => {
-  try {
-    const task = await Task.find({ assignedManager: req.user._id }).populate("department", "name")
-      .populate("assignedManager", "username email")
-      .populate("assignedEmployees", "username email role");
-    if (!task) return res.status(404).json({ message: "No task found" });
+  // try {
+  //   const task = await Task.find({ assignedManager: req.user._id })
+  //     .populate("department", "name")
+  //     .populate("assignedManager", "username email")
+  //     .populate("assignedEmployees", "username email role");
+  //   if (!task) return res.status(404).json({ message: "No task found" });
 
-    res.status(200).json(task);
-  } catch (error) {
-    console.log(error);
-    res.status(500).json({ message: "Failed to fetch task" });
-  }
+  //   res.status(200).json(task);
+  // } catch (error) {
+  //   console.log(error);
+  //   res.status(500).json({ message: "Failed to fetch task" });
+  // }
+  await applyTaskFilters(
+    { assignedManager: req.user._id },
+    req,
+    res,
+    "No tasks assigned to manager found"
+  );
 };
 
 export const getTasksByEmployee = async (req, res) => {
-  try {
-    const task = await Task.find({ assignedEmployees: req.user._id }).populate("department", "name")
-      .populate("assignedManager", "username email")
-      .populate("assignedEmployees", "username email role");
-    if (!task) return res.status(404).json({ message: "No task found" });
+  // try {
+  //   const task = await Task.find({ assignedEmployees: req.user._id })
+  //     .populate("department", "name")
+  //     .populate("assignedManager", "username email")
+  //     .populate("assignedEmployees", "username email role");
+  //   if (!task) return res.status(404).json({ message: "No task found" });
 
-    res.status(200).json(task);
-  } catch (error) {
-    console.log(error);
-    res.status(500).json({ message: "Failed to fetch task" });
-  }
+  //   res.status(200).json(task);
+  // } catch (error) {
+  //   console.log(error);
+  //   res.status(500).json({ message: "Failed to fetch task" });
+  // }
+  await applyTaskFilters(
+    { assignedEmployees: req.user._id },
+    req,
+    res,
+    "No tasks assigned to employee found"
+  );
 };
