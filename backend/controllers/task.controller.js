@@ -1,5 +1,7 @@
 import mongoose from "mongoose";
 import Task from "../models/task.model.js";
+import User from '../models/user.model.js'
+import { sendTaskNotificationEmail } from "../utils/send.mail.js";
 
 // Helper function to apply common filtering/sorting logic
 const applyTaskFilters = async (
@@ -130,6 +132,12 @@ export const createTask = async (req, res) => {
     milestones = [],
   } = req.body;
   try {
+    const manager = await User.findById(assignedManager);
+    if (!manager) return res.status(404).json({ message: "Manager not found" });
+
+    const { username, email} = manager;
+    console.log({username, email});
+
     const task = await Task.create({
       title,
       description,
@@ -141,6 +149,19 @@ export const createTask = async (req, res) => {
       milestones,
       createdBy: req.user._id,
     });
+
+    if (!task) return res.status(400).json({ message: "Failed to create task" });
+
+    const emailResponse = await sendTaskNotificationEmail({
+      title,
+      description,
+      assignedManagerEmail: email,
+      managerName: username,
+      priority,
+      deadline,
+    })
+
+    console.log("✅ Email sent:", emailResponse?.messageId);
 
     // ✅ Populate department and assignedManager before sending response
     const populatedTask = await Task.findById(task._id)
