@@ -61,3 +61,38 @@ export const sendWelcomeEmail = async ({
     throw new Error("Email failed to send");
   }
 };
+
+export const sendTaskNotificationEmail = async ({ title, description, assignedManagerEmail, managerName, priority, deadline }) => {
+  await transporter.sendMail({
+    from: `"Taskify Notifications" <${process.env.SMTP_USER}>`,
+    to: assignedManagerEmail,
+    subject: `New Task Assigned: ${title}`,
+    html: `
+      <div style="font-family: Arial, sans-serif; font-size: 16px; color: #333; line-height: 1.6; max-width: 600px; margin: auto; border: 1px solid #ddd; border-radius: 8px; overflow: hidden;">
+        <div style="background-color: #4CAF50; color: white; padding: 20px; text-align: center;">
+          <h2 style="margin: 0;">🚀 New Task Assigned!</h2>
+        </div>
+        <div style="padding: 20px;">
+          <p>Hi <strong style="color: #4CAF50;">${managerName}</strong>,</p>
+          <p>A new task has been assigned to you. Here are the details:</p>
+          
+          <div style="background-color: #f9f9f9; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
+            <h4 style="color: #333; margin-top: 0; margin-bottom: 10px;">Task Title: <span style="color: #007bff;">${title}</span></h4>
+            <p style="margin-bottom: 5px;"><strong>Description:</strong> ${description}</p>
+            <p style="margin-bottom: 5px;"><strong>Priority:</strong> <span style="color: ${priority === 'High' ? '#dc3545' : priority === 'Medium' ? '#ffc107' : '#28a745'}; font-weight: bold;">${priority}</span></p>
+            <p style="margin-bottom: 0;"><strong>Deadline:</strong> <span style="font-weight: bold;">${deadline}</span></p>
+          </div>
+          
+          <p>Please log in to Taskify to view and manage your tasks. Stay organized!</p>
+          
+          <p style="text-align: center; margin-top: 30px;">
+            <a href="https://saas-tms-frontend.onrender.com" style="background-color: #4CAF50; color: white; padding: 12px 25px; text-decoration: none; border-radius: 5px; font-weight: bold;">Go to Taskify</a>
+          </p>
+        </div>
+        <div style="background-color: #f0f0f0; color: #777; padding: 15px; text-align: center; font-size: 14px;">
+          <p style="margin: 0;">&copy; ${new Date().getFullYear()} Taskify. All rights reserved.</p>
+        </div>
+      </div>
+    `,
+  });
+};
