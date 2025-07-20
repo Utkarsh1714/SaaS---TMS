@@ -152,7 +152,7 @@ export const createTask = async (req, res) => {
 
     if (!task) return res.status(400).json({ message: "Failed to create task" });
 
-    const emailResponse = await sendTaskNotificationEmail({
+    await sendTaskNotificationEmail({
       title,
       description,
       assignedManagerEmail: email,
@@ -160,8 +160,6 @@ export const createTask = async (req, res) => {
       priority,
       deadline,
     })
-
-    console.log("✅ Email sent:", emailResponse?.messageId);
 
     // ✅ Populate department and assignedManager before sending response
     const populatedTask = await Task.findById(task._id)
