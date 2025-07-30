@@ -1,5 +1,5 @@
 import User from "../models/user.model.js";
-import Organization from "../models/organization.model.js";
+import Organization from '../models/organization.model.js'
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import Department from "../models/department.model.js";
@@ -109,6 +109,7 @@ export const registerOrg = async (req, res) => {
         email: newUser.email,
         role: newUser.role,
         organizationId: newOrg._id,
+        organizationName: newOrg._id,
       },
       token,
     });
@@ -120,7 +121,8 @@ export const registerOrg = async (req, res) => {
 
 export const login = async (req, res) => {
   const { email, password } = req.body;
-  const user = await User.findOne({ email });
+  const user = await User.findOne({ email }).populate('organizationId', 'name logoUrl');
+
   if (!user) {
     return res.status(400).json({ message: "Invalid credentials" });
   }
@@ -139,10 +141,18 @@ export const login = async (req, res) => {
   await user.save();
 
   const io = req.app.get("io");
-  io.to(user.organizationId.toString()).emit("statusUpdate", {
+  io.to(user.organizationId?.toString()).emit("statusUpdate", {
     userId: user._id,
     status: "Active",
   });
+
+  const {
+    password: pwd,
+    resetToken,
+    resetTokenExpires,
+    __v,
+    ...safeUser
+  } = user.toObject();
 
   res
     .cookie("token", token, {
@@ -150,7 +160,7 @@ export const login = async (req, res) => {
       secure: true,
       sameSite: "None",
     })
-    .json({ message: "Login successful", user });
+    .json({ message: "Login successful", user: safeUser });
 };
 
 export const logout = async (req, res) => {

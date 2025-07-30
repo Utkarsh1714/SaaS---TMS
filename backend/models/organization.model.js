@@ -35,7 +35,7 @@ const OrganizationSchema = new mongoose.Schema({
         type: String,
         required: true,
     },
-    webstieUrl: {
+    websiteUrl: {
         type: String,
     },
     createdBy: {
