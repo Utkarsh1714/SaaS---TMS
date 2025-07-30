@@ -37,8 +37,8 @@ const UserSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ['Active', 'Inactive', 'On Leave'],
-      default: 'Inactive'
+      enum: ["Active", "Inactive", "On Leave"],
+      default: "Inactive",
     },
     resetToken: { type: String },
     resetTokenExpires: { type: Date },
