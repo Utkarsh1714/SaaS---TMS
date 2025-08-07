@@ -16,25 +16,24 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Input } from "@/components/ui/input";
-import SlideButton from "@/components/ui/slide-button";
 import { useAuth } from "@/context/AuthContext";
 import axios from "axios";
 import { RefreshCcw } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { FaFilter } from "react-icons/fa";
 import { IoSearch } from "react-icons/io5";
+import { RxCross1 } from "react-icons/rx";
 import { MdDelete, MdDeleteForever, MdOutlineCreate } from "react-icons/md";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
 const DESCRIPTION_CHAR_LIMIT = 15;
-const TITLE_CHAR_LIMIT = 20;
+const TITLE_CHAR_LIMIT = 10;
 
 const Tasks = () => {
   const { user } = useAuth();
   const [tasks, setTasks] = useState([]);
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchTerm, setSearchTerm] = useState(null);
   const [open, setOpen] = useState(false);
   const [hasManager, setHasManager] = useState(true);
   const [selectedDepartment, setSelectedDepartment] = useState([]);
@@ -50,7 +49,6 @@ const Tasks = () => {
   });
   const [loading, setLoading] = useState(false);
   const [activeFilter, setActiveFilter] = useState("None");
-  const [isSearching, setIsSearching] = useState(false);
   const [originalTasks, setOriginalTasks] = useState([]);
   const navigate = useNavigate();
 
@@ -191,6 +189,10 @@ const Tasks = () => {
     fetchTasks(filter);
   };
 
+  const clearSearchTerm = () => {
+    setSearchTerm("")
+  };
+
   const getNoTasksMessage = () => {
     if (activeFilter === "None") {
       return "No tasks available.";
@@ -229,6 +231,7 @@ const Tasks = () => {
       toast.success(`Found ${filteredTasks.length} task(s).`);
     }
   };
+
   useEffect(() => {
     if (!user) {
       navigate("/login");
@@ -246,7 +249,7 @@ const Tasks = () => {
     <div className="w-full h-full p-5">
       <div className="flex flex-col sm:flex-row gap-4 justify-between mb-5">
         <div className="flex items-center justify-center gap-2">
-          <div className="flex items-center justify-center gap-2 rounded-full bg-[#121212]">
+          <div className="flex items-center justify-between gap-2 rounded-full bg-[#121212]">
             <input
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -256,12 +259,19 @@ const Tasks = () => {
               type={"text"}
               placeholder={"Search..."}
             />
-            <button
-              onClick={handleSearch}
-              className="bg-[#222222] px-4 py-2.5 rounded-r-full"
-            >
-              <IoSearch color="white" size={20} />
-            </button>
+            <div className="flex items-center justify-center gap-2">
+              {searchTerm?.length > 0 && (
+                <button onClick={clearSearchTerm}>
+                  <RxCross1 color="white" />
+                </button>
+              )}
+              <button
+                onClick={handleSearch}
+                className="bg-[#222222] px-4 py-2.5 rounded-r-full"
+              >
+                <IoSearch color="white" size={20} />
+              </button>
+            </div>
           </div>
           <DropdownMenu>
             <DropdownMenuTrigger>

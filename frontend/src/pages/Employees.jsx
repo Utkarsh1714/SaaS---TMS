@@ -280,20 +280,29 @@ const Employees = () => {
                       className="bg-white rounded-xl shadow-md border p-5 flex justify-between hover:shadow-lg transition duration-300"
                     >
                       <div className="flex items-center gap-4">
-                        <div className="bg-slate-200 text-slate-800 font-bold rounded-full w-12 h-12 flex items-center justify-center text-xl">
-                          {initials}
-                        </div>
                         <div className="flex-1">
-                          <h3 className="text-lg font-semibold text-slate-800">
-                            {emp.username}
-                          </h3>
-                          <p className="text-sm text-gray-500">{emp.email}</p>
-                          <p className="text-sm text-gray-500">
-                            Department: {emp.departmentId?.name || "—"}
-                          </p>
-                          <p className="text-sm text-gray-500">
-                            Role: {emp.role}
-                          </p>
+                          <div className="flex items-center justify-start gap-2">
+                            <div className="bg-slate-200 text-slate-800 font-bold rounded-full w-12 h-12 flex items-center justify-center text-xl">
+                              {initials}
+                            </div>
+                            <h4 className="text-lg font-semibold text-slate-800">
+                              {emp.username}
+                            </h4>
+                          </div>
+                          <div className="py-2">
+                            <p className="text-sm text-gray-500">{emp.email}</p>
+                            <p className="text-sm text-gray-500">
+                              <span className="text-gray-600 font-semibold">
+                                Department :-
+                              </span>{" "}
+                              {emp.departmentId?.name || "—"}
+                            </p>
+                            <p className="text-sm text-gray-500">
+                              <span className="text-gray-600 font-semibold">
+                                Role :-
+                              </span> {emp.role}
+                            </p>
+                          </div>
                           <div className="flex items-start justify-start gap-4">
                             <span className="inline-block mt-1 text-sm font-medium text-green-600 bg-green-100 px-3 py-2 rounded">
                               {emp.status}
