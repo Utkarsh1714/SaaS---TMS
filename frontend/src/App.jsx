@@ -5,6 +5,7 @@ import ProtectedRoute from "./routes/ProtectedRoutes";
 import { useAuth } from "./context/AuthContext";
 import { Toaster } from "./components/ui/sonner";
 import { Toaster as HotToast } from "react-hot-toast";
+import Task1 from "./pages/Task1";
 
 // Lazy load the page
 const Home = lazy(() => import("./pages/Home"));
@@ -57,6 +58,7 @@ function App() {
             <Route path="/" element={<Layout />}>
               <Route index element={<Home />} />
               <Route path="/tasks" element={<Tasks />} />
+              <Route path="/tasks1" element={<Task1 />} />
               <Route path="/tasks/:id" element={<TaskDetails />} />
               <Route path="/departments" element={<Departments />} />
               <Route path="/departments/:id" element={<DeptDetails />} />
