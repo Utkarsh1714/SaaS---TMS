@@ -1,0 +1,16 @@
+.task-items-title {
+  display: grid;
+  grid-template-columns: 1fr 3fr 1fr 1fr 0.5fr;
+  align-items: center;
+  font-size: max(0.9vw, 12px);
+}
+.task-items-item {
+  margin: 12px 0;
+  color: white;
+}
+@media (max-width: 768px) {
+  .task-items-title {
+    grid-template-columns: 1fr;
+    row-gap: 10px;
+  }
+}
