@@ -130,6 +130,7 @@ export const createTask = async (req, res) => {
     deadline,
     priority,
     milestones = [],
+    organizationId
   } = req.body;
   try {
     const manager = await User.findById(assignedManager);
@@ -147,6 +148,7 @@ export const createTask = async (req, res) => {
       deadline,
       priority,
       milestones,
+      organizationId: req.user.organizationId,
       createdBy: req.user._id,
     });
 
@@ -237,12 +239,13 @@ export const updateTaskStatus = async (req, res) => {
   const { status } = req.body;
 
   try {
-    const task = await Task.findByIdAndUpdate(
-      taskId,
-      { status },
-      { new: true }
-    );
+    const task = await Task.findById(taskId);
+
     if (!task) return res.status(404).json({ message: "Task not found" });
+
+    task.status = status;
+
+    await task.save();
 
     res.status(200).json(task);
   } catch (error) {

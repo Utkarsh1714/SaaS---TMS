@@ -46,6 +46,7 @@ const Tasks = () => {
     deadline: "",
     priority: "Medium",
     milestones: [],
+    organizationId: ""
   });
   const [loading, setLoading] = useState(false);
   const [activeFilter, setActiveFilter] = useState("None");
@@ -123,6 +124,11 @@ const Tasks = () => {
     e.preventDefault();
     setLoading(true);
 
+    // const payload = {
+    //   ...taskData,
+    //   organizationId: user.organizationId,
+    // };
+
     try {
       const res = await axios.post(
         `${import.meta.env.VITE_API_URL}/api/task/create`,
@@ -150,6 +156,7 @@ const Tasks = () => {
         deadline: "",
         priority: "Medium",
         milestones: [],
+        organizationId
       });
       setSelectedDepartment([]);
       setHasManager(true);
@@ -190,12 +197,12 @@ const Tasks = () => {
   };
 
   const clearSearchTerm = () => {
-    setSearchTerm("")
+    setSearchTerm("");
   };
 
   const getNoTasksMessage = () => {
     if (activeFilter === "None") {
-      return "No tasks available.";
+      return "No tasks are available at the moment. Kindly check again later !";
     } else if (activeFilter === "Completed") {
       return "No tasks found with the status 'Completed'.";
     } else if (activeFilter === "In Progress") {
@@ -523,7 +530,9 @@ const Tasks = () => {
       ) : (
         <>
           {tasks.length === 0 ? (
-            <p className="text-gray-500">{getNoTasksMessage()}</p>
+            <div className="w-full text-center pt-56">
+              <p className="text-gray-500">{getNoTasksMessage()}</p>
+            </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
               {tasks.map((task) => {

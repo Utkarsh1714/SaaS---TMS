@@ -9,7 +9,7 @@
     router.post('/create', verifyToken, authorizeRole("Boss"), createTask)
     router.put('/:taskId/employees/add', verifyToken, authorizeRole("Manager"), addEmployeeToTask);
     router.put('/:taskId/employees/remove/:employeeId', verifyToken, authorizeRole("Manager"), removeEmployeeFromTask);
-    router.put('/:taskId/status', verifyToken, authorizeRole("Manager"), updateTaskStatus);
+    router.patch('/status/:taskId', verifyToken, authorizeRole("Manager"), updateTaskStatus);
     router.post('/:taskId/milestone', verifyToken, authorizeRole("Manager"), addMilestones);
     router.put('/:taskId/milestone/:milestoneIndex', verifyToken, updateMilestone);
     router.delete('/:taskId', verifyToken, authorizeRole("Boss"), deleteTask);
