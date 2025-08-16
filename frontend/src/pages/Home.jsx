@@ -1,10 +1,22 @@
 import BarChart from "@/components/BarChart";
-import { useAuth } from "@/context/AuthContext";
+import MonthlyTrendChart from "@/components/MonthlyTrendChart";
+import axios from "axios";
 import { Clock, LayoutList, Loader } from "lucide-react";
+import { useEffect } from "react";
 import { MdOutlineAutoGraph } from "react-icons/md";
-import { SlGraph } from "react-icons/sl";
 
 const Home = () => {
+  const statistics_v1 = async () => {
+    const res = await axios.get(
+      `${import.meta.env.VITE_API_URL}/api/dashboard/overview-data1`,
+      { withCredentials: true }
+    );
+    console.log(res.data)
+  };
+
+  useEffect(() => {
+    statistics_v1();
+  }, []);
   return (
     <div className="w-full h-full py-5 px-5 sm:px-2 space-y-6">
       <div className="w-full grid sm:grid-col-2 md:grid-cols-3 grid-cols-1 sm:flex-row justify-between gap-4 sm:gap-4">
@@ -63,10 +75,8 @@ const Home = () => {
             </div>
           </div>
           <div className="stats shadow-md bg-gray-50">
-            <div className="stat flex flex-col items-start justify-start">
-              <h1>Upcomming Meetings Will be shown here</h1>
-              <h1>Upcomming Meetings Will be shown here</h1>
-              <h1>Upcomming Meetings Will be shown here</h1>
+            <div className="stat flex flex-col items-start justify-start overflow-visible">
+              <MonthlyTrendChart />
             </div>
           </div>
         </div>

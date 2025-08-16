@@ -6,40 +6,28 @@ export const overview = async (req, res) => {
   try {
     const { _id, role, organizationId } = req.user;
 
-    // Task count query
-    let taskCount = 0;
+    const taskQuery =
+      role === "Boss"
+        ? { organizationId: new mongoose.Types.ObjectId(organizationId) }
+        : { $or: [{ assignedManager: _id }, { assignedEmployees: _id }] };
 
-    if (role === "Boss") {
-      taskCount = await Task.countDocuments({ organizationId: organizationId });
-    } else {
-      taskCount = await Task.countDocuments({
-        $or: [{ assignedManager: _id }, { assignedEmployees: _id }],
-      });
-    }
+    // Task count query
+    const taskCount = await Task.countDocuments(taskQuery);
 
     // Active user count query
-    let activeUser = 0;
-
-    activeUser = await User.countDocuments({
+    const activeUser = await User.countDocuments({
       organizationId: organizationId,
       status: "Active",
     });
 
     // Overdue task count query
     const now = new Date();
-
-    let query = {
-      deadline: { $lt: now }, // Filter for tasks where the deadline is less than (before) now
-      status: { $ne: "Completed" }, // Exclude tasks that are already completed
+    const overdueQuery = {
+      ...taskQuery,
+      deadline: { $lt: now },
+      status: { $ne: "Completed" },
     };
-
-    if (role === "Boss") {
-      query.organizationId = organizationId;
-    } else {
-      query.$or = [{ assignedManager: _id }, { assignedEmployees: _id }];
-    }
-
-    const overdueTaskCount = await Task.countDocuments(query);
+    const overdueTaskCount = await Task.countDocuments(overdueQuery);
 
     // average time (in days) to complete a task in the organization
     // The aggregation pipeline is a seires of stages to process documents.
@@ -81,11 +69,209 @@ export const overview = async (req, res) => {
       }
     }
 
+    // Task status count
+    const statusResult = await Task.aggregate([
+      // Stage 1: Match task based on same user-role logic
+      {
+        $match: taskQuery,
+      },
+      {
+        $group: {
+          _id: "$status",
+          count: { $sum: 1 },
+        },
+      },
+    ]);
+
+    const taskStatusCount = {
+      pending: 0,
+      inProgress: 0,
+      completed: 0,
+    };
+
+    statusResult.forEach((result) => {
+      if (result._id === "Pending") taskStatusCount.pending = result.count;
+      if (result._id === "In Progress")
+        taskStatusCount.inProgress = result.count;
+      if (result._id === "Completed") taskStatusCount.completed = result.count;
+    });
+
+    // Task priority count
+    const priorityResult = await Task.aggregate([
+      // Stage 1: Match task based on same user-role logic
+      {
+        $match: taskQuery,
+      },
+      {
+        $group: {
+          _id: "$priority",
+          count: { $sum: 1 },
+        },
+      },
+    ]);
+
+    const taskPriorityCount = {
+      Low: 0,
+      Medium: 0,
+      High: 0,
+    };
+
+    priorityResult.forEach((result) => {
+      if (result._id === "Low") taskPriorityCount.Low = result.count;
+      if (result._id === "Medium")
+        taskPriorityCount.Medium = result.count;
+      if (result._id === "High") taskPriorityCount.High = result.count;
+    });
+
+    // Employees count by department
+    const departmentCount = await User.aggregate([
+      // Stage 1: Find all users excluding the Boss
+      {
+        $match: {
+          organizationId: new mongoose.Types.ObjectId(organizationId),
+          role: { $ne: "Boss" },
+          departmentId: { $ne: null },
+        }
+      },
+      // Stage 2: Group users by department and count them
+      {
+        $group: {
+          _id: "$departmentId",
+          employeeCount: { $sum: 1 },
+        }
+      },
+      // Stage 3: Join with the 'departments' collections to get department names
+      {
+        $lookup: {
+          from: "departments", // The collection to join with
+          localField: "_id", // Field from the input documents (the departmentId)
+          foreignField: "_id", // Field from the documents of the "from" collection
+          as: "departmentInfo", // Output array field name
+        }
+      },
+      // Stage 4: Clean up the output to get more readable results
+      {
+        $project: {
+          _id: 0,
+          departmentName: { $arrayElemAt: ['$departmentInfo.name', 0] }, // Get the first element of the departmentInfo array
+          employeeCount: 1, // Include the employee count
+        }
+      },
+      // Stage 5: Remove the results where department was not found
+      {
+        $match: {
+          departmentName: { $ne: null }
+        }
+      }
+    ]);
+
     res
       .status(200)
-      .json({ taskCount, activeUser, overdueTaskCount, averageCompletionDays });
+      .json({
+        taskCount,
+        activeUser,
+        overdueTaskCount,
+        averageCompletionDays,
+        taskStatusCount,
+        taskPriorityCount,
+        departmentCount
+      });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Failed to fetch details" });
   }
 };
+
+export const getMonthyCompletionTrend = async (req, res) => {
+  try {
+    const { _id, role, organizationId } = req.user;
+    const { year, quarter } = req.query;
+
+    let startDate, endDate;
+    const now = new Date();
+
+    if (year && quarter) {
+      const startMonth = (parseInt(quarter) - 1) * 3;
+      const endMonth = startMonth + 3;
+      startDate = new Date(parseInt(year), startMonth, 1);
+      endDate = new Date(parseInt(year), endMonth, 1);
+    } else {
+      endDate = new Date(now.getFullYear(), now.getMonth(), 1);
+      startDate = new Date(endDate);
+      startDate.setMonth(startDate.getMonth() - 3);
+    }
+
+    // Create a dynamic query based on user role
+    const matchQuery = {
+      status: "Completed",
+      updatedAt: { $gte: startDate, $lt: endDate },
+    }
+
+    if (role === 'Boss') {
+      matchQuery.organizationId = new mongoose.Types.ObjectId(organizationId);
+    } else {
+      matchQuery.$or = [
+        { assignedEmployees: _id },
+        { assignedManager: _id },
+      ]
+    };
+
+    const monthlyDate = await Task.aggregate([
+      // Stage 1: Use the dynamic match query
+      {
+        $match: matchQuery,
+      },
+      // Stage 2: Group by year and month
+      {
+        $group: {
+          _id: {
+            year: { $year: "$updatedAt" },
+            month: { $month: "$updatedAt" },
+          },
+          count: { $sum: 1 },
+        }
+      },
+      // Stage 3: Sort the result chronologically
+      { 
+        $sort: {
+          "_id.year": 1,
+          "_id.month": 1,
+        }
+      }
+    ])
+
+    // Post-Processing: Fill the missing months
+    const monthName = [
+      "January", "February", "March", "April", "May", "June", "July",
+      "August", "September", "October", "November", "December"
+    ];
+
+    const trendData = [];
+    let currentDate = new Date(startDate);
+
+    const resultMap = new Map();
+    monthlyDate.forEach(item => {
+      const key = `${item._id.year}-${item._id.month}`;
+      resultMap.set(key, item.count);
+    });
+
+    while (currentDate < endDate) {
+      const year = currentDate.getFullYear();
+      const month = currentDate.getMonth() + 1; // Months are 0-indexed in JavaScript
+      const key = `${year}-${month}`;
+
+      trendData.push({
+        year: year,
+        month: monthName[month - 1],
+        count: resultMap.get(key) || 0,
+      });
+
+      currentDate.setMonth(currentDate.getMonth() + 1);
+    }
+
+    res.status(200).json(trendData);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Failed to fetch monthly completion trend" });
+  }
+}
