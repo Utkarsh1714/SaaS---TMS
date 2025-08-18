@@ -66,7 +66,7 @@ const MonthlyTrendChart = () => {
   return (
     <div className="p-4 bg-white rounded-lg shadow-md overflow-visible">
       {/* Row 1: Title */}
-      <div className="mb-4 flex items-center justify-between">
+      <div className="mb-4 flex items-center justify-between gap-2">
         <h3 className="text-lg font-semibold">Completed Tasks — Trend</h3>
         {/* Year Selector */}
         <div className="flex items-center gap-2">

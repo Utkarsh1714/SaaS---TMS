@@ -155,8 +155,7 @@ const Tasks = () => {
         assignedManager: "",
         deadline: "",
         priority: "Medium",
-        milestones: [],
-        organizationId
+        milestones: []
       });
       setSelectedDepartment([]);
       setHasManager(true);
