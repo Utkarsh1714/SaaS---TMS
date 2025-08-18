@@ -1,5 +1,5 @@
-import React from 'react';
-import { Bar } from 'react-chartjs-2';
+import React, { useState, useEffect } from "react";
+import { Bar } from "react-chartjs-2";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -8,7 +8,8 @@ import {
   Title,
   Tooltip,
   Legend,
-} from 'chart.js';
+} from "chart.js";
+import axios from "axios";
 
 // Register Chart.js components
 ChartJS.register(
@@ -20,39 +21,54 @@ ChartJS.register(
   Legend
 );
 
-const BarChart = () => {
-  const data = {
-    labels: ['January', 'February', 'March', 'April', 'May', 'June'],
-    datasets: [
-      {
-        label: 'Monthly Sales',
-        data: [30, 20, 50, 60, 70, 90],
-        backgroundColor: 'rgba(75, 192, 192, 0.6)',
-        borderColor: 'rgba(75, 192, 192, 1)',
-        borderWidth: 1,
-      },
-    ],
-  };
+const BarChart = ({ taskPriorityCounts }) => {
+  const [chartData, setChartData] = useState({
+    datasets: [],
+  });
+  const [chartOptions, setChartOptions] = useState({});
 
-  const options = {
-    responsive: true,
-    plugins: {
-      legend: {
-        position: 'top',
-      },
-      title: {
-        display: true,
-        text: 'Monthly Sales Chart',
-      },
-    },
-    scales: {
-      y: {
-        beginAtZero: true
-      }
+  useEffect(() => {
+    // Check if the prop has data before processing
+    if (taskPriorityCounts && Object.keys(taskPriorityCounts).length > 0) {
+      const labels = Object.keys(taskPriorityCounts);
+      const dataValues = Object.values(taskPriorityCounts);
+
+      setChartData({
+        labels: labels,
+        datasets: [
+          {
+            label: "Task Count",
+            data: dataValues,
+            backgroundColor: ["#74C0FC", "#B197FC", "#FFDAB9"],
+            borderColor: ["#4DABF7", "#9775FA", "#FFA94D"],
+            borderWidth: 1,
+          },
+        ],
+      });
+
+      setChartOptions({
+        responsive: true,
+        plugins: {
+          legend: {
+            display: false,
+          },
+          title: {
+            display: true,
+            text: "Task Priority Distribution",
+          },
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+          },
+        },
+      });
     }
-  };
+    // ✨ Add taskPriorityCounts to the dependency array
+  }, [taskPriorityCounts]);
 
-  return <Bar data={data} options={options} />;
+  // 5. Render the bar chart with the state data
+  return <Bar data={chartData} options={chartOptions} />;
 };
 
 export default BarChart;

@@ -118,8 +118,7 @@ export const overview = async (req, res) => {
 
     priorityResult.forEach((result) => {
       if (result._id === "Low") taskPriorityCount.Low = result.count;
-      if (result._id === "Medium")
-        taskPriorityCount.Medium = result.count;
+      if (result._id === "Medium") taskPriorityCount.Medium = result.count;
       if (result._id === "High") taskPriorityCount.High = result.count;
     });
 
@@ -131,14 +130,14 @@ export const overview = async (req, res) => {
           organizationId: new mongoose.Types.ObjectId(organizationId),
           role: { $ne: "Boss" },
           departmentId: { $ne: null },
-        }
+        },
       },
       // Stage 2: Group users by department and count them
       {
         $group: {
           _id: "$departmentId",
           employeeCount: { $sum: 1 },
-        }
+        },
       },
       // Stage 3: Join with the 'departments' collections to get department names
       {
@@ -147,35 +146,33 @@ export const overview = async (req, res) => {
           localField: "_id", // Field from the input documents (the departmentId)
           foreignField: "_id", // Field from the documents of the "from" collection
           as: "departmentInfo", // Output array field name
-        }
+        },
       },
       // Stage 4: Clean up the output to get more readable results
       {
         $project: {
           _id: 0,
-          departmentName: { $arrayElemAt: ['$departmentInfo.name', 0] }, // Get the first element of the departmentInfo array
+          departmentName: { $arrayElemAt: ["$departmentInfo.name", 0] }, // Get the first element of the departmentInfo array
           employeeCount: 1, // Include the employee count
-        }
+        },
       },
       // Stage 5: Remove the results where department was not found
       {
         $match: {
-          departmentName: { $ne: null }
-        }
-      }
+          departmentName: { $ne: null },
+        },
+      },
     ]);
 
-    res
-      .status(200)
-      .json({
-        taskCount,
-        activeUser,
-        overdueTaskCount,
-        averageCompletionDays,
-        taskStatusCount,
-        taskPriorityCount,
-        departmentCount
-      });
+    res.status(200).json({
+      taskCount,
+      activeUser,
+      overdueTaskCount,
+      averageCompletionDays,
+      taskStatusCount,
+      taskPriorityCount,
+      departmentCount,
+    });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Failed to fetch details" });
@@ -205,16 +202,13 @@ export const getMonthyCompletionTrend = async (req, res) => {
     const matchQuery = {
       status: "Completed",
       updatedAt: { $gte: startDate, $lt: endDate },
-    }
+    };
 
-    if (role === 'Boss') {
+    if (role === "Boss") {
       matchQuery.organizationId = new mongoose.Types.ObjectId(organizationId);
     } else {
-      matchQuery.$or = [
-        { assignedEmployees: _id },
-        { assignedManager: _id },
-      ]
-    };
+      matchQuery.$or = [{ assignedEmployees: _id }, { assignedManager: _id }];
+    }
 
     const monthlyDate = await Task.aggregate([
       // Stage 1: Use the dynamic match query
@@ -229,28 +223,38 @@ export const getMonthyCompletionTrend = async (req, res) => {
             month: { $month: "$updatedAt" },
           },
           count: { $sum: 1 },
-        }
+        },
       },
       // Stage 3: Sort the result chronologically
-      { 
+      {
         $sort: {
           "_id.year": 1,
           "_id.month": 1,
-        }
-      }
-    ])
+        },
+      },
+    ]);
 
     // Post-Processing: Fill the missing months
     const monthName = [
-      "January", "February", "March", "April", "May", "June", "July",
-      "August", "September", "October", "November", "December"
+      "January",
+      "February",
+      "March",
+      "April",
+      "May",
+      "June",
+      "July",
+      "August",
+      "September",
+      "October",
+      "November",
+      "December",
     ];
 
     const trendData = [];
     let currentDate = new Date(startDate);
 
     const resultMap = new Map();
-    monthlyDate.forEach(item => {
+    monthlyDate.forEach((item) => {
       const key = `${item._id.year}-${item._id.month}`;
       resultMap.set(key, item.count);
     });
@@ -272,6 +276,40 @@ export const getMonthyCompletionTrend = async (req, res) => {
     res.status(200).json(trendData);
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "Failed to fetch monthly completion trend" });
+    res
+      .status(500)
+      .json({ message: "Failed to fetch monthly completion trend" });
   }
-}
+};
+
+export const getUpcomingDeadlines = async (req, res) => {
+  try {
+    const { _id, role, organizationId } = req.user  ;
+    const now = new Date();
+
+    // 1. Create a base query based on user role
+    let query = {};
+    if (role === "Boss") {
+      query.organizationId = new mongoose.Types.ObjectId(organizationId);
+    } else {
+      query.$or = [{ assignedEmployees: _id }, { assignedManager: _id }];
+    }
+
+    // 2. Add conditions for deadline and status
+    query.deadline = { $gte: now };
+    query.status = { $ne: "Completed" };
+
+    // 3. Execute the query
+    const upcomingTasks = await Task.find(query)
+      .sort({ deadline: 1 })
+      .limit(10)
+      .populate("department", "name")
+      .populate('assignedManager', 'username')
+      .select("title deadline status assignedManager department");
+
+    res.status(200).json(upcomingTasks);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Failed to fetch upcoming deadlines" });
+  }
+};
