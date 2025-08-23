@@ -533,7 +533,7 @@ const Tasks = () => {
               <p className="text-gray-500">{getNoTasksMessage()}</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            <div className="grid grid-cols-1 xl:grid-cols-3 lg:grid-cols-2 gap-5">
               {tasks.map((task) => {
                 const isDescriptionLong =
                   task.description.length > DESCRIPTION_CHAR_LIMIT;

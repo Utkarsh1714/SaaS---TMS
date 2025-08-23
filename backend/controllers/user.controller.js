@@ -2,6 +2,7 @@ import User from "../models/user.model.js";
 import { sendWelcomeEmail } from "../utils/send.mail.js";
 import crypto from "crypto";
 import bcrypt from "bcryptjs";
+import Department from "../models/department.model.js";
 
 export const getAllEmployees = async (req, res) => {
   try {
@@ -22,19 +23,20 @@ export const getAllEmployees = async (req, res) => {
 export const getSingleEmployee = async (req, res) => {
   const { id } = req.params;
   try {
-    const user = await User.findById(id).select("-password -resetToken -resetTokenExpires -__v").populate("departmentId", "name");
+    const user = await User.findById(id)
+      .select("-password -resetToken -resetTokenExpires -__v")
+      .populate("departmentId", "name");
 
     res.status(200).json(user);
   } catch (error) {
     console.error("Error fetching user:", error);
     res.status(500).json({ message: "Internal server error" });
   }
-}
+};
 
 export const createEmployee = async (req, res) => {
   try {
     const { username, email, contactNo, role, departmentId } = req.body;
-    const io = req.app.get("io");
 
     const existingUser = await User.findOne({
       email,
@@ -71,18 +73,22 @@ export const createEmployee = async (req, res) => {
     });
 
     await newEmployee.save();
+    
+    if (role === 'Manager' && departmentId) {
+      await Department.findByIdAndUpdate(departmentId, {
+        $set: { manager: newEmployee._id }
+      })
+    }
 
     const resetLink = `${process.env.FRONTEND_URL}/reset-password?email=${email}&token=${resetToken}`;
 
-    const emailResponse = await sendWelcomeEmail({
+    await sendWelcomeEmail({
       email,
       name: username,
       role,
       tempPassword,
       resetLink,
     });
-
-    console.log("✅ Email sent:", emailResponse?.messageId);
 
     const populatedEmployee = await User.findById(newEmployee._id)
       .select("-password -resetToken -resetTokenExpires")

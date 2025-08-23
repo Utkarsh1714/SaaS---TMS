@@ -2,7 +2,6 @@
 import CreatableSelect from 'react-select/creatable';
 
 const roleOptions = [
-  { value: 'Boss', label: 'Boss' },
   { value: 'Manager', label: 'Manager' },
   { value: 'Team Leader', label: 'Team Leader' },
   { value: 'Employee', label: 'Employee' },

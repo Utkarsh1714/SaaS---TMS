@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 import Department from "../models/department.model.js";
+import User from "../models/user.model.js";
 
 export const createDepartment = async (req, res) => {
   try {
@@ -43,85 +44,126 @@ export const getDepartment = async (req, res) => {
 
 export const getDepartmentWithDetails = async (req, res) => {
   try {
-    const departments = await Department.aggregate([
+    // const departments = await Department.aggregate([
+    //   {
+    //     $match: {
+    //       organizationId: new mongoose.Types.ObjectId(req.user.organizationId),
+    //     },
+    //   },
+    //   {
+    //     $lookup: {
+    //       from: "users",
+    //       let: { deptId: "$_id" },
+    //       pipeline: [
+    //         {
+    //           $match: {
+    //             $expr: {
+    //               $eq: ["$departmentId", "$$deptId"],
+    //             },
+    //           },
+    //         },
+    //         {
+    //           $project: {
+    //             username: 1,
+    //             email: 1,
+    //             role: 1,
+    //           },
+    //         },
+    //       ],
+    //       as: "users",
+    //     },
+    //   },
+    //   {
+    //     $addFields: {
+    //       manager: {
+    //         $first: {
+    //           $filter: {
+    //             input: "$users",
+    //             as: "user",
+    //             cond: { $eq: ["$$user.role", "Manager"] },
+    //           },
+    //         },
+    //       },
+    //       totalEmployees: {
+    //         $size: {
+    //           $filter: {
+    //             input: "$users",
+    //             as: "user",
+    //             cond: {
+    //               $and: [
+    //                 { $ne: ["$$user.role", "Manager"] },
+    //                 { $ne: ["$$user.role", "Boss"] },
+    //               ],
+    //             },
+    //           },
+    //         },
+    //       },
+    //     },
+    //   },
+    //   {
+    //     $project: {
+    //       name: 1,
+    //       manager: {
+    //         $cond: [
+    //           { $gt: ["$manager", null] },
+    //           {
+    //             _id: "$manager._id",
+    //             username: "$manager.username",
+    //             email: "$manager.email",
+    //           },
+    //           null,
+    //         ],
+    //       },
+    //       totalEmployees: 1,
+    //     },
+    //   },
+    //   {
+    //     $sort: { createdAt: -1 },
+    //   },
+    // ]);
+
+    // res.status(200).json(departments);
+    // Step 1: Get all employee counts in a single, efficient aggregate query.
+    const employeeCounts = await User.aggregate([
+      // Only match users within the current organization
       {
         $match: {
           organizationId: new mongoose.Types.ObjectId(req.user.organizationId),
-        },
+          departmentId: { $exists: true, $ne: null } // Ensure departmentId exists
+        }
       },
+      // Group users by their departmentId and count them
       {
-        $lookup: {
-          from: "users",
-          let: { deptId: "$_id" },
-          pipeline: [
-            {
-              $match: {
-                $expr: {
-                  $eq: ["$departmentId", "$$deptId"],
-                },
-              },
-            },
-            {
-              $project: {
-                username: 1,
-                email: 1,
-                role: 1,
-              },
-            },
-          ],
-          as: "users",
+        $group: {
+          _id: "$departmentId",
+          totalEmployees: { $sum: 1 },
         },
-      },
-      {
-        $addFields: {
-          manager: {
-            $first: {
-              $filter: {
-                input: "$users",
-                as: "user",
-                cond: { $eq: ["$$user.role", "Manager"] },
-              },
-            },
-          },
-          totalEmployees: {
-            $size: {
-              $filter: {
-                input: "$users",
-                as: "user",
-                cond: {
-                  $and: [
-                    { $ne: ["$$user.role", "Manager"] },
-                    { $ne: ["$$user.role", "Boss"] },
-                  ],
-                },
-              },
-            },
-          },
-        },
-      },
-      {
-        $project: {
-          name: 1,
-          manager: {
-            $cond: [
-              { $gt: ["$manager", null] },
-              {
-                _id: "$manager._id",
-                username: "$manager.username",
-                email: "$manager.email",
-              },
-              null,
-            ],
-          },
-          totalEmployees: 1,
-        },
-      },
-      {
-        $sort: { createdAt: -1 },
       },
     ]);
 
-    res.status(200).json(departments);
+    // Create a Map for quick lookups (O(1) complexity)
+    const employeeCountsMap = new Map(
+      employeeCounts.map(item => [item._id.toString(), item.totalEmployees])
+    );
+
+    // Step 2: Get all departments and populate their manager's details.
+    const departments = await Department.find({
+      organizationId: req.user.organizationId,
+    })
+    .sort({ createdAt: -1 })
+    .populate("manager", "_id username email") // Populate with specific fields
+    .lean(); // Use .lean() for performance
+
+    // Step 3: Combine the two results in your application.
+    const finalResponse = departments.map((dept) => ({
+      _id: dept._id,
+      name: dept.name,
+      // Look up the count from the map, defaulting to 0 if not found
+      totalEmployees: employeeCountsMap.get(dept._id.toString()) || 0,
+      manager: dept.manager, // The manager object is already populated
+    }));
+
+    res.status(200).json(finalResponse);
   } catch (error) {
     console.log(error);
     res.status(500).json({ message: "Failed to fetch details" });

@@ -9,6 +9,10 @@ const DepartmentSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: "Organization",
         required: true,
+    },
+    manager: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
     }
 }, {
     timestamps: true,

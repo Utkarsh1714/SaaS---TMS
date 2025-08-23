@@ -5,6 +5,7 @@ import socket from "@/utils/socket"; // Make sure this is same as used in Employ
 import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
 import { IoIosArrowBack } from "react-icons/io";
+import { MdEdit } from "react-icons/md";
 
 const EmpDetails = () => {
   const { id } = useParams();
@@ -80,13 +81,22 @@ const EmpDetails = () => {
   return (
     <div className="w-full h-full px-5 py-2">
       <div className="w-full">
-        <Button
-          variant={"outline"}
-          onClick={() => navigate(-1)}
-          className="bg-slate-200 cursor-pointer"
-        >
-          <IoIosArrowBack className="mr-1" /> Back
-        </Button>
+        <div className="w-full flex items-center justify-between">
+          <Button
+            variant={"outline"}
+            onClick={() => navigate(-1)}
+            className="bg-slate-200 cursor-pointer"
+          >
+            <IoIosArrowBack className="mr-1" /> Back
+          </Button>
+          <Button
+            onClick={() => navigate(-1)}
+            variant="outline"
+            className={"cursor-pointer"}
+          >
+            <MdEdit className="mr-1" /> Edit
+          </Button>
+        </div>
         <div className="w-full flex flex-col md:flex-row md:items-center md:justify-between pt-4">
           <div>
             <h1 className="text-2xl sm:text-3xl md:text-4xl font-semibold text-orange-400">
