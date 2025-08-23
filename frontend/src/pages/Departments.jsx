@@ -12,8 +12,10 @@ import {
 import { useAuth } from "@/context/AuthContext";
 import axios from "axios";
 import { RefreshCcw } from "lucide-react";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
+import { IoSearch } from "react-icons/io5";
 import { MdOutlineCreate } from "react-icons/md";
+import { RxCross1 } from "react-icons/rx";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
@@ -24,8 +26,35 @@ const Departments = () => {
   const [departments, setDepartments] = useState([]);
   const [name, setName] = useState("");
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [showSuggestions, setShowSuggestions] = useState(false);
 
   const navigate = useNavigate();
+
+  // NEW: Memoized filtered departments to prevent re-calculating on every render
+  const filteredDepartments = useMemo(() => {
+    if (!searchTerm.trim()) {
+      return departments;
+    }
+    return departments.filter((dept) =>
+      dept.name.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }, [searchTerm, departments]);
+
+  const clearSearchTerm = () => {
+    setSearchTerm("");
+  };
+
+  // Handle click on suggestion
+  const handleSuggestionClick = (suggestion) => {
+    setSearchTerm(suggestion);
+    setShowSuggestions(false); // Hide suggestions after selection
+  };
+
+  const handleSearch = () => {
+    if (!searchTerm.trim()) {
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -64,13 +93,12 @@ const Departments = () => {
   };
 
   const handleDelete = async (id) => {
-    const res = await axios.delete(
-      `${import.meta.env.VITE_API_URL}/api/department/${id}`,
-      { withCredentials: true }
-    );
+    await axios.delete(`${import.meta.env.VITE_API_URL}/api/department/${id}`, {
+      withCredentials: true,
+    });
 
     toast.success("Department deleted successfully");
-    setDeleteOpen(!deleteOpen);
+    setDeleteOpen(false);
     setDepartments((dept) => dept.filter((dept) => dept._id !== id));
   };
 
@@ -98,8 +126,45 @@ const Departments = () => {
   return (
     <div className="w-full h-[90vh] px-4 py-5">
       <div className="w-full flex items-center justify-between gap-3">
-        <div>
-          <h1 className="text-xl md:text-2xl font-semibold">Departments</h1>
+        <div className="relative w-full max-w-md">
+          <div className="flex items-center justify-between gap-2 rounded-full bg-[#121212]">
+            <input
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              onFocus={() => setShowSuggestions(true)} // NEW: Show suggestions on focus
+              // NEW: Hide suggestions on blur with a small delay to allow clicking
+              onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
+              className="w-full py-2 placeholder:text-gray-200 rounded-l-full text-white outline-none px-4"
+              type={"text"}
+              placeholder={"Search..."}
+              autoComplete="off" // NEW: Prevent browser's default autocomplete
+            />
+            <div className="flex items-center justify-center gap-2">
+              {searchTerm?.length > 0 && (
+                <button onClick={clearSearchTerm}>
+                  <RxCross1 color="white" />
+                </button>
+              )}
+              <button className="bg-[#222222] px-4 py-2.5 rounded-r-full">
+                <IoSearch color="white" size={20} />
+              </button>
+            </div>
+          </div>
+          {/* Suggestion Dropdown */}
+          {showSuggestions && searchTerm && filteredDepartments.length > 0 && (
+            <ul className="absolute z-10 w-full mt-2 bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-y-auto">
+              {filteredDepartments.map((dept) => (
+                <li
+                  key={dept._id}
+                  className="px-4 py-2 text-gray-800 cursor-pointer hover:bg-gray-100"
+                  // Use onMouseDown to prevent the onBlur from firing first
+                  onMouseDown={() => handleSuggestionClick(dept.name)}
+                >
+                  {dept.name}
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
         <div className="flex items-center justify-center gap-3">
           {user.role === "Boss" && (
@@ -138,7 +203,7 @@ const Departments = () => {
             variant={"ghost"}
             className={"cursor-pointer"}
           >
-            <RefreshCcw /> Refresh
+            <RefreshCcw /> <span className="hidden sm:flex">Refresh</span>
           </Button>
         </div>
       </div>
@@ -149,11 +214,13 @@ const Departments = () => {
         </div>
       ) : (
         <>
-          {departments.length === 0 ? (
+          {departments.length > 0 && filteredDepartments.length === 0 ? (
             <p>No department found. Please create an department!</p>
+          ) : filteredDepartments.length === 0 ? (
+            <p className="text-center mt-10">No departments exist. Please create one!</p>
           ) : (
             <div className="Departments-cards w-full grid sm:grid-cols-2 md:grid-cols-2 gap-4 mt-6">
-              {departments.map((dept) => (
+              {filteredDepartments.map((dept) => (
                 <div
                   key={dept._id}
                   className="p-4 bg-white shadow-md rounded-lg flex items-center justify-between gap-0.5"
@@ -188,7 +255,7 @@ const Departments = () => {
                     >
                       Edit
                     </Button>
-                    <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+                    <Dialog>
                       <DialogTrigger asChild>
                         <Button className="cursor-pointer bg-red-600 w-full">
                           Delete
@@ -198,21 +265,20 @@ const Departments = () => {
                         <DialogHeader>
                           <DialogTitle>Delete Department</DialogTitle>
                           <DialogDescription>
-                            Are you sure you want to delete the department?
+                            Are you sure you want to delete the "{dept.name}" department? This action cannot be undone.
                           </DialogDescription>
                         </DialogHeader>
-                        <div className="flex items-end justify-end gap-4">
-                          <Button
-                            onClick={() => setDeleteOpen(!deleteOpen)}
-                            className={
-                              "cursor-pointer bg-red-600 hover:bg-red-600 hover:opacity-60"
-                            }
-                          >
-                            Cancel
-                          </Button>
+                        <div className="flex items-end justify-end gap-4 pt-4">
+                           <DialogTrigger asChild>
+                            <Button
+                                className="cursor-pointer bg-gray-200 text-black hover:bg-gray-300"
+                            >
+                                Cancel
+                            </Button>
+                           </DialogTrigger>
                           <Button
                             onClick={() => handleDelete(dept._id)}
-                            className={"cursor-pointer"}
+                            className={"cursor-pointer bg-red-600 hover:bg-red-700"}
                           >
                             Delete
                           </Button>

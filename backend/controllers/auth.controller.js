@@ -27,23 +27,25 @@ export const registerOrg = async (req, res) => {
       departments,
     } = req.body;
 
-    if (
-      !username?.trim() ||
-      !email?.trim() ||
-      !contactNo?.trim() ||
-      !password?.trim() ||
-      !companyName?.trim() ||
-      !gstin?.trim() ||
-      !address?.trim() ||
-      !city?.trim() ||
-      !state?.trim() ||
-      !pincode?.toString().trim() ||
-      !country?.trim()
-    ) {
-      return res
-        .status(400)
-        .json({ message: "All required fields must be filled" });
-    }
+    // if (
+    //   !username?.trim() ||
+    //   !email?.trim() ||
+    //   !contactNo?.trim() ||
+    //   !password?.trim() ||
+    //   !companyName?.trim() ||
+    //   !gstin?.trim() ||
+    //   !address?.trim() ||
+    //   !city?.trim() ||
+    //   !state?.trim() ||
+    //   !pincode?.toString().trim() ||
+    //   !country?.trim() ||
+    //   !logoUrl?.trim() ||
+    //   !websiteUrl?.trim()
+    // ) {
+    //   return res
+    //     .status(400)
+    //     .json({ message: "All required fields must be filled" });
+    // }
     const existing = await User.findOne({ email });
     if (existing) {
       return res

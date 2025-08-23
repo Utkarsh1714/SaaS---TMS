@@ -218,10 +218,12 @@ const DepartmentDetails = () => {
                       {emp.username}
                     </h3>
                   </div>
-                  <p className="text-sm text-gray-500">{emp.email}</p>
-                  <p className="text-sm text-gray-500">
-                    Role: {emp.role || "—"}
-                  </p>
+                  <div className="mt-1">
+                    <p className="text-sm text-gray-500"><span className="text-gray400 font-semibold">Email:</span> {emp.email}</p>
+                    <p className="text-sm text-gray-500">
+                      <span className="text-gray400 font-semibold">Role:</span> {emp.role || "—"}
+                    </p>
+                  </div>
                   <div className="flex items-start justify-start gap-4">
                     <Button
                       onClick={() => navigate("/chat")}
@@ -234,19 +236,19 @@ const DepartmentDetails = () => {
               </div>
 
               {/* Right - Actions */}
-              <div className="flex flex-col items-start justify-start gap-2">
+              <div className="flex flex-col items-end justify-start gap-2">
                 {user.role === "Boss" && (
                   <>
                     <Button
                       onClick={() => navigate(`/employees/${emp._id}`)}
-                      className="cursor-pointer bg-green-600 hover:bg-green-600 hover:opacity-70 text-white"
+                      className="w-full cursor-pointer bg-green-600 hover:bg-green-600 hover:opacity-70 text-white"
                     >
-                      <FaUserEdit className="w-4 h-4" />
+                      View
                     </Button>
                     <Dialog open={deleteAlert} onOpenChange={setDeleteAlert}>
                       <DialogTrigger asChild>
-                        <Button className="bg-red-500 hover:bg-red-600 text-white cursor-pointer">
-                          <MdDelete className="w-4 h-4" />
+                        <Button className="w-full bg-red-500 hover:bg-red-600 text-white cursor-pointer">
+                          Delete
                         </Button>
                       </DialogTrigger>
                       <DialogContent className="sm:max-w-[500px]">

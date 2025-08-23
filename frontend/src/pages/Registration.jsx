@@ -13,9 +13,9 @@ const Registration = () => {
   const [isVisible, setIsVisible] = useState(false);
   const [logoUrl, setLogoUrl] = useState("");
   const [formFields, setFormFields] = useState({
-    name: "",
+    username: "",
     email: "",
-    contactNumber: "",
+    contactNo: "",
     companyName: "",
     gstin: "",
     address: "",
@@ -23,7 +23,6 @@ const Registration = () => {
     state: "",
     pincode: "",
     country: "",
-    websiteUrl: "",
   });
 
   const Navigate = useNavigate();
@@ -99,11 +98,12 @@ const Registration = () => {
       );
 
       login(res.data.user);
+      toast.success("Organization registered successfully! Please start creating & managing your employees, tasks, departments, meetings, and more.");
 
       Navigate("/");
     } catch (error) {
       console.error("Error registering organization:", error);
-      toast(error?.response?.data?.message || "Registration failed");
+      toast.error(error?.response?.data?.message || "Registration failed");
     }
   };
 
@@ -125,13 +125,13 @@ const Registration = () => {
         <form onSubmit={handleSubmit} className="w-full">
           <div className="w-full">
             <h1 className="text-2xl">Personal details</h1>
-            <div className="w-full flex items-center justify-center gap-8">
+            <div className="w-full flex flex-col sm:flex-row items-center justify-center sm:gap-8">
               <label className="block text-left mt-4 w-full">
-                <span className="text-gray-700">Your Name<span className="text-red-500 pl-1">*</span></span>
+                <span className="text-gray-700">Your Full Name<span className="text-red-500 pl-1">*</span></span>
                 <input
-                  name="name"
+                  name="username"
                   type="text"
-                  value={formFields.name}
+                  value={formFields.username}
                   onChange={handleChange}
                   placeholder="Enter your full name"
                   className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-yellow-400"
@@ -151,13 +151,13 @@ const Registration = () => {
                 />
               </label>
             </div>
-            <div className="w-full flex items-center justify-center gap-8">
+            <div className="w-full flex flex-col sm:flex-row items-start justify-center sm:gap-8">
               <label className="block text-left mt-4 w-full">
                 <span className="text-gray-700">Contact Number<span className="text-red-500 pl-1">*</span></span>
                 <input
-                  name="contactNumber"
+                  name="contactNo"
                   type="number"
-                  value={formFields.contactNumber}
+                  value={formFields.contactNo}
                   onChange={handleChange}
                   placeholder="Ex. +91 1234567890"
                   className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-yellow-400"
@@ -362,7 +362,7 @@ const Registration = () => {
           <div className="w-full flex justify-center mt-8">
             <button
               type="submit"
-              disabled={!isFormValid}
+              //disabled={!isFormValid}
               className={`px-6 py-2 font-semibold rounded-md ${
                 isFormValid
                   ? "bg-yellow-400 text-white hover:bg-yellow-500"
