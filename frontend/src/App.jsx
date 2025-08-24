@@ -29,7 +29,7 @@ function App() {
     return (
       <div className="flex items-center justify-center w-full min-h-screen gap-3">
         <div>
-          <p className="text-lg">Loading app</p>
+          <p className="text-lg">Loading app App.jsx if loading</p>
           <span className="loading loading-dots loading-xl"></span>
         </div>
       </div>
