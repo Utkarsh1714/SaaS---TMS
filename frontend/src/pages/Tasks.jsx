@@ -111,7 +111,6 @@ const Tasks = () => {
       setTasks(res.data);
       // REMOVED: Initialization of showFullDescription state
       setOriginalTasks(res.data);
-      console.log(originalTasks);
     } catch (error) {
       console.error("Failed to fetch tasks:", error);
     } finally {
@@ -244,12 +243,7 @@ const Tasks = () => {
       return;
     }
     fetchTasks(activeFilter);
-    console.log(tasks);
   }, [user, activeFilter, navigate]);
-
-  useEffect(() => {
-    console.log("Original Tasks State:", originalTasks);
-  }, [originalTasks]);
 
   return (
     <div className="w-full h-full p-5">

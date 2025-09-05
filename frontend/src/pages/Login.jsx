@@ -12,6 +12,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import Pricing from "@/components/Pricing";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -82,7 +83,7 @@ const Login = () => {
   return (
     <div className="w-full h-screen">
       <div>
-        <h1 className="Headline text-yellow-400 text-xl font-bold py-4 px-8 cursor-pointer">
+        <h1 className="Headline text-black text-xl font-bold py-4 px-8 cursor-pointer">
           Taskify
         </h1>
       </div>
@@ -177,7 +178,7 @@ const Login = () => {
               <hr className="px-8 border-2 mt-8" />
             </div>
             <div className="w-full px-20 pt-6">
-              <NavLink to={"/registration"}>
+              <NavLink to={"/plans"}>
                 <button className="w-full bg-[#d7d7d7] cursor-pointer py-2 text-md sm:text-lg rounded-md">
                   Register Your Organisation
                 </button>
@@ -216,6 +217,9 @@ const Login = () => {
             <p className="text-sm text-gray-600">{feature.desc}</p>
           </div>
         ))}
+      </div>
+      <div className="w-full">
+        <Pricing />
       </div>
     </div>
   );

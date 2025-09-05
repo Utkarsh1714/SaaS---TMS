@@ -1,7 +1,8 @@
-import mongoose from "mongoose";
 import Task from "../models/task.model.js";
+import mongoose from "mongoose";
 import User from '../models/user.model.js'
 import { sendTaskNotificationEmail } from "../utils/send.mail.js";
+import { redisClient } from '../config/redisClient.js'; // 1. Import the Redis client
 
 // Helper function to apply common filtering/sorting logic
 const applyTaskFilters = async (
@@ -234,6 +235,26 @@ export const removeEmployeeFromTask = async (req, res) => {
   }
 };
 
+// export const updateTaskStatus = async (req, res) => {
+//   const { taskId } = req.params;
+//   const { status } = req.body;
+
+//   try {
+//     const task = await Task.findById(taskId);
+
+//     if (!task) return res.status(404).json({ message: "Task not found" });
+
+//     task.status = status;
+//     await task.save();
+
+//     res.status(200).json(task);
+//   } catch (error) {
+//     console.log(error);
+//     res.status(500).json({ message: "Failed to update task status" });
+//   }
+// };
+
+
 export const updateTaskStatus = async (req, res) => {
   const { taskId } = req.params;
   const { status } = req.body;
@@ -241,11 +262,48 @@ export const updateTaskStatus = async (req, res) => {
   try {
     const task = await Task.findById(taskId);
 
-    if (!task) return res.status(404).json({ message: "Task not found" });
+    if (!task) {
+      return res.status(404).json({ message: "Task not found" });
+    }
 
     task.status = status;
-
     await task.save();
+
+    // === 2. CACHE INVALIDATION LOGIC ===
+    console.log('Task updated, starting cache invalidation...');
+    
+    // Create a set to store unique user IDs to avoid duplicates
+    const userIdsToInvalidate = new Set();
+
+    // Add the manager's ID
+    if (task.assignedManager) {
+      userIdsToInvalidate.add(task.assignedManager.toString());
+    }
+    // Add all assigned employees' IDs
+    if (task.assignedEmployees && task.assignedEmployees.length > 0) {
+      task.assignedEmployees.forEach(id => userIdsToInvalidate.add(id.toString()));
+    }
+    // You might also want to invalidate the cache for the person who created the task
+    if (task.createdBy) {
+        userIdsToInvalidate.add(task.createdBy.toString());
+    }
+
+    if (userIdsToInvalidate.size > 0) {
+      // Convert the set of user IDs to an array of cache keys to delete
+      const keysToDelete = [...userIdsToInvalidate].flatMap(userId => [
+        `cache:${userId}:/api/dashboard/overview-data1`,
+        `cache:${userId}:/api/dashboard/overview-data2`,
+        `cache:${userId}:/api/dashboard/overview-data3`
+      ]);
+
+      try {
+        await redisClient.del(keysToDelete);
+        console.log(`Successfully invalidated ${keysToDelete.length} cache keys.`);
+      } catch (redisError) {
+        console.error("Redis error during cache invalidation:", redisError);
+      }
+    }
+    // ===================================
 
     res.status(200).json(task);
   } catch (error) {

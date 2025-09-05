@@ -282,31 +282,64 @@ export const getMonthyCompletionTrend = async (req, res) => {
   }
 };
 
+// export const getUpcomingDeadlines = async (req, res) => {
+//   try {
+//     const { _id, role, organizationId } = req.user;
+//     const now = new Date();
+
+//     // 1. Create a base query based on user role
+//     let query = {};
+//     if (role === "Boss") {
+//       query.organizationId = new mongoose.Types.ObjectId(organizationId);
+//     } else {
+//       query.$or = [{ assignedEmployees: _id }, { assignedManager: _id }];
+//     }
+
+//     // 2. Add conditions for deadline and status
+//     query.deadline = { $gte: now };
+//     query.status = { $ne: "Completed" };
+
+//     // 3. Execute the query
+//     const upcomingTasks = await Task.find(query)
+//       .sort({ deadline: 1 })
+//       .limit(10)
+//       .populate("department", "name")
+//       .populate("assignedManager", "username")
+//       .select("title deadline status assignedManager department");
+
+//     console.log(upcomingTasks);
+//     res.status(200).json(upcomingTasks);
+//   } catch (error) {
+//     console.error(error);
+//     res.status(500).json({ message: "Failed to fetch upcoming deadlines" });
+//   }
+// };
+
 export const getUpcomingDeadlines = async (req, res) => {
   try {
-    const { _id, role, organizationId } = req.user  ;
+    // We only need the organizationId from the logged-in user
+    const { organizationId } = req.user;
     const now = new Date();
 
-    // 1. Create a base query based on user role
-    let query = {};
-    if (role === "Boss") {
-      query.organizationId = new mongoose.Types.ObjectId(organizationId);
-    } else {
-      query.$or = [{ assignedEmployees: _id }, { assignedManager: _id }];
-    }
+    // 1. MODIFIED: The query is now always based on the organizationId.
+    // The if/else block for checking the user's role has been removed.
+    let query = {
+      organizationId: new mongoose.Types.ObjectId(organizationId),
+    };
 
-    // 2. Add conditions for deadline and status
+    // 2. Add conditions for deadline and status (this part remains the same)
     query.deadline = { $gte: now };
     query.status = { $ne: "Completed" };
 
     // 3. Execute the query
     const upcomingTasks = await Task.find(query)
-      .sort({ deadline: 1 })
-      .limit(10)
+      .sort({ deadline: 1 }) // Sorts to show the nearest deadlines first
+      .limit(10)            // Shows a maximum of 10 tasks
       .populate("department", "name")
-      .populate('assignedManager', 'username')
+      .populate("assignedManager", "username")
       .select("title deadline status assignedManager department");
 
+    console.log("Fetched all upcoming tasks for the organization:", upcomingTasks);
     res.status(200).json(upcomingTasks);
   } catch (error) {
     console.error(error);

@@ -8,8 +8,8 @@ const UpcomingDeadline = () => {
       `${import.meta.env.VITE_API_URL}/api/dashboard/overview-data3`,
       { withCredentials: true }
     );
-    setTask(res.data);
     console.log(res.data);
+    setTask(res.data);
   };
 
   useEffect(() => {

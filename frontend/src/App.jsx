@@ -5,6 +5,8 @@ import ProtectedRoute from "./routes/ProtectedRoutes";
 import { useAuth } from "./context/AuthContext";
 import { Toaster } from "./components/ui/sonner";
 import { Toaster as HotToast } from "react-hot-toast";
+import Pricing from "./components/Pricing";
+import ProtectRegRoute from "./routes/ProtectRegRoute";
 
 // Lazy load the page
 const Home = lazy(() => import("./pages/Home"));
@@ -29,7 +31,7 @@ function App() {
     return (
       <div className="flex items-center justify-center w-full min-h-screen gap-3">
         <div>
-          <p className="text-lg">Loading app App.jsx if loading</p>
+          <p className="text-lg">Loading app</p>
           <span className="loading loading-dots loading-xl"></span>
         </div>
       </div>
@@ -49,7 +51,15 @@ function App() {
         <Routes>
           {/* Public Routes */}
           <Route path="/login" element={<Login />} />
-          <Route path="/registration" element={<Registration />} />
+          <Route
+            path="/registration"
+            element={
+              <ProtectRegRoute>
+                <Registration />
+              </ProtectRegRoute>
+            }
+          />
+          <Route path="/plans" element={<Pricing />} />
           <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/forget-password" element={<ForgotPassword />} />
 

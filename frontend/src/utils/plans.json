@@ -1,0 +1,79 @@
+{
+  "billingOptions": [
+    { "name": "Monthly", "save": null },
+    { "name": "Yearly", "save": "Save 20%" }
+  ],
+  "plans": [
+    {
+      "id": "free",
+      "name": "Free Plan",
+      "yearlyPrice": "0",
+      "monthlyPrice": "0",
+      "billingPeriod": "per month",
+      "buttonText": "Get Started",
+      "isHighlighted": false
+    },
+    {
+      "id": "premium",
+      "name": "Premium Plan",
+      "yearlyPrice": "4250",
+      "monthlyPrice": "400",
+      "billingPeriod": "per month",
+      "buttonText": "Get Started",
+      "isHighlighted": true
+    },
+    {
+      "id": "enterprise",
+      "name": "Enterprise Plan",
+      "yearlyPrice": "8499",
+      "monthlyPrice": "800",
+      "billingPeriod": "per month",
+      "buttonText": "Get Started",
+      "isHighlighted": false
+    }
+  ],
+  "features": [
+    {
+      "name": "Unlimited Components",
+      "free": true,
+      "premium": true,
+      "enterprise": true
+    },
+    {
+      "name": "Easily edited and customized",
+      "free": true,
+      "premium": true,
+      "enterprise": true
+    },
+    {
+      "name": "Combine Files Mercurius",
+      "free": true,
+      "premium": true,
+      "enterprise": true
+    },
+    {
+      "name": "Health care included",
+      "free": false,
+      "premium": true,
+      "enterprise": true
+    },
+    {
+      "name": "Dedicated Support Channel",
+      "free": false,
+      "premium": true,
+      "enterprise": true
+    },
+    {
+      "name": "Advanced Analytics & Reporting",
+      "free": false,
+      "premium": false,
+      "enterprise": true
+    },
+    {
+      "name": "Custom Integrations & APIs",
+      "free": false,
+      "premium": false,
+      "enterprise": true
+    }
+  ]
+}
