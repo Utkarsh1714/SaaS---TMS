@@ -1,11 +1,13 @@
 import User from "../models/user.model.js";
-import Organization from '../models/organization.model.js'
+import Organization from "../models/organization.model.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import Razorpay from "razorpay";
 import Department from "../models/department.model.js";
 import { sendPasswordResetEmail } from "../utils/send.mail.js";
 import crypto from "crypto";
 import dotenv from "dotenv";
+import Payment from "../models/paymentModel.js";
 dotenv.config();
 
 export const registerOrg = async (req, res) => {
@@ -251,5 +253,79 @@ export const resetPassword = async (req, res) => {
   } catch (error) {
     console.error("Reset Error:", error);
     res.status(500).json({ message: "Failed to reset password" });
+  }
+};
+
+export const razorpay = async (req, res) => {
+  const razorpayInstance = new Razorpay({
+    key_id: process.env.RAZORPAY_KEY_ID,
+    key_secret: process.env.RAZORPAY_KEY_SECRET,
+  });
+
+  try {
+    const { amount } = req.body;
+    const options = {
+      amount: amount * 100,
+      currency: "INR",
+      receipt: `receipt_order_${Date.now()}`,
+    };
+
+    const order = await razorpayInstance.orders.create(options);
+
+    res.status(200).json({
+      success: true,
+      orderId: order.id,
+      amount: amount,
+      currency: "INR",
+    });
+  } catch (error) {
+    console.error("Razorpay order creation failed:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error: Failed to create order.",
+    });
+  }
+};
+
+export const paymentVerification = async (req, res) => {
+  try {
+    const {
+      razorpay_order_id,
+      razorpay_payment_id,
+      razorpay_signature,
+      plan_id,
+      amount,
+    } = req.body;
+
+    // Generate new signature using secret key and received data
+    const generatedSignature = crypto
+      .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
+      .update(razorpay_order_id + "|" + razorpay_payment_id)
+      .digest("hex");
+
+    if (generatedSignature === razorpay_signature) {
+      // Signature is valid, payment is successful
+      const newPayment = new Payment({
+        razorpay_order_id,
+        razorpay_payment_id,
+        razorpay_signature,
+        plan_id,
+        amount,
+      });
+
+      await newPayment.save();
+    }
+
+    res
+      .status(200)
+      .json({ success: true, message: "Payment verified successfully." });
+  } catch (error) {
+    console.error("Payment verification error:", error);
+    res
+      .status(500)
+      .json({
+        success: false,
+        message: "Server error during payment verification.",
+      });
   }
 };
