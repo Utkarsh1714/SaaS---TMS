@@ -5,19 +5,24 @@ import { LiaWarehouseSolid } from "react-icons/lia";
 import { PiUsersThreeFill } from "react-icons/pi";
 import { TbReportSearch } from "react-icons/tb";
 import { IoChatboxEllipsesOutline } from "react-icons/io5";
-import { FaRegBell, FaRegUserCircle } from "react-icons/fa";
+import { FaRegUserCircle } from "react-icons/fa";
 import { Outlet, NavLink, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { useAuth } from "../context/AuthContext";
 import { toast } from "sonner";
 import { Button } from "./ui/button";
 import { useState } from "react";
+import { Bell, BellDot } from "lucide-react";
+import NotificationPanel from "./NotificationPanel";
+import { useNotifications } from "@/context/NotificationContext";
 
 const Layout = () => {
+  const [loading, setLoading] = useState(false);
+
   const navigate = useNavigate();
   const { logout } = useAuth();
+  const { notifications, toggleNotificationPanel } = useNotifications();
 
-  const [loading, setLoading] = useState(false);
 
   const handleLogout = async () => {
     setLoading(true);
@@ -41,18 +46,21 @@ const Layout = () => {
       setLoading(false);
     }
   };
+
   return (
-    <div className="w-full h-screen">
+    <div className="w-full h-screen relative overflow-hidden">
       <header className="Header w-full px-8 py-4 flex items-center justify-between">
         <div>
           <h1 className="Headline text-3xl font-semibold">Taskify</h1>
         </div>
-        <div className="space-x-4 flex items-center justify-center">
+        <div className="space-x-4 flex items-center justify-center relative">
           <Button
             variant={"outline"}
             className={"cursor-pointer hover:animate-in"}
+            onClick={toggleNotificationPanel}
           >
-            <FaRegBell />
+            {/* Notification Bell */}
+            {notifications.length > 0 ? <BellDot /> : <Bell />}
           </Button>
           <NavLink to={"/login"}>
             <button
@@ -69,7 +77,7 @@ const Layout = () => {
         </div>
       </header>
       <div className="w-full flex items-start justify-center">
-        <div className="Sidebar w-[15%] h-full lg:w-[20%] py-2 px-2 border-r-4">
+        <div className="Sidebar w-[15%] h-[90vh] py-2 px-2 border-r-4">
           <nav className="flex flex-col items-start justify-start gap-5 md:gap-10 md:px-3">
             <NavLink
               to={"/"}
@@ -176,6 +184,8 @@ const Layout = () => {
           <Outlet />
         </div>
       </div>
+      {/* Conditionally render the new component */}
+        <NotificationPanel />
     </div>
   );
 };

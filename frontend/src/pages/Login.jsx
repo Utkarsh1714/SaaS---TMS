@@ -218,9 +218,9 @@ const Login = () => {
           </div>
         ))}
       </div>
-      <div className="w-full">
+      {/* <div className="w-full">
         <Pricing />
-      </div>
+      </div> */}
     </div>
   );
 };
