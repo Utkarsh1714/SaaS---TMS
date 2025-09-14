@@ -23,7 +23,6 @@ const Layout = () => {
   const { logout } = useAuth();
   const { notifications, toggleNotificationPanel } = useNotifications();
 
-
   const handleLogout = async () => {
     setLoading(true);
 
@@ -185,7 +184,7 @@ const Layout = () => {
         </div>
       </div>
       {/* Conditionally render the new component */}
-        <NotificationPanel />
+      <NotificationPanel />
     </div>
   );
 };
