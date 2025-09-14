@@ -1,7 +1,7 @@
 import { useState } from "react";
 import pricingData from "../utils/plans.json"; // Make sure the path is correct
 import { useNavigate } from "react-router-dom";
-import axios from 'axios'; // We'll use axios for API calls
+import axios from "axios"; // We'll use axios for API calls
 import { toast } from "sonner";
 
 const Pricing = () => {
@@ -19,46 +19,69 @@ const Pricing = () => {
 
   // The function to handle payment initiation
   const handlePayment = async (plan) => {
-    if (plan.id === 'free') {
-      toast.success('Starting your free plan!');
-      // Navigate directly to the registration route
-      // We pass payment_success=true to satisfy the ProtectedRoute guard
+    if (plan.id === "free") {
+      toast.success("Starting your free plan!");
       navigate(`/registration?payment_success=true&plan=${plan.id}`);
-      return; // Exit the function to prevent the Razorpay logic from running
+      return;
     }
-    
-    // Determine the amount based on the selected billing period
-    const amount = isYearly ? parseInt(plan.yearlyPrice) : parseInt(plan.monthlyPrice);
+
+    const amount = isYearly
+      ? parseInt(plan.yearlyPrice)
+      : parseInt(plan.monthlyPrice);
 
     try {
       // Step 1: Call your backend API to create a Razorpay order
       // Replace with your actual backend endpoint
-      const { data: { orderId } } = await axios.post(`${import.meta.env.VITE_API_URL}/api/auth/create-order`, { amount });
+      const {
+        data: { orderId },
+      } = await axios.post(
+        `${import.meta.env.VITE_API_URL}/api/auth/create-order`,
+        { amount }
+      );
 
       // Step 2: Open the Razorpay checkout pop-up with the received orderId
       const options = {
         key: import.meta.env.VITE_RAZORPAY_KEY_ID, // Replace with your test key ID
         amount: amount * 100, // Amount in paisa
-        currency: 'INR',
-        name: 'Taskify',
+        currency: "INR",
+        name: "Taskify",
         description: `${plan.name} Plan`,
-        order_id: orderId, // The order ID from your backend
-        handler: function (response) {
-          // This function is called after a successful payment
-          // You should now verify this payment on your backend
-          toast.success('Payment Successful! Redirecting to registration');
-          
-          // Redirect to the registration page with plan and payment information
-          navigate(`/registration?payment_success=true&plan=${plan.id}`);
+        order_id: orderId,
+        handler: async function (response) {
+          try {
+            // Call backend to verify payment
+            const verificationResponse = await axios.post(
+              `${import.meta.env.VITE_API_URL}/api/auth/verify-payment`,
+              {
+                razorpay_order_id: orderId,
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_signature: response.razorpay_signature,
+                plan_id: plan.id,
+                amount: amount
+              }
+            );
+
+            if (verificationResponse.data.success) {
+              toast.success("Payment Successful! Redirecting to registration");
+              // Redirect to the registration page with plan and payment information
+              navigate(
+                `/registration?payment_success=true&plan=${plan.id}&payment_id=${response.razorpay_payment_id}`
+              );
+            } else {
+              toast.error("Payment verification failed.");
+            }
+          } catch (error) {
+            console.error("Payment verification failed:", error);
+            toast.error("Payment verification failed due to a server error.");
+          }
         },
         theme: {
-          color: '#007BFF',
+          color: "#007BFF",
         },
       };
-      
+
       const rzp = new window.Razorpay(options);
       rzp.open();
-
     } catch (error) {
       console.error("Payment initiation failed:", error);
       alert("Payment failed. Please try again.");

@@ -26,6 +26,7 @@ import { RxCross1 } from "react-icons/rx";
 import { MdDelete, MdDeleteForever, MdOutlineCreate } from "react-icons/md";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import { useNotifications } from "@/context/NotificationContext";
 
 const DESCRIPTION_CHAR_LIMIT = 15;
 const TITLE_CHAR_LIMIT = 10;
@@ -51,7 +52,9 @@ const Tasks = () => {
   const [loading, setLoading] = useState(false);
   const [activeFilter, setActiveFilter] = useState("None");
   const [originalTasks, setOriginalTasks] = useState([]);
+
   const navigate = useNavigate();
+  const { addNotification, toggleNotificationPanel } = useNotifications();
 
   // Fetch task function
   const fetchTasks = async (filter = "None") => {
@@ -123,11 +126,6 @@ const Tasks = () => {
     e.preventDefault();
     setLoading(true);
 
-    // const payload = {
-    //   ...taskData,
-    //   organizationId: user.organizationId,
-    // };
-
     try {
       const res = await axios.post(
         `${import.meta.env.VITE_API_URL}/api/task/create`,
@@ -139,6 +137,17 @@ const Tasks = () => {
 
       setTasks((prev) => [newTask, ...prev]);
       setOriginalTasks((prev) => [newTask, ...prev]);
+
+      // Add the new notification
+      addNotification({
+        message: "New Task Created!",
+        details: {
+          title: newTask.title,
+          department: newTask.department.name,
+          priority: newTask.priority,
+        },
+        time: new Date().toLocaleTimeString(),
+      })
 
       toast.success("Task created successfully!");
     } catch (error) {

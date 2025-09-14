@@ -40,8 +40,8 @@ const Home = () => {
 
   return (
     <div className="w-full h-full py-5 px-5 sm:px-2 space-y-6">
-      <div className="w-full flex flex-col sm:flex-row items-center justify-between gap-4 sm:gap-10">
-        <div className="w-full bg-gray-400/10 rounded-xl grid grid-cols-1 sm:grid-cols-2 items-center justify-between gap-5 p-12">
+      <div className="w-full flex flex-col md:flex-row items-center justify-between gap-4 sm:gap-10">
+        <div className="w-full bg-gray-400/10 rounded-xl grid grid-cols-1 md:grid-cols-2 items-center justify-between gap-5 p-4">
           <div className="w-full stats shadow-md bg-amber-100">
             <div className="stat">
               <div className="stat-title text-xl">Total Task</div>
@@ -117,7 +117,7 @@ const Home = () => {
             </div>
           </div>
         </div>
-        <div className="w-full max-h-[450px] shadow-xl px-6 py-4 overflow-scroll">
+        <div className="w-full shadow-xl px-6 py-4">
           <UpcomingDeadline />
         </div>
       </div>

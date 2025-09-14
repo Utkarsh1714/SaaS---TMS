@@ -282,39 +282,6 @@ export const getMonthyCompletionTrend = async (req, res) => {
   }
 };
 
-// export const getUpcomingDeadlines = async (req, res) => {
-//   try {
-//     const { _id, role, organizationId } = req.user;
-//     const now = new Date();
-
-//     // 1. Create a base query based on user role
-//     let query = {};
-//     if (role === "Boss") {
-//       query.organizationId = new mongoose.Types.ObjectId(organizationId);
-//     } else {
-//       query.$or = [{ assignedEmployees: _id }, { assignedManager: _id }];
-//     }
-
-//     // 2. Add conditions for deadline and status
-//     query.deadline = { $gte: now };
-//     query.status = { $ne: "Completed" };
-
-//     // 3. Execute the query
-//     const upcomingTasks = await Task.find(query)
-//       .sort({ deadline: 1 })
-//       .limit(10)
-//       .populate("department", "name")
-//       .populate("assignedManager", "username")
-//       .select("title deadline status assignedManager department");
-
-//     console.log(upcomingTasks);
-//     res.status(200).json(upcomingTasks);
-//   } catch (error) {
-//     console.error(error);
-//     res.status(500).json({ message: "Failed to fetch upcoming deadlines" });
-//   }
-// };
-
 export const getUpcomingDeadlines = async (req, res) => {
   try {
     // We only need the organizationId from the logged-in user
