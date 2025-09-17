@@ -160,9 +160,9 @@ export const login = async (req, res) => {
 
   res
     .cookie("token", token, {
-      httpOnly: true,
-      secure: true,
-      sameSite: "None",
+      httpOnly: false,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: "lax",
     })
     .json({ message: "Login successful", user: safeUser });
 };

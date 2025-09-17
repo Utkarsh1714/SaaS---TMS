@@ -7,8 +7,7 @@ import Department from "../models/department.model.js";
 export const getAllEmployees = async (req, res) => {
   try {
     const users = await User.find({
-      organizationId: req.user.organizationId,
-      role: { $ne: "Boss" },
+      organizationId: req.user.organizationId
     })
       .select("-password")
       .populate("departmentId", "name");
