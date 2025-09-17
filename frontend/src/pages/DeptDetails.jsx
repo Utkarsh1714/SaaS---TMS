@@ -132,13 +132,44 @@ const DepartmentDetails = () => {
         >
           <IoIosArrowBack className="mr-1" /> Back
         </Button>
-        <Button
-          onClick={() => navigate(-1)}
-          variant="outline"
-          className={"cursor-pointer"}
-        >
-          <MdEdit className="mr-1" /> Edit
-        </Button>
+        <div className="flex items-center justify-center gap-3">
+          <Button
+            onClick={() => navigate(-1)}
+            variant="outline"
+            className={"cursor-pointer"}
+          >
+            <MdEdit className="mr-1" /> Edit
+          </Button>
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button className="cursor-pointer ">
+                Delete
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[500px]">
+              <DialogHeader>
+                <DialogTitle>Delete Department</DialogTitle>
+                <DialogDescription>
+                  Are you sure you want to delete the <strong>"{department.name}"</strong> department?
+                  This action cannot be undone.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="flex items-end justify-end gap-4 pt-4">
+                <DialogTrigger asChild>
+                  <Button className="cursor-pointer bg-gray-200 text-black hover:bg-gray-300">
+                    Cancel
+                  </Button>
+                </DialogTrigger>
+                <Button
+                  onClick={() => handleDelete(dept._id)}
+                  className={"cursor-pointer bg-red-600 hover:bg-red-700"}
+                >
+                  Delete
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
 
       {/* Department Info */}
@@ -219,9 +250,13 @@ const DepartmentDetails = () => {
                     </h3>
                   </div>
                   <div className="mt-1">
-                    <p className="text-sm text-gray-500"><span className="text-gray400 font-semibold">Email:</span> {emp.email}</p>
                     <p className="text-sm text-gray-500">
-                      <span className="text-gray400 font-semibold">Role:</span> {emp.role || "—"}
+                      <span className="text-gray400 font-semibold">Email:</span>{" "}
+                      {emp.email}
+                    </p>
+                    <p className="text-sm text-gray-500">
+                      <span className="text-gray400 font-semibold">Role:</span>{" "}
+                      {emp.role || "—"}
                     </p>
                   </div>
                   <div className="flex items-start justify-start gap-4">

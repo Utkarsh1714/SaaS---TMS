@@ -226,7 +226,7 @@ const Departments = () => {
                   className="p-4 bg-white shadow-md rounded-lg flex items-center justify-between gap-0.5"
                 >
                   <div>
-                    <h2 className="text-xl font-semibold text-yellow-600">
+                    <h2 className="text-xl font-semibold text-black">
                       {dept.name}
                     </h2>
                     <div className="mt-2 text-gray-700 text-sm space-y-1">
@@ -246,45 +246,15 @@ const Departments = () => {
                       </p>
                     </div>
                   </div>
-                  <div className="flex items-center justify-center flex-col gap-2">
+                  <div className="flex items-start justify-start">
                     <Button
                       onClick={() => navigate(`/departments/${dept._id}`)}
                       className={
                         "cursor-pointer bg-green-600 hover:bg-green-600 hover:opacity-70 w-full"
                       }
                     >
-                      Edit
+                      View
                     </Button>
-                    <Dialog>
-                      <DialogTrigger asChild>
-                        <Button className="cursor-pointer bg-red-600 w-full">
-                          Delete
-                        </Button>
-                      </DialogTrigger>
-                      <DialogContent className="sm:max-w-[500px]">
-                        <DialogHeader>
-                          <DialogTitle>Delete Department</DialogTitle>
-                          <DialogDescription>
-                            Are you sure you want to delete the "{dept.name}" department? This action cannot be undone.
-                          </DialogDescription>
-                        </DialogHeader>
-                        <div className="flex items-end justify-end gap-4 pt-4">
-                           <DialogTrigger asChild>
-                            <Button
-                                className="cursor-pointer bg-gray-200 text-black hover:bg-gray-300"
-                            >
-                                Cancel
-                            </Button>
-                           </DialogTrigger>
-                          <Button
-                            onClick={() => handleDelete(dept._id)}
-                            className={"cursor-pointer bg-red-600 hover:bg-red-700"}
-                          >
-                            Delete
-                          </Button>
-                        </div>
-                      </DialogContent>
-                    </Dialog>
                   </div>
                 </div>
               ))}
