@@ -180,7 +180,9 @@ const Layout = () => {
           </nav>
         </div>
         <div className="Content w-full h-[90vh] flex items-center justify-center overflow-hidden overflow-y-scroll">
-          <Outlet />
+          <div className="w-full h-full">
+            <Outlet />
+          </div>
         </div>
       </div>
       {/* Conditionally render the new component */}

@@ -6,8 +6,8 @@ export const accessOrCreateChat = async (req, res) => {
 
   if (!userId) return res.status(400).json({ message: "UserId is required." });
 
-  const loggedInUserId = req.body.id;
-  const organizationId = req.body.organizationId;
+  const loggedInUserId = req.user.id;
+  const organizationId = req.user.organizationId;
 
   let existingChat = await Channel.findOne({
     isGroupChat: false,

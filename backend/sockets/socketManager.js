@@ -1,84 +1,98 @@
+// In your initializeSocket.js file
+
 import jwt from "jsonwebtoken";
-import Message from '../models/MessageModel.js'
+import Message from "../models/MessageModel.js";
 
 const initializeSocket = (io) => {
-  // 🔑 This is our powerful authentication middleware
-  io.use((socket, next) => {
-    // The client must send the token in the 'auth' object
-    const token = socket.handshake.auth.token;
+  // 🔑 This is our powerful authentication middleware
+  io.use((socket, next) => {
+    // The client must send the token in the 'auth' object
+    // const token = socket.handshake.auth.token;
 
-    if (!token)
-      return next(new Error("Authentication Error: Token not provided."));
+const token = socket.handshake.headers.cookie
+    .split('; ')
+    .find(row => row.startsWith('token='))
+    ?.split('=')[1];
 
-    jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
-      if (err) return next(new Error("Authentication Error: Invalid token."));
+    if (!token)
+      return next(new Error("Authentication Error: Token not provided."));
 
-      // SECURITY CHECK: Ensure the token has the necessary info
-      if (!decoded.id || !decoded.organizationId)
-        return next(
-          new Error("Authentication Error: Token is missing required data.")
-        );
+    jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
+      if (err) return next(new Error("Authentication Error: Invalid token."));
 
-      // Attach user info to the socket object for later use
-      socket.user = {
-        id: decoded.id,
-        role: decoded.role,
-        organizationId: decoded.organizationId,
-      };
+      // SECURITY CHECK: Ensure the token has the necessary info
+      if (!decoded.id || !decoded.organizationId)
+        return next(
+          new Error("Authentication Error: Token is missing required data.")
+        );
 
-      next(); // Grant connection
-    });
-  });
+      // Attach user info to the socket object for later use
+      socket.user = {
+        id: decoded.id,
+        role: decoded.role,
+        organizationId: decoded.organizationId,
+      };
 
-  io.on("connection", (socket) => {
-    console.log(
-      `✅ User connected: ${socket.user.id} from org: ${socket.user.organizationId}`
-    );
+      next(); // Grant connection
+    });
+  });
 
-    // We MUST join the user to a room specific to their organization.
-    // This is the key to isolating communication.
-    socket.join(socket.user.organizationId);
+  io.on("connection", (socket) => {
+    console.log(
+      `✅ User connected: ${socket.user.id} from org: ${socket.user.organizationId}`
+    );
 
-    // 1. Logic for joining a specific chat room
-    // The frontend will emit this event when user click on chat.
-    socket.on('joinChat', (channelId) => {
-        socket.join(channelId);
-        console.log(`User ${socket.user.id} joined channel: ${channelId}`);
-    });
+    // We MUST join the user to a room specific to their organization.
+    // This is the key to isolating communication.
+    socket.join(socket.user.organizationId);
 
-    // 2. Logic for sendign and broadcasting the message.
-    socket.on('sendMessage', async (data) => {
-        const { channelId, content } = data;
+    // 1. Logic for joining a specific chat room
+    // The frontend will emit this event when user click on chat.
+    socket.on("joinChat", (channelId) => {
+      socket.join(channelId);
+      console.log(`User ${socket.user.id} joined channel: ${channelId}`);
+    });
 
-        if (!channelId || !content) return;
+    // 2. Logic for sending and broadcasting the message.
+    socket.on("sendMessage", async (data) => {
+      // 🐛 Log event reception and data
+      console.log(`📩 Received 'sendMessage' event.`);
+      console.log("Message data:", data);
 
-        const newMessageData = {
-            sender: socket.user.id,
-            content: content,
-            channel: channelId,
-            organizationId: socket.user.organizationId,
-        };
+      const { channelId, content } = data;
 
-        try {
-            // Step A: Save the message to the database
-            let message = await Message.create(newMessageData);
+      if (!channelId || !content) {
+        console.error("Validation Error: channelId or content is missing.");
+        return;
+      }
 
-            // Step B: Populate the sender's info before broadcasting
-            message = await message.populate('sender', 'username email');
+      const newMessageData = {
+        sender: socket.user.id,
+        content: content,
+        channel: channelId,
+        organizationId: socket.user.organizationId,
+      };
 
-            // Step C: Broadcast the new message to everyone in the channel's room
-            io.to(channelId).emit('newMessage', message);
+      try {
+        // Step A: Save the message to the database
+        let message = await Message.create(newMessageData);
 
-        } catch (error) {
-            console.error('Error sending message:', error);
-        }
-    })
+        // Step B: Populate the sender's info before broadcasting
+        message = await message.populate("sender", "username email");
 
-    socket.on("disconnect", () => {
-      console.log(`❌ User disconnected: ${socket.user.id}`);
-      // You can emit a status update here if you want
-    });
-  });
+        // Step C: Broadcast the new message to everyone in the channel's room
+        io.to(channelId).emit("newMessage", message);
+        console.log('✅ Message sent successfully to channel:', channelId);
+      } catch (error) {
+        console.error("❌ Error sending message:", error);
+      }
+    });
+
+    socket.on("disconnect", () => {
+      console.log(`❌ User disconnected: ${socket.user.id}`);
+      // You can emit a status update here if you want
+    });
+  });
 };
 
 export default initializeSocket;
