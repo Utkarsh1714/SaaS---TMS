@@ -32,7 +32,7 @@ const NotificationPanel = () => {
     <div
       className={`fixed top-0 right-0 h-full bg-slate-50 border-l border-gray-300 shadow-lg p-4 z-50 transition-transform duration-500 ease-in-out transform
           ${showNotifications ? "translate-x-0" : "translate-x-full"}
-          w-full md:w-[30%] overflow-y-auto`}
+          w-full md:w-[35%] overflow-y-auto`}
     >
       <div className="flex justify-between items-center mb-4 sticky top-0 bg-slate-50 py-2">
         <h2 className="text-2xl font-bold">Notifications</h2>

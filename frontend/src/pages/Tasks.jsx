@@ -209,7 +209,10 @@ const Tasks = () => {
 
   const getNoTasksMessage = () => {
     if (activeFilter === "None") {
-      return "No tasks are available at the moment. Kindly check again later !";
+      if (user.role !== "Boss") {
+        return "No tasks are available at the moment. Kindly check again later !";
+      }
+      return "No tasks have been created yet. Please check back later or create a new task.";
     } else if (activeFilter === "Completed") {
       return "No tasks found with the status 'Completed'.";
     } else if (activeFilter === "In Progress") {
@@ -336,7 +339,7 @@ const Tasks = () => {
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
-        <div className="flex items-start justify-start gap-2">
+        <div className="flex items-start justify-end gap-2">
           <div>
             {user.role === "Boss" && (
               <Dialog open={open} onOpenChange={setOpen}>
