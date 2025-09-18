@@ -5,6 +5,7 @@ import User from "../models/user.model.js";
 export const overview = async (req, res) => {
   try {
     const { _id, role, organizationId } = req.user;
+    console.log(_id)
 
     const taskQuery =
       role === "Boss"
