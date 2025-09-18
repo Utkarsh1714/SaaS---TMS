@@ -134,7 +134,7 @@ export const login = async (req, res) => {
   if (!isMatch) {
     return res.status(400).json({ message: "Invalid credentials" });
   }
-  
+
   const token = jwt.sign(
     { id: user._id, role: user.role, organizationId: user.organizationId },
     process.env.JWT_SECRET,
@@ -161,8 +161,8 @@ export const login = async (req, res) => {
   res
     .cookie("token", token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: "none",
+      secure: process.env.NODE_ENV === "production" ? true : false,
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
     })
     .json({ message: "Login successful", user: safeUser });
 };
@@ -321,11 +321,9 @@ export const paymentVerification = async (req, res) => {
       .json({ success: true, message: "Payment verified successfully." });
   } catch (error) {
     console.error("Payment verification error:", error);
-    res
-      .status(500)
-      .json({
-        success: false,
-        message: "Server error during payment verification.",
-      });
+    res.status(500).json({
+      success: false,
+      message: "Server error during payment verification.",
+    });
   }
 };
