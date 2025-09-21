@@ -164,7 +164,7 @@ export const login = async (req, res) => {
       secure: process.env.NODE_ENV === 'production', // 🔑 Must be true for production
       sameSite: process.env.NODE_ENV === 'production' ? "none" : "lax", // 🔑 Required with `secure: true` for cross-site cookies
     })
-    .json({ message: "Login successful", user: safeUser });
+    .json({ message: "Login successful", user: safeUser, token: token });
 };
 
 export const logout = async (req, res) => {
