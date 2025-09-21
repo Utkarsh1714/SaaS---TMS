@@ -22,6 +22,7 @@ const Home = () => {
           `${import.meta.env.VITE_API_URL}/api/dashboard/overview-data1`,
           { withCredentials: true }
         );
+        console.log(res.data);
         // Set the state with the fetched data
         setData(res.data);
         setTaskPriorityCount(res.data.taskPriorityCount);
