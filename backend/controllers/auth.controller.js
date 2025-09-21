@@ -166,7 +166,7 @@ export const login = async (req, res) => {
       httpOnly: false,
       secure: true, // 🔑 Must be true for production
       sameSite: "none", // 🔑 Required with `secure: true` for cross-site cookies
-      domain: ".onrender.com", // 🔑 This ensures the cookie is shared across all subdomains
+      domain: process.env.NODE_ENV === 'production' ? '.onrender.com' : 'localhost', // 🔑 This ensures the cookie is shared across all subdomains
     })
     .json({ message: "Login successful", user: safeUser });
 };
