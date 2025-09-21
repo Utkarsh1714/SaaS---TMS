@@ -1,51 +1,67 @@
-import Cookies from 'js-cookie';
-import { createContext, useContext, useEffect, useState } from 'react'
-import { io } from 'socket.io-client';
+import Cookies from "js-cookie";
+import { createContext, useContext, useEffect, useState, useRef } from "react";
+import { io } from "socket.io-client";
 
 const SocketContext = createContext();
 
 export const useSocket = () => {
-    return useContext(SocketContext);
+  return useContext(SocketContext);
 };
 
 export const SocketProvider = ({ children }) => {
-    const [socket, setSocket] = useState(null);
+  const [socket, setSocket] = useState(null);
+  const socketRef = useRef(null); // Create a ref to store the socket instance
 
-    useEffect(() => {
-        const token = Cookies.get('token');
-        if (token) {
-            const newSocket = io(import.meta.env.VITE_API_URL, {
-                auth: {
-                    token: token,
-                },
-                transports: ['websocket'], // Ensure WebSocket transport is used
-            });
+  const [token, setToken] = useState(null);
+  useEffect(() => {
+    const currentToken = Cookies.get("token");
+    setToken(currentToken);
+  }, []);
 
-            // Add a console log to confirm connection status
-            newSocket.on('connect', () => {
-                console.log('✅ Socket.IO connected successfully!');
-            });
-            
-            // Add error handling to catch connection issues
-            newSocket.on('connect_error', (err) => {
-                console.error("❌ Socket Connection Error:", err.message);
-            });
+  useEffect(() => {
+    // Only proceed if a socket hasn't been created yet
+    if (token && !socketRef.current) {
+      console.log("Socket Token:", token);
+      if (token) {
+        const newSocket = io(import.meta.env.VITE_API_URL, {
+          auth: {
+            token: token,
+          },
+          transports: ['websocket'],
+        });
 
-            // Log general socket errors
-            newSocket.on('error', (err) => {
-                console.error("❌ Socket Error:", err);
-            });
+        // Event listeners for debugging
+        newSocket.on("connect", () => {
+          console.log("✅ Socket.IO connected successfully!");
+          // Update the state only after a successful connection
+          setSocket(newSocket);
+        });
 
-            setSocket(newSocket);
+        newSocket.on("disconnect", () => {
+          console.log("❌ Socket disconnected.");
+          setSocket(null);
+        });
 
-            // Clean up the component when the socket unbound
-            return () => newSocket.close();
-        }
-    }, [])
+        newSocket.on("connect_error", (err) => {
+          console.error("❌ Socket Connection Error:", err.message);
+        });
 
-    return (
-        <SocketContext.Provider value={socket}>
-            {children}
-        </SocketContext.Provider>
-    )
-}
+        // Store the socket instance in the ref
+        socketRef.current = newSocket;
+      }
+    }
+
+    // This cleanup function will now properly close the socket
+    // when the component unmounts.
+    return () => {
+      if (socketRef.current) {
+        socketRef.current.close();
+        socketRef.current = null;
+      }
+    };
+  }, [token]);
+
+  return (
+    <SocketContext.Provider value={socket}>{children}</SocketContext.Provider>
+  );
+};
