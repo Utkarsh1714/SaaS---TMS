@@ -163,9 +163,11 @@ export const login = async (req, res) => {
       // httpOnly: true,
       // secure: true,
       // sameSite: "None",
-      httpOnly: false, // 🔑 Set to false so client-side JS can read it for Socket.IO
-      secure: process.env.NODE_ENV === 'production', // 🔑 Conditionally set based on environment
-      sameSite: 'lax', // Use 'none' in production if needed
+      httpOnly: false,
+      // 🔑 Corrected: Set secure to false in development
+      secure: false,
+      sameSite: "lax",
+      domain: '.onrender.com',
     })
     .json({ message: "Login successful", user: safeUser });
 };
