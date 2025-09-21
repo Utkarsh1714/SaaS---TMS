@@ -164,8 +164,8 @@ export const login = async (req, res) => {
       // secure: process.env.NODE_ENV === 'production',
       // sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
       httpOnly: false,
-      secure: true, // 🔑 Must be true for production
-      sameSite: "none", // 🔑 Required with `secure: true` for cross-site cookies
+      secure: process.env.ENV_NODE === 'production', // 🔑 Must be true for production
+      sameSite: process.env.ENV_NODE ? "none" : "lax", // 🔑 Required with `secure: true` for cross-site cookies
       domain: process.env.NODE_ENV === 'production' ? '.onrender.com' : 'localhost', // 🔑 This ensures the cookie is shared across all subdomains
     })
     .json({ message: "Login successful", user: safeUser });
