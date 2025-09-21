@@ -160,13 +160,13 @@ export const login = async (req, res) => {
 
   res
     .cookie("token", token, {
+      // httpOnly: false,
+      // secure: process.env.NODE_ENV === 'production',
+      // sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
       httpOnly: false,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-      // httpOnly: false, // Allows client-side JavaScript to read the cookie
-      // secure: true, // 🔑 This is crucial for production HTTPS sites
-      // sameSite: "none", // 🔑 Required for cross-site cookie access with 'secure: true'
-      // domain: ".onrender.com", // 🔑 Your production domain
+      secure: true, // 🔑 Must be true for production
+      sameSite: "none", // 🔑 Required with `secure: true` for cross-site cookies
+      domain: ".onrender.com", // 🔑 This ensures the cookie is shared across all subdomains
     })
     .json({ message: "Login successful", user: safeUser });
 };
