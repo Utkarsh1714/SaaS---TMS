@@ -161,8 +161,8 @@ export const login = async (req, res) => {
   res
     .cookie("token", token, {
       httpOnly: false,
-      secure: false,
-      sameSite: 'lax',
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
       // httpOnly: false, // Allows client-side JavaScript to read the cookie
       // secure: true, // 🔑 This is crucial for production HTTPS sites
       // sameSite: "none", // 🔑 Required for cross-site cookie access with 'secure: true'
