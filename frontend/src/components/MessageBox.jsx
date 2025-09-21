@@ -8,6 +8,8 @@ const MessageBox = ({ chat }) => {
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState("");
   const [loading, setLoading] = useState(false);
+
+  
   const socket = useSocket();
   const { user: loggedInUser } = useAuth();
 
@@ -64,12 +66,6 @@ const MessageBox = ({ chat }) => {
 
   const handleSendMessage = (e) => {
     e.preventDefault();
-    console.log(
-      "Attempting to send message. Socket connected:",
-      socket?.connected,
-      "Chat:",
-      chat
-    );
     if (newMessage.trim() && socket && socket.connected && chat) {
       const data = {
         channelId: chat._id,

@@ -9,7 +9,6 @@ const Chat = () => {
     const [selectedChat, setSelectedChat] = useState(null);
     const socket = useSocket();
     const { user } = useAuth();
-    console.log(user)
 
     const handleSelectedChat = async(employee) => {
         try {

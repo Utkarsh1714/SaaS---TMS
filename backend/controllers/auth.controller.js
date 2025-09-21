@@ -160,9 +160,12 @@ export const login = async (req, res) => {
 
   res
     .cookie("token", token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production" ? true : false,
-      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+      // httpOnly: true,
+      // secure: true,
+      // sameSite: "None",
+      httpOnly: false, // 🔑 Set to false so client-side JS can read it for Socket.IO
+      secure: process.env.NODE_ENV === 'production', // 🔑 Conditionally set based on environment
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax', // Use 'none' in production if needed
     })
     .json({ message: "Login successful", user: safeUser });
 };
