@@ -24,7 +24,9 @@ export const SocketProvider = ({ children }) => {
       console.log("Socket Token:", token);
       if (token) {
         const newSocket = io(import.meta.env.VITE_API_URL, {
-          withCredentials: true,
+          auth: {
+            token: token,
+          },
           transports: ['websocket'],
         });
 
