@@ -165,7 +165,7 @@ export const login = async (req, res) => {
       // sameSite: "None",
       httpOnly: false, // 🔑 Set to false so client-side JS can read it for Socket.IO
       secure: process.env.NODE_ENV === 'production', // 🔑 Conditionally set based on environment
-      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax', // Use 'none' in production if needed
+      sameSite: 'lax', // Use 'none' in production if needed
     })
     .json({ message: "Login successful", user: safeUser });
 };
