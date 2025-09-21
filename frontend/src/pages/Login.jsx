@@ -43,7 +43,8 @@ const Login = () => {
         formData,
         { withCredentials: true }
       );
-      const { user } = response.data;
+      const { user, token } = response.data;
+      localStorage.setItem("token", token);
       setLoading(false);
       toast.success("Login successful!");
       login(user);

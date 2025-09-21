@@ -14,7 +14,7 @@ export const SocketProvider = ({ children }) => {
 
   const [token, setToken] = useState(null);
   useEffect(() => {
-    const currentToken = Cookies.get("token");
+    const currentToken = localStorage.getItem('token');
     setToken(currentToken);
   }, []);
 
