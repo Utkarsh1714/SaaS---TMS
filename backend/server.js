@@ -61,7 +61,8 @@ app.use("/api", limiter);
 
 // Import routes
 app.use("/api/auth", authRoutes);
-app.use("/api/dashboard", verifyToken, cacheMiddleware(), dashboard);
+// app.use("/api/dashboard", verifyToken, cacheMiddleware(), dashboard);
+app.use("/api/dashboard", dashboard);
 app.use("/api/employee", employeeRoute);
 app.use("/api/department", departmentRoute);
 app.use("/api/task", taskRouter);
