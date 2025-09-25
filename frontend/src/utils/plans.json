@@ -11,7 +11,18 @@
       "monthlyPrice": "0",
       "billingPeriod": "per month",
       "buttonText": "Get Started",
-      "isHighlighted": false
+      "isHighlighted": false,
+      "features": [
+        { "text": "Up to 5 users", "included": true },
+        { "text": "Basic task management", "included": true },
+        { "text": "Team chat", "included": true },
+        { "text": "5 GB storage", "included": true },
+        { "text": "Email support", "included": true },
+        { "text": "Advanced reporting", "included": false },
+        { "text": "Custom branding", "included": false },
+        { "text": "API access", "included": false },
+        { "text": "Dedicated Support Channel", "included": false }
+      ]
     },
     {
       "id": "premium",
@@ -20,7 +31,18 @@
       "monthlyPrice": "400",
       "billingPeriod": "per month",
       "buttonText": "Get Started",
-      "isHighlighted": true
+      "isHighlighted": true,
+      "features": [
+        { "text": "Up to 25 users", "included": true },
+        { "text": "Advanced task management", "included": true },
+        { "text": "Team chat with history", "included": true },
+        { "text": "50 GB storage", "included": true },
+        { "text": "Priority email support", "included": true },
+        { "text": "Advanced analytics & reporting", "included": true },
+        { "text": "Custom branding", "included": true },
+        { "text": "API access", "included": false },
+        { "text": "Dedicated Support Channel", "included": true }
+      ]
     },
     {
       "id": "enterprise",
@@ -29,50 +51,61 @@
       "monthlyPrice": "800",
       "billingPeriod": "per month",
       "buttonText": "Get Started",
-      "isHighlighted": false
+      "isHighlighted": false,
+      "features": [
+        { "text": "Unlimited users", "included": true },
+        { "text": "Enterprise task management", "included": true },
+        { "text": "Advanced team communication", "included": true },
+        { "text": "Unlimited storage", "included": true },
+        { "text": "24/7 phone & email support", "included": true },
+        { "text": "Custom reporting", "included": true },
+        { "text": "Custom branding", "included": true },
+        { "text": "API access", "included": true },
+        { "text": "Dedicated Support Channel", "included": true }
+      ]
     }
   ],
   "features": [
     {
-      "name": "Unlimited Components",
+      "name": "Task Management",
       "free": true,
       "premium": true,
       "enterprise": true
     },
     {
-      "name": "Easily edited and customized",
+      "name": "Role-Based Access",
       "free": true,
       "premium": true,
       "enterprise": true
     },
     {
-      "name": "Combine Files Mercurius",
+      "name": "Real-time updates",
       "free": true,
-      "premium": true,
-      "enterprise": true
-    },
-    {
-      "name": "Health care included",
-      "free": false,
-      "premium": true,
-      "enterprise": true
-    },
-    {
-      "name": "Dedicated Support Channel",
-      "free": false,
       "premium": true,
       "enterprise": true
     },
     {
       "name": "Advanced Analytics & Reporting",
       "free": false,
-      "premium": false,
+      "premium": true,
       "enterprise": true
     },
     {
       "name": "Custom Integrations & APIs",
       "free": false,
       "premium": false,
+      "enterprise": true
+    },
+    {
+      "name": "Custom Branding",
+      "free": false,
+      "premium": true,
+      "enterprise": true
+    },
+    {
+      "name": "Priority Support",
+      "free": false,
+      "premium": true,
       "enterprise": true
     }
   ]

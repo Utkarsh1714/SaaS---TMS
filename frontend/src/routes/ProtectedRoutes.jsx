@@ -16,7 +16,7 @@ const ProtectedRoute = () => {
 
   // If not loading and user is null, redirect to login
   if (!user) {
-    return <Navigate to="/login" replace />;
+    return <Navigate to="/landing" replace />;
   }
 
   // If user is present, render the child routes
