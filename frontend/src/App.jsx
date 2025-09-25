@@ -7,6 +7,7 @@ import { Toaster } from "./components/ui/sonner";
 import { Toaster as HotToast } from "react-hot-toast";
 import Pricing from "./components/Pricing";
 import ProtectRegRoute from "./routes/ProtectRegRoute";
+import LandingPage from "./pages/LandingPage";
 
 // Lazy load the page
 const Home = lazy(() => import("./pages/Home"));
@@ -50,6 +51,7 @@ function App() {
       >
         <Routes>
           {/* Public Routes */}
+          <Route path="/landing" element={<LandingPage />} />
           <Route path="/login" element={<Login />} />
           <Route
             path="/registration"
