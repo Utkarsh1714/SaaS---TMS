@@ -21,7 +21,6 @@ export const SocketProvider = ({ children }) => {
   useEffect(() => {
     // Only proceed if a socket hasn't been created yet
     if (token && !socketRef.current) {
-      console.log("Socket Token:", token);
       if (token) {
         const newSocket = io(import.meta.env.VITE_API_URL, {
           auth: {

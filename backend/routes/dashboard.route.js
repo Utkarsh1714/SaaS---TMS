@@ -7,8 +7,8 @@ import {
 
 const router = express.Router();
 
-router.get("/overview-data1", overview);
-router.get("/overview-data2", getMonthyCompletionTrend);
-router.get("/overview-data3", getUpcomingDeadlines);
+router.get("/overview-data1", verifyToken, overview);
+router.get("/overview-data2", verifyToken, getMonthyCompletionTrend);
+router.get("/overview-data3", verifyToken, getUpcomingDeadlines);
 
 export default router;
