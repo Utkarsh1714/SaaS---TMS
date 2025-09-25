@@ -4,6 +4,7 @@ import {
   getUpcomingDeadlines,
   overview,
 } from "../controllers/dashboard.controller.js";
+import verifyToken from "../middlewares/verifyToken.js";
 
 const router = express.Router();
 
