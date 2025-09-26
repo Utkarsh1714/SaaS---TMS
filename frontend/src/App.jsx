@@ -31,11 +31,9 @@ function App() {
 
   if (loading)
     return (
-      <div className="flex items-center justify-center w-full min-h-screen gap-3">
-        <div>
-          <p className="text-lg">Loading app</p>
-          <span className="loading loading-dots loading-xl"></span>
-        </div>
+      <div className="flex items-center justify-center h-screen bg-gray-50">
+        <Loader className="h-10 w-10 animate-spin text-blue-500" />
+        <p className="ml-3 text-lg text-gray-700">Loading...</p>
       </div>
     );
 
@@ -46,10 +44,10 @@ function App() {
       <HotToast position="top-right" />
       <Suspense
         fallback={
-          <div className="flex items-center justify-center w-full h-full gap-3">
-            <p className="text-lg">Loading...</p>
-            <span className="loading loading-dots loading-xl"></span>
-          </div>
+          <div className="flex items-center justify-center h-screen bg-gray-50">
+        <Loader className="h-10 w-10 animate-spin text-blue-500" />
+        <p className="ml-3 text-lg text-gray-700">Loading app...</p>
+      </div>
         }
       >
         <Routes>
