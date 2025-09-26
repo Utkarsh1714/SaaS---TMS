@@ -20,6 +20,7 @@ import Chat from "./pages/Chat";
 import Reports from "./pages/Reports";
 import Profile from "./pages/Profile";
 import DepartmentDetails from "./pages/DeptDetails";
+import { Loader } from "lucide-react";
 
 // Lazy load the pages... (keep all your lazy imports here)
 const Home = lazy(() => import("./pages/Home"));
