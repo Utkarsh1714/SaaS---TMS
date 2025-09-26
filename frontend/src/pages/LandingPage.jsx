@@ -9,6 +9,7 @@ import {
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { InfiniteMovingCards } from "@/components/ui/infinite-moving-cards";
+import AnimatedContent from "@/components/ui/AnimatedContent";
 
 const LandingPage = () => {
   return (
@@ -27,7 +28,7 @@ const LandingPage = () => {
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
                 <Link
-                  to="/register"
+                  to="/registration"
                   className="bg-white text-blue-700 hover:bg-blue-50 font-medium px-6 py-3 rounded-lg text-center"
                 >
                   Start for free
@@ -63,11 +64,11 @@ const LandingPage = () => {
             </p>
           </div>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            <FeatureCard
-              icon={<ClipboardCheckIcon size={24} />}
-              title="Task Management"
-              description="Create, assign and track tasks across teams and departments with ease."
-            />
+              <FeatureCard
+                icon={<ClipboardCheckIcon size={24} />}
+                title="Task Management"
+                description="Create, assign and track tasks across teams and departments with ease."
+              />
             <FeatureCard
               icon={<UsersIcon size={24} />}
               title="Employee Management"
@@ -128,7 +129,7 @@ const LandingPage = () => {
           </p>
           <div className="flex flex-col sm:flex-row justify-center gap-4">
             <Link
-              to="/register"
+              to="/registration"
               className="bg-white text-blue-700 hover:bg-blue-50 font-medium px-8 py-3 rounded-lg"
             >
               Get started for free
@@ -148,47 +149,66 @@ const LandingPage = () => {
 };
 
 const testimonials = [
-    {
-        quote: "This platform has transformed how we manage our teams and projects. Everything is now streamlined and efficient.",
-        name: "Utkarsh Palav",
-        title: "CEO, TechCorp",
-        image: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-1.2.1&auto=format&fit=crop&w=200&q=80"
-    },
-    {
-        quote: "The analytics and reporting features have given us insights we never had before. Game-changing for our decision making.",
-        name: "Sairaj Shetty",
-        title: "COO, InnovateCo",
-        image: "https://images.unsplash.com/photo-1560250097-0b93528c311a?ixlib=rb-1.2.1&auto=format&fit=crop&w=200&q=80"
-    },
-    {
-        quote: "Employee engagement has increased significantly since we started using the platform. The chat and meeting features are excellent.",
-        name: "Vivek Singh Rawat",
-        title: "HR Director, GlobalFirm",
-        image: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?ixlib=rb-1.2.1&auto=format&fit=crop&w=200&q=80"
-    },
-    {
-        quote: "Managing our departments and employees has never been easier. This platform is a must-have for any growing business.",
-        name: "Abhishek Sharma",
-        title: "CTO, StartupX",
-        image: "https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?ixlib=rb-1.2.1&auto=format&fit=crop&w=200&q=80"
-    },
-    {
-        quote: "The task management features have improved our team's productivity and collaboration. Highly recommend!",
-        name: "Shraddha Singh",
-        title: "Project Manager, BuildIt",
-        image: "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?ixlib=rb-1.2.1&auto=format&fit=crop&w=200&q=80"
-    }
-]
+  {
+    quote:
+      "This platform has transformed how we manage our teams and projects. Everything is now streamlined and efficient.",
+    name: "Utkarsh Palav",
+    title: "CEO, TechCorp",
+    image: "./utkarsh.jpg",
+  },
+  {
+    quote:
+      "The analytics and reporting features have given us insights we never had before. Game-changing for our decision making.",
+    name: "Sairaj Shetty",
+    title: "COO, InnovateCo",
+    image: "./aana.jpg",
+  },
+  {
+    quote:
+      "Employee engagement has increased significantly since we started using the platform. The chat and meeting features are excellent.",
+    name: "Vivek Singh Rawat",
+    title: "HR Director, GlobalFirm",
+    image:
+      "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?ixlib=rb-1.2.1&auto=format&fit=crop&w=200&q=80",
+  },
+  {
+    quote:
+      "Managing our departments and employees has never been easier. This platform is a must-have for any growing business.",
+    name: "Abhishek Sharma",
+    title: "CTO, StartupX",
+    image:
+      "https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?ixlib=rb-1.2.1&auto=format&fit=crop&w=200&q=80",
+  },
+  {
+    quote:
+      "The task management features have improved our team's productivity and collaboration. Highly recommend!",
+    name: "Shraddha Singh",
+    title: "Project Manager, BuildIt",
+    image: "./shraddha.jpg",
+  },
+];
 
 const FeatureCard = ({ icon, title, description }) => {
   return (
-    <div className="bg-white p-8 rounded-lg shadow-md hover:shadow-xl hover:scale-3d transition-shadow duration-300">
-      <div className="bg-blue-100 p-3 rounded-full w-12 h-12 flex items-center justify-center text-blue-600 mb-5">
-        {icon}
+    <AnimatedContent
+      distance={150}
+      direction="vertical"
+      reverse={false}
+      duration={1.2}
+      initialOpacity={0.2}
+      animateOpacity
+      scale={1.1}
+      threshold={0.2}
+      delay={0.3}
+    >
+      <div className="bg-white p-8 rounded-lg shadow-md hover:shadow-xl hover:scale-3d transition-shadow duration-300">
+        <div className="bg-blue-100 p-3 rounded-full w-12 h-12 flex items-center justify-center text-blue-600 mb-5">
+          {icon}
+        </div>
+        <h3 className="text-xl font-semibold text-gray-900 mb-3">{title}</h3>
+        <p className="text-gray-600">{description}</p>
       </div>
-      <h3 className="text-xl font-semibold text-gray-900 mb-3">{title}</h3>
-      <p className="text-gray-600">{description}</p>
-    </div>
+    </AnimatedContent>
   );
 };
 
