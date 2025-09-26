@@ -1,5 +1,3 @@
-// In your initializeSocket.js file
-
 import jwt from "jsonwebtoken";
 import Message from "../models/MessageModel.js";
 
