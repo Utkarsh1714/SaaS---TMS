@@ -97,16 +97,16 @@ const Home = () => {
       if (!checkIsLargeScreen()) {
         setSidebarOpen(false);
       } else {
-         // Optionally, keep it open on large screens after a resize
-         setSidebarOpen(true);
+        // Optionally, keep it open on large screens after a resize
+        setSidebarOpen(true);
       }
     };
 
-    window.addEventListener('resize', handleResize);
+    window.addEventListener("resize", handleResize);
 
     // Cleanup function
     return () => {
-      window.removeEventListener('resize', handleResize);
+      window.removeEventListener("resize", handleResize);
     };
   }, []);
 
@@ -169,13 +169,20 @@ const Home = () => {
                   </div>
                 </div>
               </div>
-              <div className="flex items-center">
-                <button onClick={toggleNotificationPanel} className="flex-shrink-0 p-1 mr-4 text-gray-400 rounded-full hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+              <div className="flex items-center justify-center gap-2 sm:gap-4">
+                <button
+                  onClick={toggleNotificationPanel}
+                  className="flex-shrink-0 p-1 text-gray-400 rounded-full hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                >
                   <span className="sr-only">View notifications</span>
                   {/* Notification Icon */}
-                  {notifications && notifications.length > 0 ? <BellDot className="text-green-500"/> : <BellIcon className="text-gray-400" />}
+                  {notifications && notifications.length > 0 ? (
+                    <BellDot className="text-green-500" />
+                  ) : (
+                    <BellIcon className="text-gray-400" />
+                  )}
                 </button>
-                <div className="ml-3 relative">
+                <div className="relative">
                   <div>
                     <button className="flex items-center max-w-xs bg-gray-100 p-1 rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                       <span className="sr-only">Open user menu</span>

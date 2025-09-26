@@ -176,7 +176,7 @@ const ActivityFeed = () => {
         <ul className="-mb-8">
           {activities.map((activity, activityIdx) => (
             <li key={activity.id}>
-              <div className="relative pb-8">
+              <div className="relative pb-8 py-4">
                 {activityIdx !== activities.length - 1 ? (
                   <span
                     className="absolute top-4 left-4 ml-4 h-full w-0.5 bg-gray-200"

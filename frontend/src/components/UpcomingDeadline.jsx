@@ -23,7 +23,7 @@ const UpcomingDeadline = () => {
   const hasTasks = task.length > 0;
 
   return (
-    <div className="w-full h-full">
+    <div className="w-full max-h-[400px] overflow-hidden">
       <h1 className="text-2xl font-semibold mb-4">Upcoming Deadlines</h1>
       
       {!hasTasks ? (
@@ -42,7 +42,7 @@ const UpcomingDeadline = () => {
                   <th scope="col" className="py-3 px-6">Status</th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody className="overflow-y-scroll">
                 {task.map((item) => (
                   <tr key={item._id} className="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
                     <td className="py-4 px-6 font-medium text-gray-900 whitespace-nowrap dark:text-white">
@@ -52,7 +52,7 @@ const UpcomingDeadline = () => {
                     <td className="py-4 px-6">{new Date(item.deadline).toLocaleDateString()}</td>
                     <td className="py-4 px-6">
                       <span
-                        className={`badge ${item.status === "Completed" ? "badge-success" : "badge-warning"} px-1.5`}
+                        className={`badge ${item.status === "Completed" ? "badge-success" : "badge-warning"} px-3`}
                       >
                         {item.status}
                       </span>
