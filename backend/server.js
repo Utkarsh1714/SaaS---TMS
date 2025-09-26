@@ -22,7 +22,7 @@ import initializeSocket from "./sockets/socketManager.js";
 connectDB();
 
 const app = express();
-app.set('trust proxy', true);
+app.set('trust proxy', false);
 const server = http.createServer(app);
 
 // Use the cors middleware for Express before the Socket.IO setup

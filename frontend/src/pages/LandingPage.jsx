@@ -6,8 +6,8 @@ import {
   UsersIcon,
   ClipboardCheckIcon,
 } from "lucide-react";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
+import Navbar from "@/components/Layout/Navbar";
+import Footer from "@/components/Layout/Footer";
 import { InfiniteMovingCards } from "@/components/ui/infinite-moving-cards";
 import AnimatedContent from "@/components/ui/AnimatedContent";
 

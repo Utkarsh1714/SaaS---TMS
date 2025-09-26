@@ -1,5 +1,5 @@
 import React from "react";
-import { Button } from "./ui/button";
+import { Button } from "../ui/button";
 import { useNotifications } from "@/context/NotificationContext";
 import { MdDelete } from "react-icons/md";
 import { Zap, MinusCircle, ChevronDownCircle } from "lucide-react";
