@@ -10,10 +10,6 @@ import rateLimit from "express-rate-limit";
 import cookieParser from "cookie-parser";
 import connectDB from "./db/connectdb.js";
 
-// === Import redis and cacheMiddleware ===
-import { redisConnect } from './config/redisClient.js';
-import cacheMiddleware from './middlewares/cache.js';
-
 import authRoutes from "./routes/auth.route.js";
 import employeeRoute from "./routes/employee.route.js";
 import departmentRoute from "./routes/department.route.js";
@@ -22,10 +18,8 @@ import chatRoute from './routes/chat.route.js';
 import messageRoutes from './routes/message.route.js'
 import dashboard from './routes/dashboard.route.js'
 import initializeSocket from "./sockets/socketManager.js";
-import verifyToken from "./middlewares/verifyToken.js";
 
 connectDB();
-redisConnect();
 
 const app = express();
 const server = http.createServer(app);
@@ -61,7 +55,6 @@ app.use("/api", limiter);
 
 // Import routes
 app.use("/api/auth", authRoutes);
-// app.use("/api/dashboard", verifyToken, cacheMiddleware(), dashboard);
 app.use("/api/dashboard", dashboard);
 app.use("/api/employee", employeeRoute);
 app.use("/api/department", departmentRoute);

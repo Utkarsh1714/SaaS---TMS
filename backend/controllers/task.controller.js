@@ -2,7 +2,6 @@ import Task from "../models/task.model.js";
 import mongoose from "mongoose";
 import User from "../models/user.model.js";
 import { sendTaskNotificationEmail } from "../utils/send.mail.js";
-import { redisClient } from "../config/redisClient.js"; // 1. Import the Redis client
 
 // Helper function to apply common filtering/sorting logic
 const applyTaskFilters = async (
@@ -213,15 +212,6 @@ export const createTask = async (req, res) => {
       .populate("assignedManager", "username email _id")
       .populate("department", "name _id");
 
-    // ⭐ NEW: Invalidate the cache for the dashboard routes
-    if (redisClient.isReady) {
-      const userId = req.user._id; // Invalidate the cache for all dashboard routes
-      await redisClient.del(`cache:${userId}:/api/dashboard/overview-data1`);
-      await redisClient.del(`cache:${userId}:/api/dashboard/overview-data2`);
-      await redisClient.del(`cache:${userId}:/api/dashboard/overview-data3`);
-      console.log("Dashboard caches invalidated.");
-    }
-
     res.status(201).json({ message: "Task created", task: populatedTask });
   } catch (error) {
     console.log(error);
@@ -323,25 +313,6 @@ export const updateTaskStatus = async (req, res) => {
       userIdsToInvalidate.add(task.createdBy.toString());
     }
 
-    if (userIdsToInvalidate.size > 0) {
-      // Convert the set of user IDs to an array of cache keys to delete
-      const keysToDelete = [...userIdsToInvalidate].flatMap((userId) => [
-        `cache:${userId}:/api/dashboard/overview-data1`,
-        `cache:${userId}:/api/dashboard/overview-data2`,
-        `cache:${userId}:/api/dashboard/overview-data3`,
-      ]);
-
-      try {
-        await redisClient.del(keysToDelete);
-        console.log(
-          `Successfully invalidated ${keysToDelete.length} cache keys.`
-        );
-      } catch (redisError) {
-        console.error("Redis error during cache invalidation:", redisError);
-      }
-    }
-    // ===================================
-
     res.status(200).json(task);
   } catch (error) {
     console.log(error);
@@ -391,19 +362,7 @@ export const deleteTask = async (req, res) => {
 
   try {
     const task = await Task.findByIdAndDelete(taskId);
-    if (!task) return res.status(404).json({ message: "Task not found" });
-
-    // ⭐ NEW: Invalidate the Redis cache for the dashboard routes
-    // Ensure you have access to the user's ID from the request, just like in your cache middleware.
-    // Assuming req.user exists from the verifyToken middleware.
-    if (req.user && req.user._id && redisClient.isReady) {
-      const userId = req.user._id;
-      // Use redisClient.del() to remove the cached data for all dashboard endpoints
-      await redisClient.del(`cache:${userId}:/api/dashboard/overview-data1`);
-      await redisClient.del(`cache:${userId}:/api/dashboard/overview-data2`);
-      await redisClient.del(`cache:${userId}:/api/dashboard/overview-data3`);
-      console.log("Dashboard caches invalidated after task deletion.");
-    }
+    if (!task) return res.status(404).json({ message: "Task not found" });  
 
     res.status(200).json({ message: "Task deleted" });
   } catch (error) {
