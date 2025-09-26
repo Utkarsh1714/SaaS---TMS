@@ -4,13 +4,23 @@ import Message from "../models/MessageModel.js";
 const initializeSocket = (io) => {
   // 🔑 This is our powerful authentication middleware
   io.use((socket, next) => {
-    const token = socket.handshake.headers.cookie
+    const cookieHeader = socket.handshake.headers.cookie
+
+    if (!cookieHeader) {
+        console.error("Socket Auth Error: No cookie header provided.");
+        // Stop the connection attempt immediately
+        return next(new Error("Authentication Error: Cookie not provided."));
+    }
+
+    const token = cookieHeader
       .split("; ")
       .find((row) => row.startsWith("token="))
       ?.split("=")[1];
 
-    if (!token)
-      return next(new Error("Authentication Error: Token not provided."));
+    if (!token) {
+        console.error("Socket Auth Error: 'token' cookie missing from header.");
+        return next(new Error("Authentication Error: Token not provided."));
+    }
 
     jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
       if (err) return next(new Error("Authentication Error: Invalid token.")); // SECURITY CHECK: Ensure the token has the necessary info
