@@ -14,7 +14,6 @@ export default function DeptOption({ selectedDept, setSelectedDept }) {
           withCredentials: true,
         }
       );
-      console.log(res.data)
 
       const formatted = res.data.map((dept) => ({
         value: dept._id,

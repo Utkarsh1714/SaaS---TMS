@@ -6,11 +6,13 @@ export const overview = async (req, res) => {
   try {
     const { _id, role, organizationId } = req.user;
 
+    // --- Task Query Setup ---
     const taskQuery =
       role === "Boss"
         ? { organizationId: new mongoose.Types.ObjectId(organizationId) }
         : { $or: [{ assignedManager: _id }, { assignedEmployees: _id }] };
 
+    // --- Base Counts ---
     // Task count query
     const taskCount = await Task.countDocuments(taskQuery);
 
@@ -29,8 +31,7 @@ export const overview = async (req, res) => {
     };
     const overdueTaskCount = await Task.countDocuments(overdueQuery);
 
-    // average time (in days) to complete a task in the organization
-    // The aggregation pipeline is a seires of stages to process documents.
+    // --- Average Completion Time ---
     let averageCompletionDays = 0;
 
     const aggregationResult = await Task.aggregate([
@@ -69,7 +70,7 @@ export const overview = async (req, res) => {
       }
     }
 
-    // Task status count
+    // --- Task Status Count (Total) ---
     const statusResult = await Task.aggregate([
       // Stage 1: Match task based on same user-role logic
       {
@@ -96,7 +97,7 @@ export const overview = async (req, res) => {
       if (result._id === "Completed") taskStatusCount.completed = result.count;
     });
 
-    // Task priority count
+    // --- Task Priority Count (Total) ---
     const priorityResult = await Task.aggregate([
       // Stage 1: Match task based on same user-role logic
       {
@@ -122,7 +123,7 @@ export const overview = async (req, res) => {
       if (result._id === "High") taskPriorityCount.High = result.count;
     });
 
-    // Employees count by department
+    // --- Employees Count by Department ---
     const departmentCount = await User.aggregate([
       // Stage 1: Find all users excluding the Boss
       {
@@ -164,6 +165,141 @@ export const overview = async (req, res) => {
       },
     ]);
 
+    // ==========================================================
+    // --- NEW LOGIC: Monthly Task Completion Data for Chart ---
+    // ==========================================================
+
+    const currentYear = now.getFullYear();
+    
+    // Start date is January 1st of the current year
+    const startOfCurrentYear = new Date(currentYear, 0, 1); 
+
+    // We only filter tasks created within the current year
+    const monthlyTaskCompletionQuery = {
+      ...taskQuery, // Reuse the organization/user-specific filtering
+      createdAt: { $gte: startOfCurrentYear }, 
+    };
+
+    const monthlyCompletionData = await Task.aggregate([
+      // Stage 1: Filter tasks created in the current calendar year and apply user/organization scope
+      {
+        $match: monthlyTaskCompletionQuery,
+      },
+      
+      // Stage 2: Classify each task into one of the three chart categories: Completed, Overdue, or Active
+      {
+        $addFields: {
+          chartStatus: {
+            $switch: {
+              branches: [
+                // 1. Completed
+                {
+                  case: { $eq: ["$status", "Completed"] },
+                  then: "Completed",
+                },
+                // 2. Overdue (Not completed AND deadline is past)
+                {
+                  case: {
+                    $and: [
+                      { $ne: ["$status", "Completed"] },
+                      { $lt: ["$deadline", now] }
+                    ]
+                  },
+                  then: "Overdue",
+                },
+                // 3. Active (The remaining tasks: Pending/In Progress and not overdue)
+                {
+                  case: {
+                    $or: [
+                      { $eq: ["$status", "Pending"] },
+                      { $eq: ["$status", "In Progress"] }
+                    ]
+                  },
+                  then: "Active",
+                },
+              ],
+              default: "Active", 
+            },
+          },
+        },
+      },
+
+      // Stage 3: Group by month/year and the newly calculated chartStatus
+      {
+        $group: {
+          _id: {
+            month: { $month: "$createdAt" },
+            year: { $year: "$createdAt" },
+            chartStatus: "$chartStatus",
+          },
+          count: { $sum: 1 },
+        },
+      },
+      
+      // Stage 4: Reshape the data (Group by month/year only)
+      {
+        $group: {
+          _id: {
+            month: "$_id.month",
+            year: "$_id.year",
+          },
+          data: {
+            $push: {
+              status: "$_id.chartStatus",
+              count: "$count",
+            },
+          },
+        },
+      },
+
+      // Stage 5: Sort chronologically (Jan to Dec)
+      {
+        $sort: {
+          "_id.year": 1,
+          "_id.month": 1,
+        },
+      },
+
+      // Stage 6: Final Projection
+      {
+        $project: {
+          _id: 0,
+          month: "$_id.month",
+          year: "$_id.year",
+          data: 1,
+        },
+      },
+    ]);
+
+    // --- Post-Processing to fill missing months and format (Jan-Dec) ---
+    const chartDataMap = {};
+
+    // 1. Initialize 12 months of data (Jan to Dec of the current year)
+    for (let i = 1; i <= 12; i++) { // Loop from month 1 (Jan) to 12 (Dec)
+        chartDataMap[`${currentYear}-${i}`] = {
+            month: i,
+            year: currentYear,
+            Completed: 0,
+            Active: 0,
+            Overdue: 0,
+        };
+    }
+
+    // 2. Map aggregation results into the initialized structure
+    monthlyCompletionData.forEach(item => {
+        const monthKey = `${item.year}-${item.month}`;
+        if (chartDataMap[monthKey]) {
+            item.data.forEach(s => {
+                // The status is now guaranteed to be 'Completed', 'Overdue', or 'Active'
+                chartDataMap[monthKey][s.status] = s.count;
+            });
+        }
+    });
+
+    // Convert the map to a chronologically ordered array (Jan, Feb, ..., Dec)
+    const monthlyTaskCompletion = Object.values(chartDataMap);
+
+    // --- Final Response ---
     res.status(200).json({
       taskCount,
       activeUser,
@@ -172,6 +308,7 @@ export const overview = async (req, res) => {
       taskStatusCount,
       taskPriorityCount,
       departmentCount,
+      monthlyTaskCompletion, // <-- The new data for your chart
     });
   } catch (error) {
     console.error(error);

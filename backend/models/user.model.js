@@ -24,7 +24,7 @@ const UserSchema = new mongoose.Schema(
     },
     organizationId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Organiztion",
+      ref: "Organization",
       required: true,
     },
     departmentId: {

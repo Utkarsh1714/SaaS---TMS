@@ -10,7 +10,12 @@ export const getAllEmployees = async (req, res) => {
       organizationId: req.user.organizationId
     })
       .select("-password")
-      .populate("departmentId", "name");
+      .populate({
+        path: "departmentId", // The field in the User schema
+        select: "name",       // Fields to include from Department
+        // The 'as' option renames the field in the output document
+        as: "department"
+      });
 
     res.status(200).json(users);
   } catch (error) {

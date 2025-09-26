@@ -6,8 +6,8 @@ import { CheckIcon, XIcon } from "lucide-react";
 
 // Assuming these are your original data sources
 import pricingData from "../utils/plans.json";
-import Navbar from "./Navbar";
-import Footer from "./Footer";
+import Navbar from "./Layout/Navbar";
+import Footer from "./Layout/Footer";
 
 const Pricing = () => {
   const navigate = useNavigate();

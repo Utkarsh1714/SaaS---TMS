@@ -282,6 +282,11 @@ export const updateTaskStatus = async (req, res) => {
   const { taskId } = req.params;
   const { status } = req.body;
 
+  // Assuming req.user is populated by authentication middleware and contains:
+  // _id: the ID of the authenticated user
+  // role: the role of the authenticated user (e.g., "Boss")
+  const { _id: userId, role } = req.user;
+
   try {
     const task = await Task.findById(taskId);
 
@@ -289,33 +294,37 @@ export const updateTaskStatus = async (req, res) => {
       return res.status(404).json({ message: "Task not found" });
     }
 
+    // --- ACCESS CONTROL LOGIC ---
+
+    // 1. Convert IDs to strings for reliable comparison
+    const assignedManagerId = task.assignedManager ? task.assignedManager.toString() : null;
+    const currentUserId = userId.toString();
+
+    // 2. Check if the user is authorized to update the status
+    const isBoss = role === "Boss";
+    const isAssignedManager = assignedManagerId && assignedManagerId === currentUserId;
+
+    // Check for authorization: Boss OR Assigned Manager
+    if (!isBoss && !isAssignedManager) {
+      return res.status(403).json({
+        message: "Forbidden: Only the assigned manager or a Boss can update the task status."
+      });
+    }
+
+    // 3. Check if the new status is valid (Good practice)
+    const validStatuses = ["Pending", "In Progress", "Completed"];
+    if (!validStatuses.includes(status)) {
+        return res.status(400).json({ message: `Invalid status value: ${status}` });
+    }
+    
+    // --- Update Task Status ---
     task.status = status;
     await task.save();
 
-    // === 2. CACHE INVALIDATION LOGIC ===
-    console.log("Task updated, starting cache invalidation...");
-
-    // Create a set to store unique user IDs to avoid duplicates
-    const userIdsToInvalidate = new Set();
-
-    // Add the manager's ID
-    if (task.assignedManager) {
-      userIdsToInvalidate.add(task.assignedManager.toString());
-    }
-    // Add all assigned employees' IDs
-    if (task.assignedEmployees && task.assignedEmployees.length > 0) {
-      task.assignedEmployees.forEach((id) =>
-        userIdsToInvalidate.add(id.toString())
-      );
-    }
-    // You might also want to invalidate the cache for the person who created the task
-    if (task.createdBy) {
-      userIdsToInvalidate.add(task.createdBy.toString());
-    }
-
     res.status(200).json(task);
+
   } catch (error) {
-    console.log(error);
+    console.error(error); // Log the actual error
     res.status(500).json({ message: "Failed to update task status" });
   }
 };

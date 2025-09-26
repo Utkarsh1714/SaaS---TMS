@@ -125,7 +125,7 @@ export const registerOrg = async (req, res) => {
 
 export const login = async (req, res) => {
   const { email, password } = req.body;
-  const user = await User.findOne({ email });
+  const user = await User.findOne({ email }).populate('organizationId', 'name');
 
   if (!user) {
     return res.status(400).json({ message: "Invalid credentials" });
@@ -135,8 +135,10 @@ export const login = async (req, res) => {
     return res.status(400).json({ message: "Invalid credentials" });
   }
 
+  const organizationIdForToken = user.organizationId ? user.organizationId._id : null;
+
   const token = jwt.sign(
-    { id: user._id, role: user.role, organizationId: user.organizationId },
+    { id: user._id, role: user.role, organizationId: user.organizationIdForToken },
     process.env.JWT_SECRET,
     { expiresIn: "1d" }
   );
