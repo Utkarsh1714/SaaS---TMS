@@ -1,73 +1,4 @@
-// import React from 'react';
-// import {
-//   BarChart,
-//   Bar,
-//   XAxis,
-//   YAxis,
-//   CartesianGrid,
-//   Tooltip,
-//   Legend,
-//   ResponsiveContainer,
-// } from 'recharts';
-
-// // Function to transform the flat priority object into Recharts data array
-// const transformPriorityData = (priorityCount) => {
-//   // Map the object to an array of { name: "Priority", count: value } objects
-//   return Object.keys(priorityCount).map(key => ({
-//     name: key,
-//     count: priorityCount[key]
-//   }));
-// };
-
-// const TasksChart = ({ taskPriorityCount }) => {
-//     console.log("Task Priority Count:", taskPriorityCount); // Debug log
-//   // Transform the fetched data
-//   const data = taskPriorityCount ? transformPriorityData(taskPriorityCount) : [];
-
-//   return (
-//     <div className="bg-white rounded-lg shadow p-6">
-//       <div className="flex justify-between items-center mb-4">
-//         <h2 className="text-lg font-medium text-gray-900">Task Priority Distribution</h2>
-//         <div className="flex items-center space-x-2">
-//           {/* Kept dropdown for context, though it's now static */}
-//           <select className="text-sm border-gray-300 rounded-md shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
-//             <option>All Tasks</option>
-//             <option>Last 30 Days</option>
-//             <option>This Quarter</option>
-//           </select>
-//         </div>
-//       </div>
-//       <div className="h-80">
-//         <ResponsiveContainer width="100%" height="100%">
-//           <BarChart
-//             data={data}
-//             margin={{
-//               top: 20,
-//               right: 30,
-//               left: 0,
-//               bottom: 5,
-//             }}
-//           >
-//             <CartesianGrid strokeDasharray="3 3" vertical={false} />
-//             <XAxis dataKey="name" />
-//             <YAxis />
-//             <Tooltip />
-//             <Legend />
-//             <Bar
-//               dataKey="count"
-//               name="Tasks by Priority"
-//               fill="#4F46E5"
-//             />
-//           </BarChart>
-//         </ResponsiveContainer>
-//       </div>
-//     </div>
-//   );
-// };
-
-// export default TasksChart;
-
-import React from 'react';
+import React, { useMemo, useState } from "react";
 import {
   BarChart,
   Bar,
@@ -77,36 +8,55 @@ import {
   Tooltip,
   Legend,
   ResponsiveContainer,
-} from 'recharts';
+} from "recharts";
 
 // Helper function to map month number to short name
 const getMonthName = (monthNumber) => {
   const date = new Date(2000, monthNumber - 1, 1);
-  return date.toLocaleString('en-US', { month: 'short' });
+  return date.toLocaleString("en-US", { month: "short" });
 };
 
 // Component now accepts monthlyTaskCompletion as a prop
 const TasksChart = ({ monthlyTaskCompletion }) => {
-  
-  // Transform the data structure for Recharts
-  const chartData = monthlyTaskCompletion.map(item => ({
-    // Convert month number (1-12) to short month name (Jan, Feb, etc.)
-    name: getMonthName(item.month), 
-    completed: item.Completed,
-    active: item.Active,
-    overdue: item.Overdue,
-  }));
-  
-  const displayData = chartData; 
+  const [filter, setFilter] = useState("This year");
 
+  const displayData = useMemo(() => {
+    // A. structure the incoming data into a structured Recharts needs
+    const transformedData = monthlyTaskCompletion.map((item) => ({
+      name: getMonthName(item.month),
+      month: item.month,
+      completed: item.Completed,
+      active: item.Active,
+      overdue: item.Overdue,
+    }));
+
+    // Find the current month number
+    const currentMonth = new Date().getMonth() + 1;
+
+    if (filter === "This year" || filter === "Last 12 months") {
+      return transformedData;
+    } else if (filter === "Last 6 months") {
+      const sortedData = [...transformedData].sort((a, b) => a.month - b.month);
+      return sortedData.slice(-6);
+    }
+
+    return transformedData;
+  }, [monthlyTaskCompletion, filter]);
+
+  const handleFilterChange = (e) => {
+    setFilter(e.target.value);
+  };
   return (
     <div className="bg-white rounded-lg shadow p-6">
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-lg font-medium text-gray-900">Task Completion</h2>
         <div className="flex items-center space-x-2">
-          {/* NOTE: You should implement actual state/logic to filter the data here */}
-          <select className="text-sm border-gray-300 rounded-md shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
-            <option>Last 12 months</option> {/* Updated to reflect the fetched data */}
+          <select
+            className="text-sm border-gray-300 rounded-md shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+            value={filter}
+            onChange={handleFilterChange}
+          >
+            <option>Last 12 months</option>
             <option>Last 6 months</option>
             <option>This year</option>
           </select>
@@ -116,7 +66,7 @@ const TasksChart = ({ monthlyTaskCompletion }) => {
         <ResponsiveContainer width="100%" height="100%">
           <BarChart
             // Use the dynamically generated chartData
-            data={displayData} 
+            data={displayData}
             margin={{
               top: 20,
               right: 30,
@@ -126,7 +76,7 @@ const TasksChart = ({ monthlyTaskCompletion }) => {
           >
             <CartesianGrid strokeDasharray="3 3" vertical={false} />
             {/* dataKey is now 'name' from the transformed data */}
-            <XAxis dataKey="name" /> 
+            <XAxis dataKey="name" />
             <YAxis />
             <Tooltip />
             <Legend />

@@ -1,12 +1,19 @@
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import { UsersIcon, SearchIcon, FilterIcon, Loader } from 'lucide-react';
+import React, { useState, useEffect, useMemo } from "react";
+import axios from "axios";
+import { UsersIcon, SearchIcon, FilterIcon, Loader } from "lucide-react";
+
+// --- CONFIGURATION CONSTANTS ---
+const EMPLOYEES_PER_PAGE = 5;
 
 const EmployeeTable = () => {
+  // --- STATE FOR DATA AND LOADING ---
   const [employees, setEmployees] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
+
+  // --- STATE FOR PAGINATION ---
+  const [currentPage, setCurrentPage] = useState(1);
 
   // 1. Fetch Employee Data
   useEffect(() => {
@@ -17,7 +24,7 @@ const EmployeeTable = () => {
           { withCredentials: true }
         );
         // Assuming the API returns an array of employee objects
-        setEmployees(res.data); 
+        setEmployees(res.data);
       } catch (err) {
         console.error("Failed to fetch employees:", err);
         setError("Failed to load employee data.");
@@ -28,33 +35,59 @@ const EmployeeTable = () => {
     fetchEmployees();
   }, []);
 
-  // 2. Filter Logic
-  const filteredEmployees = employees.filter(
-    (employee) =>
-      // Assuming employee objects have 'name', 'email', 'role', and 'department' fields
-      employee.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      employee.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      employee.role?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      employee.department?.toLowerCase().includes(searchTerm.toLowerCase()),
-  );
+  // 2. Filter Logic (Memoized)
+  const filteredEmployees = useMemo(() => {
+    // Reset page to 1 whenever the filter changes
+    setCurrentPage(1);
 
-  // Helper for Tailwind classes based on status
+    return employees.filter(
+      (employee) =>
+        // Assuming employee objects have 'username', 'email', 'role', and a department name nested
+        employee.username?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        employee.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        employee.role?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        employee.departmentId?.name
+          ?.toLowerCase()
+          .includes(searchTerm.toLowerCase())
+    );
+  }, [employees, searchTerm]);
+
+  // 3. PAGINATION CALCULATIONS
+  const totalPages = Math.ceil(filteredEmployees.length / EMPLOYEES_PER_PAGE);
+
+  // Calculate the slice boundaries
+  const startIndex = (currentPage - 1) * EMPLOYEES_PER_PAGE;
+  const endIndex = startIndex + EMPLOYEES_PER_PAGE;
+
+  // Slice the array to get only the employees for the current page
+  const employeesToDisplay = filteredEmployees.slice(startIndex, endIndex);
+
+  // --- Helper for Tailwind classes based on status ---
   const getStatusClass = (status) => {
     switch (status) {
-      case 'Active':
-        return 'bg-green-100 text-green-800';
-      case 'On Leave':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'Terminated':
-        return 'bg-red-100 text-red-800';
+      case "Active":
+        return "bg-green-100 text-green-800";
+      case "On Leave":
+        return "bg-yellow-100 text-yellow-800";
+      case "Terminated":
+        return "bg-red-100 text-red-800";
       default:
-        return 'bg-gray-100 text-gray-800';
+        return "bg-gray-100 text-gray-800";
     }
   };
 
-  // 3. Render States (Loading/Error/Data)
-  
+  // --- Handlers for Pagination Buttons ---
+  const goToPreviousPage = () => {
+    setCurrentPage((prev) => Math.max(1, prev - 1));
+  };
+
+  const goToNextPage = () => {
+    setCurrentPage((prev) => Math.min(totalPages, prev + 1));
+  };
+
+  // --- Render States (Loading/Error/Data) ---
   if (loading) {
+    // ... (loading state unchanged)
     return (
       <div className="bg-white shadow rounded-lg p-6 flex items-center justify-center h-96">
         <Loader className="h-8 w-8 animate-spin text-blue-500" />
@@ -64,6 +97,7 @@ const EmployeeTable = () => {
   }
 
   if (error) {
+    // ... (error state unchanged)
     return (
       <div className="bg-red-50 border border-red-200 text-red-700 shadow rounded-lg p-6 h-96 flex items-center justify-center">
         <p>{error}</p>
@@ -134,67 +168,108 @@ const EmployeeTable = () => {
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {filteredEmployees.length === 0 ? (
-                <tr>
-                    <td colSpan="5" className="px-6 py-4 text-center text-gray-500">
-                        {searchTerm ? "No employees match your search." : "No employee data available."}
-                    </td>
-                </tr>
+            {employeesToDisplay.length === 0 ? (
+              <tr>
+                <td colSpan="5" className="px-6 py-4 text-center text-gray-500">
+                  {searchTerm
+                    ? "No employees match your search on this page."
+                    : "No employee data available."}
+                </td>
+              </tr>
             ) : (
-                filteredEmployees.map((employee) => (
-                    <tr key={employee._id}>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center">
-                        <div className="flex-shrink-0 h-10 w-10 flex items-center justify-center rounded-full bg-gray-200 text-gray-600">
-                            {employee.username?.charAt(0)}
+              // --- DISPLAY PAGINATED DATA ---
+              employeesToDisplay.map((employee) => (
+                <tr key={employee._id}>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="flex items-center">
+                      <div className="flex-shrink-0 h-10 w-10 flex items-center justify-center rounded-full bg-gray-200 text-gray-600">
+                        {employee.username?.charAt(0)}
+                      </div>
+                      <div className="ml-4">
+                        <div className="text-sm font-medium text-gray-900">
+                          {employee.username}
                         </div>
-                        <div className="ml-4">
-                            <div className="text-sm font-medium text-gray-900">
-                            {employee.username}
-                            </div>
-                            <div className="text-sm text-gray-500">
-                            {employee.email}
-                            </div>
+                        <div className="text-sm text-gray-500">
+                          {employee.email}
                         </div>
-                        </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {employee.role}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {employee.departmentId?.name || 'N/A'}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                        <span
-                        className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusClass(employee.status)}`}
-                        >
-                        {employee.status}
-                        </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                        <a href="#" className="text-blue-600 hover:text-blue-900">
-                        View
-                        </a>
-                    </td>
-                    </tr>
-                ))
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    {employee.role}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    {employee.departmentId?.name || "N/A"}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <span
+                      className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusClass(
+                        employee.status
+                      )}`}
+                    >
+                      {employee.status}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                    <a href="#" className="text-blue-600 hover:text-blue-900">
+                      View
+                    </a>
+                  </td>
+                </tr>
+              ))
             )}
           </tbody>
         </table>
       </div>
+      {/* --- PAGINATION FOOTER --- */}
       <div className="px-6 py-4 border-t border-gray-200">
         <div className="flex items-center justify-between">
           <div className="text-sm text-gray-500">
-            Showing{' '}
-            <span className="font-medium">{filteredEmployees.length}</span> of{' '}
-            <span className="font-medium">{employees.length}</span> employees
+            Showing{" "}
+            <span className="font-medium">
+              {employeesToDisplay.length > 0 ? startIndex + 1 : 0}
+            </span>{" "}
+            to{" "}
+            <span className="font-medium">
+              {Math.min(endIndex, filteredEmployees.length)}
+            </span>{" "}
+            of <span className="font-medium">{filteredEmployees.length}</span>{" "}
+            results
+            {/* Optionally show total fetched if filteredEmployees.length != employees.length */}
+            {filteredEmployees.length !== employees.length && (
+              <span> (from {employees.length} total)</span>
+            )}
           </div>
-          <div className="flex-1 flex justify-end">
-            {/* Pagination buttons (functional logic not implemented) */}
-            <button className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+          <div className="flex-1 flex justify-end items-center">
+            <div className="text-sm text-gray-500 mr-4">
+              Page <span className="font-medium">{currentPage}</span> of{" "}
+              <span className="font-medium">{totalPages}</span>
+            </div>
+
+            {/* Previous Button */}
+            <button
+              onClick={goToPreviousPage}
+              disabled={currentPage === 1}
+              className={`relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-l-md text-gray-700 bg-white ${
+                currentPage === 1
+                  ? "opacity-50 cursor-not-allowed"
+                  : "hover:bg-gray-50"
+              }`}
+            >
               Previous
             </button>
-            <button className="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+            {/* Next Button */}
+            <button
+              onClick={goToNextPage}
+              disabled={
+                currentPage === totalPages || filteredEmployees.length === 0
+              }
+              className={`relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-r-md -ml-px text-gray-700 bg-white ${
+                currentPage === totalPages || filteredEmployees.length === 0
+                  ? "opacity-50 cursor-not-allowed"
+                  : "hover:bg-gray-50"
+              }`}
+            >
               Next
             </button>
           </div>

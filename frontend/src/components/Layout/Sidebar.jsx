@@ -1,5 +1,5 @@
-import React from 'react'
-import { Link } from 'react-router-dom'
+import React from "react";
+import { Link } from "react-router-dom";
 import {
   LayoutDashboardIcon,
   UsersIcon,
@@ -11,12 +11,12 @@ import {
   HelpCircleIcon,
   BuildingIcon,
   LogOutIcon,
-} from 'lucide-react'
-import { useAuth } from '@/context/AuthContext'
+} from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
 const Sidebar = ({ isOpen, setIsOpen, handleLogout, isLoggingOut }) => {
-    const { user } = useAuth();
+  const { user } = useAuth();
 
-    const handleLinkClick = () => {
+  const handleLinkClick = () => {
     // Only close if the sidebar is currently open (on mobile)
     if (isOpen) {
       setIsOpen(false);
@@ -35,7 +35,7 @@ const Sidebar = ({ isOpen, setIsOpen, handleLogout, isLoggingOut }) => {
       <div
         className={`
             fixed inset-y-0 left-0 z-50 w-64 bg-white border-r border-gray-200 transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-auto lg:z-auto
-        ${isOpen ? 'translate-x-0' : '-translate-x-full'}
+        ${isOpen ? "translate-x-0" : "-translate-x-full"}
       `}
       >
         <div className="h-full flex flex-col">
@@ -137,7 +137,7 @@ const Sidebar = ({ isOpen, setIsOpen, handleLogout, isLoggingOut }) => {
               </div>
               <div className="ml-3">
                 <p className="text-sm font-medium text-gray-900">
-                  {user.organizationId?.name || 'N/A'}
+                  {user.organizationId?.name || "N/A"}
                 </p>
                 <p className="text-xs text-gray-500">Administrator</p>
               </div>
@@ -146,46 +146,54 @@ const Sidebar = ({ isOpen, setIsOpen, handleLogout, isLoggingOut }) => {
         </div>
       </div>
     </>
-  )
-}
+  );
+};
 const SidebarLink = ({ to, icon, text, active = false }) => {
   return (
     <Link
       to={to}
       className={`
         flex items-center px-3 py-2 text-sm font-medium rounded-md group
-        ${active ? 'bg-blue-50 text-blue-700' : 'text-gray-700 hover:text-blue-700 hover:bg-blue-50'}
+        ${
+          active
+            ? "bg-blue-50 text-blue-700"
+            : "text-gray-700 hover:text-blue-700 hover:bg-blue-50"
+        }
       `}
     >
       <span
-        className={`mr-3 ${active ? 'text-blue-700' : 'text-gray-500 group-hover:text-blue-700'}`}
+        className={`mr-3 ${
+          active ? "text-blue-700" : "text-gray-500 group-hover:text-blue-700"
+        }`}
       >
         {icon}
       </span>
       {text}
     </Link>
-  )
-}
+  );
+};
 
 const LogoutButton = ({ onClick, icon, text, disabled }) => {
-    return (
-        <button
-            onClick={onClick}
-            disabled={disabled}
-            className={`
+  return (
+    <button
+      onClick={onClick}
+      disabled={disabled}
+      className={`
                 flex items-center w-full px-3 py-2 text-sm font-medium rounded-md group transition-colors duration-150
                 text-gray-700 hover:text-red-700 hover:bg-red-50 disabled:opacity-50 disabled:cursor-not-allowed
-                ${disabled ? 'text-red-700 bg-red-50' : ''}
+                ${disabled ? "text-red-700 bg-red-50" : ""}
             `}
-        >
-            <span
-                className={`mr-3 text-gray-500 group-hover:text-red-700 ${disabled ? 'text-red-700' : ''}`}
-            >
-                {icon}
-            </span>
-            {text}
-        </button>
-    )
-}
+    >
+      <span
+        className={`mr-3 text-gray-500 group-hover:text-red-700 ${
+          disabled ? "text-red-700" : ""
+        }`}
+      >
+        {icon}
+      </span>
+      {text}
+    </button>
+  );
+};
 
-export default Sidebar
+export default Sidebar;
