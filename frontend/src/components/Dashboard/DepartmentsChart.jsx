@@ -11,28 +11,50 @@ import {
 // Define a consistent color palette for departments
 const COLORS = ['#4F46E5', '#10B981', '#F59E0B', '#EC4899', '#6366F1', '#EF4444', '#3B82F6'];
 
-// CORRECTED Function to transform the data structure for Recharts
+// Function to transform the data structure for Recharts
 const transformDepartmentData = (departmentCounts) => {
   if (!departmentCounts || departmentCounts.length === 0) return [];
   
-  // Use 'departmentName' for the name/label and 'employeeCount' for the value
   return departmentCounts.map(item => ({
-    name: item.departmentName, // The label for the pie slice
-    value: item.employeeCount || 0, // The numerical value for the slice size
+    name: item.departmentName, 
+    value: item.employeeCount || 0,
   }));
 };
 
 const DepartmentsChart = ({ departmentCounts }) => {
-  // Use the corrected transformation function
   const data = departmentCounts ? transformDepartmentData(departmentCounts) : [];
+
+  // --- NEW: Calculate Total Employees ---
+  const totalEmployees = data.reduce((acc, curr) => acc + curr.value, 0);
+
+  // If there are no employees, display a placeholder
+  if (totalEmployees === 0) {
+    return (
+      <div className="bg-white rounded-lg shadow p-6">
+        <h2 className="text-lg font-medium text-gray-900 mb-4">
+          Employee Distribution by Department
+        </h2>
+        <div className="h-80 flex items-center justify-center text-gray-500">
+          No employee data available.
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-white rounded-lg shadow p-6">
       <div className="flex justify-between items-center mb-4">
-        <h2 className="text-lg font-medium text-gray-900">
-          Employee Distribution by Department
+        <h2 className="text-lg font-medium text-gray-900 flex items-center space-x-2">
+          <span>Employee Distribution by Department</span>
+          {/* --- NEW: Display Total Count Here --- */}
+          <span className="inline-flex items-center rounded-full bg-indigo-100 px-3 py-0.5 text-sm font-medium text-indigo-800">
+            Total: {totalEmployees}
+          </span>
         </h2>
         <div className="flex items-center space-x-2">
+          {/* You might want to make this dropdown actually filter the data 
+            (e.g., filter between total and active employees)
+          */}
           <select className="text-sm border-gray-300 rounded-md shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
             <option>Total Employees</option>
             <option>Active Employees</option>
@@ -44,28 +66,25 @@ const DepartmentsChart = ({ departmentCounts }) => {
           <PieChart>
             <Pie
               data={data}
-              cx="40%" // Move to the left to make room for the legend on the right
+              cx="50%" 
               cy="50%"
               labelLine={false}
               outerRadius={100}
               fill="#8884d8"
               dataKey="value"
-              // Correctly display the department name and percentage in the label
-              label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}
             >
               {data.map((entry, index) => (
                 <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
               ))}
             </Pie>
             <Tooltip 
-              // Custom formatter to show the department name and employee count on hover
               formatter={(value, name, props) => [`Employees: ${value}`, props.payload.name]}
             />
             <Legend 
-              layout="vertical" 
-              align="right" 
-              verticalAlign="middle" 
-              wrapperStyle={{ right: 0 }}
+              layout="horizontal" 
+              align="center"    
+              verticalAlign="bottom" 
+              wrapperStyle={{ padding: '0 10px' }}
             />
           </PieChart>
         </ResponsiveContainer>

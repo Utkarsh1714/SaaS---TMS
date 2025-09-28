@@ -34,13 +34,15 @@ export const overview = async (req, res) => {
     // --- Average Completion Time ---
     let averageCompletionDays = 0;
 
+    const averageCompletionMatch = {
+        ...taskQuery, // <-- *** Use the user's scoped taskQuery here ***
+        status: "Completed",
+    };
+
     const aggregationResult = await Task.aggregate([
       // Stage 1: Filter to get only relevant documents
       {
-        $match: {
-          organizationId: new mongoose.Types.ObjectId(organizationId),
-          status: "Completed",
-        },
+        $match: averageCompletionMatch
       },
 
       // Stage 2: Calculate the difference betweeen completion and creation date for each task.
