@@ -4,14 +4,12 @@ import ProtectedRoute from "./routes/ProtectedRoutes";
 import { useAuth } from "./context/AuthContext";
 import { Toaster } from "./components/ui/sonner";
 import { Toaster as HotToast } from "react-hot-toast";
-import Pricing from "./components/Pricing";
+import Pricing from "./pages/Pricing";
 import ProtectRegRoute from "./routes/ProtectRegRoute";
 import LandingPage from "./pages/LandingPage";
 
 import Login from "./pages/Login";
 import Registration from "./pages/Registration";
-import ResetPassword from "./pages/ResetPassword";
-import ForgotPassword from "./pages/ForgotPassword";
 import Tasks from "./pages/Tasks";
 import Departments from "./pages/Departments";
 import Employees from "./pages/Employees";
@@ -46,9 +44,9 @@ function App() {
       <Suspense
         fallback={
           <div className="flex items-center justify-center h-screen bg-gray-50">
-        <Loader className="h-10 w-10 animate-spin text-blue-500" />
-        <p className="ml-3 text-lg text-gray-700">Loading app...</p>
-      </div>
+            <Loader className="h-10 w-10 animate-spin text-blue-500" />
+            <p className="ml-3 text-lg text-gray-700">Loading app...</p>
+          </div>
         }
       >
         <Routes>
@@ -64,8 +62,6 @@ function App() {
             }
           />
           <Route path="/plans" element={<Pricing />} />
-          <Route path="/reset-password" element={<ResetPassword />} />
-          <Route path="/forget-password" element={<ForgotPassword />} />
 
           <Route element={<ProtectedRoute />}>
             <Route path="/tasks" element={<Tasks />} />
