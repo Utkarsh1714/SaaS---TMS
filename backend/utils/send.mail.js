@@ -62,7 +62,14 @@ export const sendWelcomeEmail = async ({
   }
 };
 
-export const sendTaskNotificationEmail = async ({ title, description, assignedManagerEmail, managerName, priority, deadline }) => {
+export const sendTaskNotificationEmail = async ({
+  title,
+  description,
+  assignedManagerEmail,
+  managerName,
+  priority,
+  deadline,
+}) => {
   await transporter.sendMail({
     from: `"Taskify Notifications" <${process.env.SMTP_USER}>`,
     to: assignedManagerEmail,
@@ -79,7 +86,13 @@ export const sendTaskNotificationEmail = async ({ title, description, assignedMa
           <div style="background-color: #f9f9f9; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
             <h4 style="color: #333; margin-top: 0; margin-bottom: 10px;">Task Title: <span style="color: #007bff;">${title}</span></h4>
             <p style="margin-bottom: 5px;"><strong>Description:</strong> ${description}</p>
-            <p style="margin-bottom: 5px;"><strong>Priority:</strong> <span style="color: ${priority === 'High' ? '#dc3545' : priority === 'Medium' ? '#ffc107' : '#28a745'}; font-weight: bold;">${priority}</span></p>
+            <p style="margin-bottom: 5px;"><strong>Priority:</strong> <span style="color: ${
+              priority === "High"
+                ? "#dc3545"
+                : priority === "Medium"
+                ? "#ffc107"
+                : "#28a745"
+            }; font-weight: bold;">${priority}</span></p>
             <p style="margin-bottom: 0;"><strong>Deadline:</strong> <span style="font-weight: bold;">${deadline}</span></p>
           </div>
           
@@ -95,4 +108,50 @@ export const sendTaskNotificationEmail = async ({ title, description, assignedMa
       </div>
     `,
   });
+};
+
+export const sendOTPByEmail = (email, otp) => {
+  const mailOptions = {
+    from: process.env.EMAIL_USER,
+    to: email,
+    subject: "Taskify Password Reset OTP",
+    html: `
+            <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; border: 1px solid #ddd; border-radius: 8px; overflow: hidden;">
+                
+                <div style="background-color: #0d6efd; color: white; padding: 20px; text-align: center;">
+                    <h1 style="margin: 0; font-size: 24px;">Taskify Password Reset</h1>
+                </div>
+
+                <div style="padding: 30px;">
+                    <p style="font-size: 16px;">
+                        Hello,
+                    </p>
+                    <p style="font-size: 16px;">
+                        We received a request to reset the password for your Taskify account. 
+                        Use the code below to complete the process.
+                    </p>
+
+                    <div style="text-align: center; margin: 30px 0; padding: 15px; background-color: #f5f5f5; border: 2px dashed #ccc; border-radius: 4px;">
+                        <p style="margin: 0; font-size: 18px; color: #555;">Your One-Time Password (OTP) is:</p>
+                        <strong style="display: block; font-size: 32px; color: #0d6efd; margin-top: 10px;">
+                            ${otp}
+                        </strong>
+                    </div>
+
+                    <p style="font-size: 14px; color: #dc3545; text-align: center;">
+                        This code is valid for 10 minutes and should only be used once.
+                    </p>
+                    <p style="font-size: 16px;">
+                        If you didn't request a password reset, you can safely ignore this email.
+                        Your password will remain unchanged.
+                    </p>
+                </div>
+
+                <div style="background-color: #f0f0f0; padding: 15px; text-align: center; font-size: 12px; color: #777;">
+                    <p style="margin: 0;">&copy; ${new Date().getFullYear()} Taskify. All rights reserved.</p>
+                </div>
+            </div>
+        `,
+  };
+  return transporter.sendMail(mailOptions);
 };

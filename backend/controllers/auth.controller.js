@@ -4,7 +4,7 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import Razorpay from "razorpay";
 import Department from "../models/department.model.js";
-import { sendPasswordResetEmail } from "../utils/send.mail.js";
+import { sendOTPByEmail, sendPasswordResetEmail } from "../utils/send.mail.js";
 import crypto from "crypto";
 import dotenv from "dotenv";
 import Payment from "../models/paymentModel.js";
@@ -125,7 +125,7 @@ export const registerOrg = async (req, res) => {
 
 export const login = async (req, res) => {
   const { email, password } = req.body;
-  const user = await User.findOne({ email }).populate('organizationId', 'name');
+  const user = await User.findOne({ email }).populate("organizationId", "name");
 
   if (!user) {
     return res.status(400).json({ message: "Invalid credentials" });
@@ -135,10 +135,16 @@ export const login = async (req, res) => {
     return res.status(400).json({ message: "Invalid credentials" });
   }
 
-  const organizationIdForToken = user.organizationId ? user.organizationId._id : null;
+  const organizationIdForToken = user.organizationId
+    ? user.organizationId._id
+    : null;
 
   const token = jwt.sign(
-    { id: user._id, role: user.role, organizationId: user.organizationIdForToken },
+    {
+      id: user._id,
+      role: user.role,
+      organizationId: user.organizationIdForToken,
+    },
     process.env.JWT_SECRET,
     { expiresIn: "1d" }
   );
@@ -163,8 +169,8 @@ export const login = async (req, res) => {
   res
     .cookie("token", token, {
       httpOnly: false,
-      secure: process.env.NODE_ENV === 'production', // 🔑 Must be true for production
-      sameSite: process.env.NODE_ENV === 'production' ? "none" : "lax", // 🔑 Required with `secure: true` for cross-site cookies
+      secure: process.env.NODE_ENV === "production", // 🔑 Must be true for production
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax", // 🔑 Required with `secure: true` for cross-site cookies
     })
     .json({ message: "Login successful", user: safeUser, token: token });
 };
@@ -227,34 +233,6 @@ export const forgotPassword = async (req, res) => {
   } catch (error) {
     console.error("Error in resetPassword:", error);
     res.status(500).json({ message: "Internal server error" });
-  }
-};
-
-export const resetPassword = async (req, res) => {
-  const { token, newPassword } = req.body;
-
-  const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
-
-  try {
-    const user = await User.findOne({
-      resetToken: hashedToken,
-      resetTokenExpires: { $gt: Date.now() }, // Check if token is still valid
-    });
-
-    if (!user)
-      return res.status(400).json({ message: "Invalid or expired token" });
-
-    const hashedNewPassword = await bcrypt.hash(newPassword, 10);
-
-    user.password = hashedNewPassword;
-    user.resetToken = undefined; // Clear reset token
-    user.resetTokenExpires = undefined; // Clear reset token expiration
-    await user.save();
-
-    res.status(200).json({ message: "Password reset successfully" });
-  } catch (error) {
-    console.error("Reset Error:", error);
-    res.status(500).json({ message: "Failed to reset password" });
   }
 };
 
@@ -327,5 +305,136 @@ export const paymentVerification = async (req, res) => {
       success: false,
       message: "Server error during payment verification.",
     });
+  }
+};
+
+export const sendOTP = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(404).json({
+        message: "If the email is registered, you will receive an OTP shortly.",
+      });
+    }
+
+    // Generate a 6-digit OTP
+    const otp = crypto.randomInt(100000, 999999).toString();
+
+    // Set OTP expiration time (e.g., 10 minutes from now)
+    const tenMinutesFromNow = Date.now() + 10 * 60 * 1000;
+
+    // Hash OTP before saving
+    const hashedOTP = await bcrypt.hash(otp, 10);
+
+    user.otp = hashedOTP;
+    user.otpExpires = tenMinutesFromNow;
+    await user.save();
+
+    await sendOTPByEmail(user.email, otp);
+
+    res.status(200).json({
+      message: "OTP sent to your email. Please check your inbox.",
+      email: user.email, // Useful for the next step on the frontend
+    });
+  } catch (error) {
+    console.error("Error sending OTP:", error);
+    res.status(500).json({ message: "Server error. Failed to send OTP." });
+  }
+};
+
+export const verifyOTPAndAllowPasswordChange = async (req, res) => {
+  try {
+    const { email, otp } = req.body; // Expecting both email and the raw OTP code
+
+    const user = await User.findOne({ email });
+
+    if (!user || !user.otp) {
+      return res
+        .status(400)
+        .json({ message: "No active OTP found for this user." });
+    }
+
+    // 1. Check if the OTP has expired
+    if (user.otpExpires < Date.now()) {
+      user.otp = null;
+      user.otpExpires = null;
+      await user.save();
+      return res
+        .status(400)
+        .json({ message: "OTP has expired. Please request a new one." });
+    }
+
+    // 2. Compare the submitted OTP with the stored hashed OTP
+    const isMatch = await bcrypt.compare(otp, user.otp);
+
+    if (!isMatch) {
+      return res.status(400).json({ message: "Invalid OTP submitted." });
+    }
+
+    // 3. OTP is valid and matched. Clear the OTP fields immediately.
+    user.otp = null;
+    user.otpExpires = null;
+    await user.save();
+
+    // 4. Issue a temporary, short-lived JWT to authorize the password change
+    const resetToken = jwt.sign(
+      { id: user._id, purpose: "password_reset" },
+      process.env.JWT_SECRET,
+      { expiresIn: "10m" } // Token is valid for 10 minutes
+    );
+
+    res.status(200).json({
+      message: "OTP verified successfully. You can now set a new password.",
+      resetToken: resetToken,
+    });
+  } catch (error) {
+    console.error("Error verifying OTP:", error);
+    res.status(500).json({ message: "Server error during OTP verification." });
+  }
+};
+
+export const resetPassword = async (req, res) => {
+  try {
+    const { newPassword, resetToken } = req.body;
+
+    // 1. Verify the temporary reset token
+    let decoded;
+    try {
+      decoded = jwt.verify(resetToken, process.env.JWT_SECRET);
+    } catch (err) {
+      return res.status(401).json({
+        message:
+          "Invalid or expired reset session. Please restart the process.",
+      });
+    }
+
+    // Check if the token is intended for password reset
+    if (decoded.purpose !== "password_reset") {
+      return res.status(401).json({ message: "Invalid token purpose." });
+    }
+
+    const user = await User.findById(decoded.id);
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found." });
+    }
+
+    // 2. Hash the new password
+    const salt = await bcrypt.genSalt(10);
+    user.password = await bcrypt.hash(newPassword, salt);
+
+    // 3. Save the new password
+    await user.save();
+
+    res.status(200).json({
+      message: "Password has been successfully updated. You can now login.",
+    });
+  } catch (error) {
+    console.error("Error resetting password:", error);
+    res
+      .status(500)
+      .json({ message: "Server error. Failed to update password." });
   }
 };

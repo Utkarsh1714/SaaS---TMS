@@ -9,6 +9,7 @@ const UserSchema = new mongoose.Schema(
     email: {
       type: String,
       required: true,
+      unique: true,
     },
     contactNo: {
       type: Number,
@@ -40,8 +41,14 @@ const UserSchema = new mongoose.Schema(
       enum: ["Active", "Inactive", "On Leave"],
       default: "Inactive",
     },
-    resetToken: { type: String },
-    resetTokenExpires: { type: Date },
+    otp: {
+      type: String,
+      default: null,
+    },
+    otpExpires: {
+      type: Date,
+      default: null,
+    },
   },
   {
     timestamps: true,

@@ -13,12 +13,12 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
+import { motion } from "framer-motion";
+import ResetPasswordDialog from "@/components/ResetPasswordDialog";
 
 const Login = () => {
-  const [email, setEmail] = useState("");
   const { user, loading, login } = useAuth();
   const [loadingLogin, setLoadingLogin] = useState(false);
-  const [passwordSaving, setPasswordSaving] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
   const navigate = useNavigate();
 
@@ -56,32 +56,21 @@ const Login = () => {
     }
   };
 
-  const handlePasswordResetSubmit = async (e) => {
-    e.preventDefault();
-    setPasswordSaving(true);
-
-    try {
-      const response = await axios.post(
-        `${import.meta.env.VITE_API_URL}/api/auth/forgot-password`,
-        { email },
-        { withCredentials: true }
-      );
-
-      toast.success(response?.data?.message || "Reset link sent to your email");
-      setEmail("");
-      setDialogOpen(false);
-    } catch (error) {
-      console.error("Reset failed:", error);
-      toast.error(
-        error?.response?.data?.message || "Failed to send reset link"
-      );
-    } finally {
-      setPasswordSaving(false);
-    }
-  };
-
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 1 }}
+      className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8"
+    >
+      <ResetPasswordDialog
+        open={dialogOpen}
+        setOpen={setDialogOpen}
+        onComplete={() => {
+          // navigate("/login");
+        }}
+      />
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <Link to="/landing">
           <h2 className="text-center text-3xl font-extrabold text-gray-900">
@@ -151,44 +140,12 @@ const Login = () => {
                 </label>
               </div>
               <div className="text-sm">
-                <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-                  <DialogTrigger asChild>
-                    <a
-                      href="#"
-                      onClick={(e) => e.preventDefault()}
-                      className="font-medium text-blue-600 hover:text-blue-500"
-                    >
-                      Forgot your password?
-                    </a>
-                  </DialogTrigger>
-                  <DialogContent className="sm:max-w-[500px]">
-                    <DialogHeader>
-                      <DialogTitle>Reset your password</DialogTitle>
-                      <DialogDescription>
-                        Fill in the registered Email Address to reset the
-                        password.
-                      </DialogDescription>
-                    </DialogHeader>
-                    <form
-                      className="space-y-4"
-                      onSubmit={handlePasswordResetSubmit}
-                    >
-                      <input
-                        type="text"
-                        name="email"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        placeholder="Enter registered email address"
-                        className="w-full border px-3 py-2 rounded-md"
-                      />
-                      <Button type="submit" className="w-full">
-                        {passwordSaving
-                          ? "Sending reset link.."
-                          : "Get Resetlink"}
-                      </Button>
-                    </form>
-                  </DialogContent>
-                </Dialog>
+                <a
+                  onClick={() => setDialogOpen(true)} // Open the ResetPasswordDialog
+                  className="font-medium text-blue-600 hover:text-blue-500 cursor-pointer"
+                >
+                  Forgot your password?
+                </a>
               </div>
             </div>
             <div>
@@ -242,7 +199,7 @@ const Login = () => {
           </div>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 };
 

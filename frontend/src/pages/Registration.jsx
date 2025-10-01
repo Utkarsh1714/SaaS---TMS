@@ -6,6 +6,7 @@ import { useAuth } from "@/context/AuthContext";
 import { toast } from "react-hot-toast";
 import { CheckIcon, EyeIcon, EyeOffIcon, XIcon } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { motion } from "framer-motion";
 
 const Registration = () => {
   const [departments, setDepartments] = useState([]);
@@ -98,7 +99,9 @@ const Registration = () => {
       );
 
       login(res.data.user);
-      toast.success("Organization registered successfully! Please start creating & managing your employees, tasks, departments, meetings, and more.");
+      toast.success(
+        "Organization registered successfully! Please start creating & managing your employees, tasks, departments, meetings, and more."
+      );
 
       Navigate("/");
     } catch (error) {
@@ -108,7 +111,13 @@ const Registration = () => {
   };
 
   return (
-    <div className="w-full h-screen py-4 px-8">
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 1.3 }}
+      className="w-full h-screen py-4 px-8"
+    >
       <div className="text-center py-4">
         <h1 className="Headline2 text-2xl md:text-3xl lg:text-5xl font-semibold">
           Register Your Organization
@@ -127,7 +136,9 @@ const Registration = () => {
             <h1 className="text-2xl">Personal details</h1>
             <div className="w-full flex flex-col sm:flex-row items-center justify-center sm:gap-8">
               <label className="block text-left mt-4 w-full">
-                <span className="text-gray-700">Your Full Name<span className="text-red-500 pl-1">*</span></span>
+                <span className="text-gray-700">
+                  Your Full Name<span className="text-red-500 pl-1">*</span>
+                </span>
                 <input
                   name="username"
                   type="text"
@@ -139,7 +150,9 @@ const Registration = () => {
                 />
               </label>
               <label className="block text-left mt-4 w-full">
-                <span className="text-gray-700">Email Address<span className="text-red-500 pl-1">*</span></span>
+                <span className="text-gray-700">
+                  Email Address<span className="text-red-500 pl-1">*</span>
+                </span>
                 <input
                   name="email"
                   type="email"
@@ -153,7 +166,9 @@ const Registration = () => {
             </div>
             <div className="w-full flex flex-col sm:flex-row items-start justify-center sm:gap-8">
               <label className="block text-left mt-4 w-full">
-                <span className="text-gray-700">Contact Number<span className="text-red-500 pl-1">*</span></span>
+                <span className="text-gray-700">
+                  Contact Number<span className="text-red-500 pl-1">*</span>
+                </span>
                 <input
                   name="contactNo"
                   type="number"
@@ -165,7 +180,9 @@ const Registration = () => {
                 />
               </label>
               <label className="block text-left mt-4 w-full">
-                <span className="text-gray-700">Set Password<span className="text-red-500 pl-1">*</span></span>
+                <span className="text-gray-700">
+                  Set Password<span className="text-red-500 pl-1">*</span>
+                </span>
                 <div className="relative mt-2">
                   <Input
                     id={id}
@@ -236,7 +253,9 @@ const Registration = () => {
           <h1 className="text-2xl">Organization Details</h1>
           <div className="w-full flex items-center justify-center gap-8">
             <label className="block text-left mt-4 w-full">
-              <span className="text-gray-700">Company Name<span className="text-red-500 pl-1">*</span></span>
+              <span className="text-gray-700">
+                Company Name<span className="text-red-500 pl-1">*</span>
+              </span>
               <input
                 name="companyName"
                 type="text"
@@ -247,7 +266,9 @@ const Registration = () => {
               />
             </label>
             <label className="block text-left mt-4 w-full">
-              <span className="text-gray-700">GSTIN Number<span className="text-red-500 pl-1">*</span></span>
+              <span className="text-gray-700">
+                GSTIN Number<span className="text-red-500 pl-1">*</span>
+              </span>
               <input
                 name="gstin"
                 type="text"
@@ -260,7 +281,9 @@ const Registration = () => {
           </div>
           <div className="w-full flex items-center justify-center gap-8">
             <label className="block text-left mt-4 w-full">
-              <span className="text-gray-700">Address<span className="text-red-500 pl-1">*</span></span>
+              <span className="text-gray-700">
+                Address<span className="text-red-500 pl-1">*</span>
+              </span>
               <input
                 name="address"
                 type="text"
@@ -271,7 +294,9 @@ const Registration = () => {
               />
             </label>
             <label className="block text-left mt-4 w-full">
-              <span className="text-gray-700">City<span className="text-red-500 pl-1">*</span></span>
+              <span className="text-gray-700">
+                City<span className="text-red-500 pl-1">*</span>
+              </span>
               <input
                 name="city"
                 type="text"
@@ -284,7 +309,9 @@ const Registration = () => {
           </div>
           <div className="w-full flex items-center justify-center gap-8">
             <label className="block text-left mt-4 w-full">
-              <span className="text-gray-700">State<span className="text-red-500 pl-1">*</span></span>
+              <span className="text-gray-700">
+                State<span className="text-red-500 pl-1">*</span>
+              </span>
               <input
                 name="state"
                 type="text"
@@ -295,7 +322,9 @@ const Registration = () => {
               />
             </label>
             <label className="block text-left mt-4 w-full">
-              <span className="text-gray-700">Pincode<span className="text-red-500 pl-1">*</span></span>
+              <span className="text-gray-700">
+                Pincode<span className="text-red-500 pl-1">*</span>
+              </span>
               <input
                 name="pincode"
                 type="number"
@@ -308,7 +337,9 @@ const Registration = () => {
           </div>
           <div className="w-full flex items-center justify-center gap-8">
             <label className="block text-left mt-4 w-full">
-              <span className="text-gray-700">Country<span className="text-red-500 pl-1">*</span></span>
+              <span className="text-gray-700">
+                Country<span className="text-red-500 pl-1">*</span>
+              </span>
               <input
                 name="country"
                 type="text"
@@ -331,7 +362,8 @@ const Registration = () => {
           <div className="w-full flex items-center justify-center gap-8">
             <label className="block text-left mt-4 w-full">
               <span className="text-gray-700">
-                Upload Company Logo (URL)<span className="text-red-500 pl-1">*</span>
+                Upload Company Logo (URL)
+                <span className="text-red-500 pl-1">*</span>
               </span>
               <input
                 name="logoUrl"
@@ -374,7 +406,7 @@ const Registration = () => {
           </div>
         </form>
       </div>
-    </div>
+    </motion.div>
   );
 };
 

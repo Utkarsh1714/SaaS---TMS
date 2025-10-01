@@ -1,3 +1,4 @@
+import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import {
   BarChartIcon,
@@ -13,7 +14,13 @@ import AnimatedContent from "@/components/ui/AnimatedContent";
 
 const LandingPage = () => {
   return (
-    <div className="min-h-screen flex flex-col bg-white">
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 1 }}
+      className="min-h-screen flex flex-col bg-white"
+    >
       <Navbar />
       <section className="bg-gradient-to-r from-blue-600 to-indigo-700 py-20 px-4 sm:px-6 lg:px-8 text-white">
         <div className="max-w-7xl mx-auto">
@@ -64,11 +71,11 @@ const LandingPage = () => {
             </p>
           </div>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-              <FeatureCard
-                icon={<ClipboardCheckIcon size={24} />}
-                title="Task Management"
-                description="Create, assign and track tasks across teams and departments with ease."
-              />
+            <FeatureCard
+              icon={<ClipboardCheckIcon size={24} />}
+              title="Task Management"
+              description="Create, assign and track tasks across teams and departments with ease."
+            />
             <FeatureCard
               icon={<UsersIcon size={24} />}
               title="Employee Management"
@@ -144,7 +151,7 @@ const LandingPage = () => {
         </div>
       </section>
       <Footer />
-    </div>
+    </motion.div>
   );
 };
 
