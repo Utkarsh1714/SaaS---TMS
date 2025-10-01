@@ -26,7 +26,7 @@ const Registration = () => {
     country: "",
   });
 
-  const Navigate = useNavigate();
+  const navigate = useNavigate();
   const { login } = useAuth();
   const id = useId();
 
@@ -103,7 +103,7 @@ const Registration = () => {
         "Organization registered successfully! Please start creating & managing your employees, tasks, departments, meetings, and more."
       );
 
-      Navigate("/");
+      navigate("/dashboard");
     } catch (error) {
       console.error("Error registering organization:", error);
       toast.error(error?.response?.data?.message || "Registration failed");
