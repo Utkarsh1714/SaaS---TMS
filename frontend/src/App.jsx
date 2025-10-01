@@ -51,7 +51,7 @@ function App() {
       >
         <Routes>
           {/* All your routes remain the same */}
-          <Route path="/landing" element={<LandingPage />} />
+          <Route path="/" element={<LandingPage />} />
           <Route path="/login" element={<Login />} />
           <Route
             path="/registration"
@@ -64,8 +64,8 @@ function App() {
           <Route path="/plans" element={<Pricing />} />
 
           <Route element={<ProtectedRoute />}>
+            <Route path="/dashboard" element={<Home />} />
             <Route path="/tasks" element={<Tasks />} />
-            <Route path="/" element={<Home />} />
             <Route path="/tasks/:id" element={<TaskDetails />} />
             <Route path="/departments" element={<Departments />} />
             <Route path="/departments/:id" element={<DepartmentDetails />} />

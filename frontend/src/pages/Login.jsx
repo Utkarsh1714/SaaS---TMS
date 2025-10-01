@@ -28,7 +28,7 @@ const Login = () => {
   });
 
   if (loading) return <div>Loading...</div>;
-  if (user) return <Navigate to={"/"} replace />;
+  if (user) return <Navigate to={"/dashboard"} replace />;
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -47,7 +47,7 @@ const Login = () => {
       localStorage.setItem("token", token);
       toast.success("Login successful!");
       login(user);
-      navigate("/");
+      navigate("/dashboard");
     } catch (error) {
       console.error("Login failed:", error);
       toast.error(error?.response?.data?.message || "Login failed");
