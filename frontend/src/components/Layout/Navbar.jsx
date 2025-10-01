@@ -132,13 +132,6 @@ const Navbar = () => {
             Home
           </a>
           <a
-            href="#features"
-            onClick={handleLinkClick}
-            className="block px-3 py-2 text-xl font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-800 rounded-md"
-          >
-            Features
-          </a>
-          <a
             href="/plans"
             onClick={handleLinkClick}
             className="block px-3 py-2 text-xl font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-800 rounded-md"
