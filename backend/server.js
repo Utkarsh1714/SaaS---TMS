@@ -12,17 +12,18 @@ import connectDB from "./db/connectdb.js";
 
 import authRoutes from "./routes/auth.route.js";
 import employeeRoute from "./routes/employee.route.js";
+import employeePageRoute from "./routes/employeePage.route.js";
 import departmentRoute from "./routes/department.route.js";
-import taskRouter from './routes/task.route.js';
-import chatRoute from './routes/chat.route.js';
-import messageRoutes from './routes/message.route.js'
-import dashboard from './routes/dashboard.route.js'
+import taskRouter from "./routes/task.route.js";
+import chatRoute from "./routes/chat.route.js";
+import messageRoutes from "./routes/message.route.js";
+import dashboard from "./routes/dashboard.route.js";
 import initializeSocket from "./sockets/socketManager.js";
 
 connectDB();
 
 const app = express();
-app.set('trust proxy', false);
+app.set("trust proxy", false);
 const server = http.createServer(app);
 
 // Use the cors middleware for Express before the Socket.IO setup
@@ -30,11 +31,11 @@ app.use(cors({ origin: process.env.FRONTEND_URL, credentials: true }));
 
 // Socket.IO server setup
 const io = new SocketServer(server, {
-  cors: {
-    origin: process.env.FRONTEND_URL,
-    methods: ["GET", "POST"],
-    credentials: true,
-  },
+  cors: {
+    origin: process.env.FRONTEND_URL,
+    methods: ["GET", "POST"],
+    credentials: true,
+  },
 });
 
 app.set("io", io);
@@ -49,27 +50,28 @@ app.use(morgan("dev"));
 
 // Rate Limiter
 const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 100,
+  windowMs: 15 * 60 * 1000,
+  max: 100,
 });
 app.use("/api", limiter);
 
 // Import routes
 app.use("/api/auth", authRoutes);
 app.use("/api/dashboard", dashboard);
+app.use("/api/employeePage", employeePageRoute);
 app.use("/api/employee", employeeRoute);
 app.use("/api/department", departmentRoute);
 app.use("/api/task", taskRouter);
-app.use('/api/chat', chatRoute)
-app.use('/api/message', messageRoutes)
+app.use("/api/chat", chatRoute);
+app.use("/api/message", messageRoutes);
 
 // Global error handler
 app.use((err, req, res, next) => {
-  console.error("Server error: ", err.stack);
-  res.status(500).json({ message: "Something went wrong" });
+  console.error("Server error: ", err.stack);
+  res.status(500).json({ message: "Something went wrong" });
 });
 
 const PORT = process.env.PORT || 8080;
 server.listen(PORT, () => {
-  console.log(`🚀 Server is running on http://localhost:${PORT}`);
+  console.log(`🚀 Server is running on http://localhost:${PORT}`);
 });

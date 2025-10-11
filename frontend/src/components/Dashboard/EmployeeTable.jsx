@@ -5,12 +5,31 @@ import { UsersIcon, SearchIcon, FilterIcon, Loader } from "lucide-react";
 // --- CONFIGURATION CONSTANTS ---
 const EMPLOYEES_PER_PAGE = 5;
 
-const EmployeeTable = () => {
+const calculatePercentageChange = (current, previous) => {
+  // Handle division by zero or invalid input
+  if (previous === 0 || !previous || !current) return "N/A";
+
+  const change = ((current - previous) / previous) * 100;
+  // Format to two decimal places and prepend '+' for positive change
+  return `${change > 0 ? "+" : ""}${change.toFixed(2)}%`;
+};
+
+// Calculates the percentage of 'part' out of 'whole'
+const calculatePercentage = (part, whole) => {
+  if (whole === 0 || !whole || !part) return "0.00%";
+  const percentage = (part / whole) * 100;
+  return percentage.toFixed(2) + "%";
+};
+
+const EmployeeTable = ({ onStatsCalculated }) => {
   // --- STATE FOR DATA AND LOADING ---
   const [employees, setEmployees] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
+
+  const [currentEmployeeCount, setCurrentEmployeeCount] = useState(0);
+  const [lastYearEmployeeCount, setLastYearEmployeeCount] = useState(null);
 
   // --- STATE FOR PAGINATION ---
   const [currentPage, setCurrentPage] = useState(1);
@@ -23,8 +42,12 @@ const EmployeeTable = () => {
           `${import.meta.env.VITE_API_URL}/api/employee/`,
           { withCredentials: true }
         );
-        // Assuming the API returns an array of employee objects
-        setEmployees(res.data);
+
+        const { employees, stats } = res.data;
+
+        setEmployees(employees);
+        setCurrentEmployeeCount(stats.currentCount);
+        setLastYearEmployeeCount(stats.lastYearCount);
       } catch (err) {
         console.error("Failed to fetch employees:", err);
         setError("Failed to load employee data.");
@@ -34,6 +57,55 @@ const EmployeeTable = () => {
     };
     fetchEmployees();
   }, []);
+
+  // 2. STATISTICAL CALCULATIONS (Memoized)
+  const calculatedStats = useMemo(() => {
+    if (employees.length === 0) {
+      return { newHiresCount: 0, newHirePercentage: "0.00%", yoyChange: "N/A" };
+    }
+
+    // --- Calculate New Hires (Past 7 Days) ---
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+    const newHires = employees.filter((employee) => {
+      const createdDate = new Date(employee.createdAt);
+      return createdDate > sevenDaysAgo;
+    });
+
+    const newHiresCount = newHires.length;
+
+    // --- Calculate YoY Change ---
+    const yoyChange = calculatePercentageChange(
+      currentEmployeeCount,
+      lastYearEmployeeCount
+    );
+
+    // --- Calculate New Hire Percentage of Total ---
+    const newHirePercentage = calculatePercentage(
+      newHiresCount,
+      currentEmployeeCount
+    );
+
+    const stats = {
+      newHiresCount,
+      newHirePercentage,
+      yoyChange,
+      totalEmployees: currentEmployeeCount,
+    };
+
+    // --- UPDATE 3: Call the prop function to send stats to the parent component ---
+    if (onStatsCalculated) {
+      onStatsCalculated(stats);
+    }
+
+    return stats;
+  }, [
+    employees,
+    currentEmployeeCount,
+    lastYearEmployeeCount,
+    onStatsCalculated,
+  ]);
 
   // 2. Filter Logic (Memoized)
   const filteredEmployees = useMemo(() => {
@@ -112,6 +184,10 @@ const EmployeeTable = () => {
           <h2 className="text-lg font-medium text-gray-900 flex items-center">
             <UsersIcon className="h-5 w-5 mr-2 text-gray-500" />
             Employees
+            {/* Optional: Display current total count here */}
+            <span className="ml-2 text-sm text-gray-500">
+              ({currentEmployeeCount} Total)
+            </span>
           </h2>
           <div className="flex items-center space-x-2">
             <div className="relative">
