@@ -74,6 +74,7 @@ const Home = () => {
           monthlyTaskCompletion,
           ...restOverviewData // Collect taskCount, activeUser, overdueTaskCount, etc.
         } = res.data;
+        console.log(departmentCount);
 
         setOverviewData(restOverviewData);
         setDepartmentCount(departmentCount);

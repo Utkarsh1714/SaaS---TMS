@@ -1,5 +1,3 @@
-import DeptOption from "@/components/DeptOption";
-import RoleSelect from "@/components/RoleSelect";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -217,7 +215,9 @@ const Departments = () => {
           {departments.length > 0 && filteredDepartments.length === 0 ? (
             <p>No department found. Please create an department!</p>
           ) : filteredDepartments.length === 0 ? (
-            <p className="text-center mt-10">No departments exist. Please create one!</p>
+            <p className="text-center mt-10">
+              No departments exist. Please create one!
+            </p>
           ) : (
             <div className="Departments-cards w-full grid sm:grid-cols-2 md:grid-cols-2 gap-4 mt-6">
               {filteredDepartments.map((dept) => (

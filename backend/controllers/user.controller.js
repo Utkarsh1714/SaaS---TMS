@@ -4,23 +4,55 @@ import crypto from "crypto";
 import bcrypt from "bcryptjs";
 import Department from "../models/department.model.js";
 
-export const getAllEmployees = async (req, res) => {
+export const getAllEmployeesAndStats = async (req, res) => {
+  // 1. Calculate the date one year ago
+  const oneYearAgo = new Date();
+  oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+
+  const organizationId = req.user.organizationId;
+
   try {
-    const users = await User.find({
-      organizationId: req.user.organizationId
+    // --- A. Fetch the Current Employee List ---
+    const currentEmployees = await User.find({
+      organizationId: organizationId,
     })
-      .select("-password")
+      .select("-password -otp -otpExpires") // Include createdAt for new hire calculations on frontend
       .populate({
-        path: "departmentId", // The field in the User schema
-        select: "name",       // Fields to include from Department
-        // The 'as' option renames the field in the output document
-        as: "department"
+        path: "departmentId",
+        select: "name",
       });
 
-    res.status(200).json(users);
+    // --- B. Calculate Current Total Count ---
+    const currentEmployeeCount = currentEmployees.length;
+
+    // --- C. Calculate Last Year's Count (Approximation) ---
+    // This query attempts to count employees that were 'active' one year ago.
+    // It counts users created up to one year ago AND whose 'status' (if you have one)
+    // was not set to 'Terminated'/'Resigned' BEFORE the oneYearAgo mark.
+    // For simplicity, we'll only use 'createdAt' for now, but a 'status' field is recommended.
+
+    // This is a simple approximation: count everyone created up to one year ago.
+    const lastYearCount = await User.countDocuments({
+      organizationId: organizationId,
+      createdAt: { $lt: oneYearAgo },
+      // You SHOULD ideally filter by a status field here if you have one:
+      // status: { $ne: 'Terminated' }
+    });
+
+    // 4. Send the list and the statistics in a single response object
+    res.status(200).json({
+      employees: currentEmployees,
+      stats: {
+        currentCount: currentEmployeeCount,
+        lastYearCount: lastYearCount,
+      },
+    });
   } catch (error) {
-    console.error("Error fetching users:", error);
-    res.status(500).json({ message: "Internal server error" });
+    console.error("Error fetching employees and stats:", error);
+    // Better to check if the error is from Mongoose or a logic error
+    res
+      .status(500)
+      .json({ message: "Internal server error during data retrieval." });
   }
 };
 
@@ -77,11 +109,11 @@ export const createEmployee = async (req, res) => {
     });
 
     await newEmployee.save();
-    
-    if (role === 'Manager' && departmentId) {
+
+    if (role === "Manager" && departmentId) {
       await Department.findByIdAndUpdate(departmentId, {
-        $set: { manager: newEmployee._id }
-      })
+        $set: { manager: newEmployee._id },
+      });
     }
 
     const resetLink = `${process.env.FRONTEND_URL}/reset-password?email=${email}&token=${resetToken}`;
