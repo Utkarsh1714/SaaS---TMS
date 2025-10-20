@@ -19,7 +19,7 @@ const Sidebar = ({ isOpen, setIsOpen, handleLogout, isLoggingOut }) => {
   const handleLinkClick = () => {
     // Only close if the sidebar is currently open (on mobile)
     if (isOpen) {
-      setIsOpen(false);
+      setIsOpen(!isOpen);
     }
   };
   return (
@@ -28,7 +28,7 @@ const Sidebar = ({ isOpen, setIsOpen, handleLogout, isLoggingOut }) => {
       {isOpen && (
         <div
           className="fixed inset-0 z-40 bg-gray-600 opacity-75 lg:hidden"
-          onClick={() => setIsOpen(false)}
+          onClick={() => setIsOpen(!isOpen)}
         ></div>
       )}
       {/* Sidebar */}
@@ -45,7 +45,7 @@ const Sidebar = ({ isOpen, setIsOpen, handleLogout, isLoggingOut }) => {
               <span className="text-xl font-bold text-blue-600">WorkSpace</span>
             </Link>
             <button
-              onClick={() => setIsOpen(false)}
+              onClick={() => setIsOpen(!isOpen)}
               className="ml-auto lg:hidden text-gray-500 hover:text-gray-700"
             >
               <span className="sr-only">Close sidebar</span>
@@ -67,23 +67,23 @@ const Sidebar = ({ isOpen, setIsOpen, handleLogout, isLoggingOut }) => {
           {/* Navigation */}
           <nav className="flex-1 px-2 py-4 space-y-1 overflow-y-auto">
             <SidebarLink
-              to="/"
+              to="/dashboard"
               icon={<LayoutDashboardIcon size={20} />}
               text="Dashboard"
               active
-              onClick={handleLinkClick}
+              onClick={() => handleLinkClick}
             />
             <SidebarLink
               to="/tasks"
               icon={<ClipboardCheckIcon size={20} />}
               text="Tasks"
-              onClick={handleLinkClick}
+              onClick={() => handleLinkClick}
             />
             <SidebarLink
               to="/employees"
               icon={<UsersIcon size={20} />}
               text="Employees"
-              onClick={handleLinkClick}
+              onClick={() => handleLinkClick}
             />
             <SidebarLink
               to="/departments"
