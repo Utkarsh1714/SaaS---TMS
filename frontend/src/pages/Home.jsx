@@ -17,17 +17,12 @@ import { toast } from "sonner";
 import NotificationPanel from "../components/Dashboard/NotificationPanel";
 import { useNotifications } from "@/context/NotificationContext";
 
-const checkIsLargeScreen = () => {
-  // We check window.innerWidth, and use 1024px as the breakpoint (standard Tailwind 'lg')
-  return window.innerWidth >= 1024;
-};
-
 const Home = () => {
   const { logout } = useAuth();
   const { toggleNotificationPanel, notifications } = useNotifications();
   const navigate = useNavigate();
 
-  const [sidebarOpen, setSidebarOpen] = useState(checkIsLargeScreen);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
