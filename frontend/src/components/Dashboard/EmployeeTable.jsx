@@ -58,55 +58,6 @@ const EmployeeTable = ({ onStatsCalculated }) => {
     fetchEmployees();
   }, []);
 
-  // 2. STATISTICAL CALCULATIONS (Memoized)
-  const calculatedStats = useMemo(() => {
-    if (employees.length === 0) {
-      return { newHiresCount: 0, newHirePercentage: "0.00%", yoyChange: "N/A" };
-    }
-
-    // --- Calculate New Hires (Past 7 Days) ---
-    const sevenDaysAgo = new Date();
-    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-
-    const newHires = employees.filter((employee) => {
-      const createdDate = new Date(employee.createdAt);
-      return createdDate > sevenDaysAgo;
-    });
-
-    const newHiresCount = newHires.length;
-
-    // --- Calculate YoY Change ---
-    const yoyChange = calculatePercentageChange(
-      currentEmployeeCount,
-      lastYearEmployeeCount
-    );
-
-    // --- Calculate New Hire Percentage of Total ---
-    const newHirePercentage = calculatePercentage(
-      newHiresCount,
-      currentEmployeeCount
-    );
-
-    const stats = {
-      newHiresCount,
-      newHirePercentage,
-      yoyChange,
-      totalEmployees: currentEmployeeCount,
-    };
-
-    // --- UPDATE 3: Call the prop function to send stats to the parent component ---
-    if (onStatsCalculated) {
-      onStatsCalculated(stats);
-    }
-
-    return stats;
-  }, [
-    employees,
-    currentEmployeeCount,
-    lastYearEmployeeCount,
-    onStatsCalculated,
-  ]);
-
   // 2. Filter Logic (Memoized)
   const filteredEmployees = useMemo(() => {
     // Reset page to 1 whenever the filter changes
@@ -180,10 +131,12 @@ const EmployeeTable = ({ onStatsCalculated }) => {
   return (
     <div className="bg-white shadow rounded-lg overflow-hidden">
       <div className="px-6 py-4 border-b border-gray-200">
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg font-medium text-gray-900 flex items-center">
-            <UsersIcon className="h-5 w-5 mr-2 text-gray-500" />
-            Employees
+        <div className="flex items-center justify-between gap-2">
+          <h2 className="text-lg font-medium text-gray-900 flex flex-col md:flex-row items-center">
+            <span className="flex items-center justify-center">
+              <UsersIcon className="h-5 w-5 mr-2 text-gray-500" />
+              Employees
+            </span>
             {/* Optional: Display current total count here */}
             <span className="ml-2 text-sm text-gray-500">
               ({currentEmployeeCount} Total)

@@ -20,7 +20,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 
 const getStatusStyles = (status) => {
@@ -44,6 +44,38 @@ const getInitials = (username) => {
     .join("")
     .toUpperCase();
 };
+
+// Helper component for the Delete Dialog
+const DeleteDialog = ({ employee, handleDelete }) => (
+  <Dialog>
+    <DialogTrigger asChild>
+      <button className="text-sm font-medium text-red-600 hover:text-red-500 flex items-center">
+        <Trash2Icon className="h-4 w-4" />
+      </button>
+    </DialogTrigger>
+    <DialogContent className="sm:max-w-[425px] bg-white">
+      <DialogHeader>
+        <DialogTitle>Delete Employee</DialogTitle>
+        <DialogDescription>
+          Are you sure you want to delete{" "}
+          <span className="font-semibold">{employee.username}</span>? This
+          action cannot be undone.
+        </DialogDescription>
+      </DialogHeader>
+      <div className="flex justify-end gap-3 pt-4">
+        <DialogTrigger asChild>
+          <Button variant="outline">Cancel</Button>
+        </DialogTrigger>
+        <Button
+          variant="destructive"
+          onClick={() => handleDelete(employee._id)}
+        >
+          Delete
+        </Button>
+      </div>
+    </DialogContent>
+  </Dialog>
+);
 
 // Helper component for the Grid View
 const EmployeeCard = ({ employee, user, navigate, handleDelete }) => {
@@ -81,9 +113,11 @@ const EmployeeCard = ({ employee, user, navigate, handleDelete }) => {
         </div>
       </div>
       <div className="border-t border-gray-200 bg-gray-50 px-4 py-3 flex justify-around">
-        <button className="text-sm font-medium text-blue-600 hover:text-blue-500 flex items-center">
-          <MessageSquareIcon className="h-4 w-4" />
-        </button>
+        <Link to={"/messages"}>
+          <button className="text-sm font-medium text-blue-600 hover:text-blue-500 flex items-center">
+            <MessageSquareIcon className="h-4 w-4" />
+          </button>
+        </Link>
         {user.role === "Boss" && (
           <>
             <button
@@ -100,45 +134,19 @@ const EmployeeCard = ({ employee, user, navigate, handleDelete }) => {
   );
 };
 
-// Helper component for the Delete Dialog
-const DeleteDialog = ({ employee, handleDelete }) => (
-  <Dialog>
-    <DialogTrigger asChild>
-      <button className="text-sm font-medium text-red-600 hover:text-red-500 flex items-center">
-        <Trash2Icon className="h-4 w-4" />
-      </button>
-    </DialogTrigger>
-    <DialogContent className="sm:max-w-[425px] bg-white">
-      <DialogHeader>
-        <DialogTitle>Delete Employee</DialogTitle>
-        <DialogDescription>
-          Are you sure you want to delete{" "}
-          <span className="font-semibold">{employee.username}</span>? This
-          action cannot be undone.
-        </DialogDescription>
-      </DialogHeader>
-      <div className="flex justify-end gap-3 pt-4">
-        <DialogTrigger asChild>
-          <Button variant="outline">Cancel</Button>
-        </DialogTrigger>
-        <Button
-          variant="destructive"
-          onClick={() => handleDelete(employee._id)}
-        >
-          Delete
-        </Button>
-      </div>
-    </DialogContent>
-  </Dialog>
-);
-
 // Main EmployeeDirectory Component
 const EmployeeDirectory = ({
   view,
-  employees,
+  employees, // Full original list
   loading,
   searchTerm,
   filteredEmployees,
+  employeesToDisplay,
+  currentPage,
+  totalPages,
+  goToPreviousPage,
+  goToNextPage,
+  // ------------------------------------
   handleDelete,
 }) => {
   const navigate = useNavigate();
@@ -152,10 +160,6 @@ const EmployeeDirectory = ({
       </div>
     );
   }
-
-  const employeesToDisplay = filteredEmployees.filter(
-    (emp) => emp._id?.toString() !== user._id?.toString()
-  );
 
   if (employees.length > 0 && employeesToDisplay.length === 0) {
     return (
@@ -179,6 +183,9 @@ const EmployeeDirectory = ({
     );
   }
 
+  const EMPLOYEES_PER_PAGE = 6;
+  const startIndex = (currentPage - 1) * EMPLOYEES_PER_PAGE;
+
   if (view === "grid") {
     return (
       <div className="bg-white shadow rounded-lg overflow-hidden">
@@ -192,7 +199,21 @@ const EmployeeDirectory = ({
               handleDelete={handleDelete}
             />
           ))}
+          {employeesToDisplay.length === 0 && (
+            <div className="col-span-full py-4 text-center text-gray-500">
+              No employees found on this page.
+            </div>
+          )}
         </div>
+        {renderPaginationFooter({
+          employeesToDisplay,
+          filteredEmployees,
+          currentPage,
+          totalPages,
+          goToPreviousPage,
+          goToNextPage,
+          startIndex,
+        })}
       </div>
     );
   } else {
@@ -233,7 +254,84 @@ const EmployeeDirectory = ({
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {employeesToDisplay.map((employee) => (
+              {employeesToDisplay.length === 0 ? (
+                <tr>
+                  <td
+                    colSpan="5"
+                    className="px-6 py-4 text-center text-gray-500"
+                  >
+                    No employees found on this page.
+                  </td>
+                </tr>
+              ) : (
+                employeesToDisplay.map((employee) => (
+                  <tr
+                    key={employee._id}
+                    className="hover:bg-gray-50 transition-colors"
+                  >
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center">
+                        <div className="flex-shrink-0 h-10 w-10 bg-gray-200 rounded-full flex items-center justify-center text-sm font-medium text-gray-800">
+                          {getInitials(employee.username)}
+                        </div>
+                        <div className="ml-4">
+                          <div className="text-sm font-medium text-gray-900">
+                            {employee.username}
+                          </div>
+                          <div className="text-xs text-gray-500">
+                            {employee.email}
+                          </div>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-900">
+                        {employee.role}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-900">
+                        {employee.departmentId?.name || "—"}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span
+                        className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusStyles(
+                          employee.status
+                        )}`}
+                      >
+                        {employee.status}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                      <div className="flex justify-end space-x-2">
+                        <Link to={`/messages`}>
+                          <button className="text-gray-500 hover:text-blue-600 p-1">
+                            <MessageSquareIcon className="h-4 w-4" />
+                          </button>
+                        </Link>
+                        {user.role === "Boss" && (
+                          <>
+                            <button
+                              onClick={() =>
+                                navigate(`/employees/${employee._id}`)
+                              }
+                              className="text-gray-500 hover:text-green-600 p-1"
+                            >
+                              <EditIcon className="h-4 w-4" />
+                            </button>
+                            <DeleteDialog
+                              employee={employee}
+                              handleDelete={handleDelete}
+                            />
+                          </>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
+              {/* {employeesToDisplay.map((employee) => (
                 <tr
                   key={employee._id}
                   className="hover:bg-gray-50 transition-colors"
@@ -272,9 +370,11 @@ const EmployeeDirectory = ({
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                     <div className="flex justify-end space-x-2">
-                      <button className="text-gray-500 hover:text-blue-600 p-1">
-                        <MessageSquareIcon className="h-4 w-4" />
-                      </button>
+                      <Link to={`/messages`}>
+                        <button className="text-gray-500 hover:text-blue-600 p-1">
+                          <MessageSquareIcon className="h-4 w-4" />
+                        </button>
+                      </Link>
                       {user.role === "Boss" && (
                         <>
                           <button
@@ -294,40 +394,88 @@ const EmployeeDirectory = ({
                     </div>
                   </td>
                 </tr>
-              ))}
+              ))} */}
             </tbody>
           </table>
         </div>
-        {/* Pagination placeholder - can be implemented later */}
-        <div className="px-6 py-4 border-t border-gray-200 bg-gray-50">
-          <div className="flex items-center justify-between">
-            <span className="text-sm text-gray-700">
-              Showing <span className="font-medium">1</span> to{" "}
-              <span className="font-medium">{employeesToDisplay.length}</span>{" "}
-              of <span className="font-medium">{employees.length - 1}</span>{" "}
-              employees
-            </span>
-            <div className="flex space-x-2">
-              <button
-                disabled
-                className="inline-flex items-center px-3 py-1 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
-              >
-                Previous
-              </button>
-              <button
-                disabled
-                className="inline-flex items-center px-3 py-1 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
-              >
-                Next
-              </button>
-            </div>
-          </div>
-        </div>
+        {renderPaginationFooter({
+          employeesToDisplay,
+          filteredEmployees,
+          currentPage,
+          totalPages,
+          goToPreviousPage,
+          goToNextPage,
+          startIndex,
+        })}
       </div>
     );
   }
 };
 
+const renderPaginationFooter = ({
+  employeesToDisplay,
+  filteredEmployees,
+  currentPage,
+  totalPages,
+  goToPreviousPage,
+  goToNextPage,
+  startIndex,
+}) => {
+  return (
+    <div className="px-6 py-4 border-t border-gray-200 bg-gray-50">
+      <div className="flex items-center justify-between">
+        <div className="text-sm text-gray-500">
+          Showing{" "}
+          <span className="font-medium">
+            {employeesToDisplay.length > 0 ? startIndex + 1 : 0}
+          </span>{" "}
+          to{" "}
+          <span className="font-medium">
+            {Math.min(
+              startIndex + employeesToDisplay.length,
+              filteredEmployees.length
+            )}
+          </span>{" "}
+          of <span className="font-medium">{filteredEmployees.length}</span>{" "}
+          results
+        </div>
+        <div className="flex space-x-2">
+          <div className="text-sm text-gray-500 mr-4 flex items-center">
+            Page <span className="font-medium ml-1">{currentPage}</span> of{" "}
+            <span className="font-medium ml-1">{totalPages}</span>
+          </div>
+
+          {/* Previous Button */}
+          <button
+            onClick={goToPreviousPage}
+            disabled={currentPage === 1}
+            className={`inline-flex items-center px-3 py-1 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white ${
+              currentPage === 1
+                ? "opacity-50 cursor-not-allowed"
+                : "hover:bg-gray-50"
+            }`}
+          >
+            Previous
+          </button>
+
+          {/* Next Button */}
+          <button
+            onClick={goToNextPage}
+            disabled={
+              currentPage === totalPages || filteredEmployees.length === 0
+            }
+            className={`inline-flex items-center px-3 py-1 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white ${
+              currentPage === totalPages || filteredEmployees.length === 0
+                ? "opacity-50 cursor-not-allowed"
+                : "hover:bg-gray-50"
+            }`}
+          >
+            Next
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 export default EmployeeDirectory;
-// Note: BuildingIcon is used in the List View and should be imported if available
-// For now, I'll add a temporary import for it inside this file

@@ -61,52 +61,27 @@ const Home = () => {
           { withCredentials: true }
         );
 
-        // Destructure and set the state with the fetched data
         const {
           taskPriorityCount,
           departmentCount,
           taskStatusCount,
           monthlyTaskCompletion,
-          ...restOverviewData // Collect taskCount, activeUser, overdueTaskCount, etc.
+          ...restOverviewData
         } = res.data;
-        console.log(departmentCount);
 
         setOverviewData(restOverviewData);
         setDepartmentCount(departmentCount);
         setMonthlyTaskCompletion(monthlyTaskCompletion);
       } catch (error) {
         console.error("Failed to fetch data:", error);
-        // Handle error display if needed
       } finally {
-        setLoading(false); // Stop loading once data is fetched or an error occurs
+        setLoading(false);
       }
     };
 
     fetchData();
   }, []);
 
-  // CHANGE 2: Add useEffect to handle window resizing
-  useEffect(() => {
-    // Handler to close the sidebar if the screen is resized back down to mobile size
-    const handleResize = () => {
-      // If the screen size is less than 1024px, ensure the sidebar is closed.
-      if (!checkIsLargeScreen()) {
-        setSidebarOpen(false);
-      } else {
-        // Optionally, keep it open on large screens after a resize
-        setSidebarOpen(true);
-      }
-    };
-
-    window.addEventListener("resize", handleResize);
-
-    // Cleanup function
-    return () => {
-      window.removeEventListener("resize", handleResize);
-    };
-  }, []);
-
-  // Show a loading spinner or placeholder while data is being fetched
   if (loading) {
     return (
       <div className="flex items-center justify-center h-screen bg-gray-50">
@@ -118,7 +93,6 @@ const Home = () => {
 
   return (
     <div className="flex h-screen bg-gray-50">
-      {/* Sidebar */}
       <Sidebar
         isOpen={sidebarOpen}
         setIsOpen={setSidebarOpen}
@@ -126,9 +100,7 @@ const Home = () => {
         isLoggingOut={isLoggingOut}
       />
 
-      {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Top Navigation */}
         <header className="bg-white shadow-sm z-10">
           <div className="px-4 sm:px-6 lg:px-8">
             <div className="flex items-center justify-between h-16">
@@ -190,31 +162,20 @@ const Home = () => {
             </div>
           </div>
         </header>
-
-        {/* Main Content Area */}
         <main className="flex-1 overflow-auto p-4 sm:p-6 lg:p-8">
           <div className="mb-6">
             <h1 className="text-2xl font-semibold text-gray-900">Dashboard</h1>
           </div>
-
-          {/* Stats Cards - Pass all overview data */}
           <StatsCards
             taskCount={overviewData.taskCount}
             activeUser={overviewData.activeUser}
             overdueTaskCount={overviewData.overdueTaskCount}
             averageCompletionDays={overviewData.averageCompletionDays}
           />
-
-          {/* Charts Section */}
           <div className="mt-8 grid grid-cols-1 gap-8 lg:grid-cols-2">
-            {/* Tasks Chart - Pass priority and status data */}
             <TasksChart monthlyTaskCompletion={monthlyTaskCompletion} />
-
-            {/* Departments Chart - Pass department count data */}
             <DepartmentsChart departmentCounts={departmentCount} />
           </div>
-
-          {/* Table and Meetings */}
           <div className="mt-8 grid grid-cols-1 gap-8 lg:grid-cols-3">
             <div className="lg:col-span-2">
               <EmployeeTable />
@@ -223,13 +184,9 @@ const Home = () => {
               <MeetingsCard />
             </div>
           </div>
-
-          {/* Upcoming Deadlines */}
           <div className="mt-8">
             <UpcomingDeadline />
           </div>
-
-          {/* Activity Feed */}
           <div className="mt-8">
             <ActivityFeed />
           </div>

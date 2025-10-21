@@ -11,6 +11,7 @@ import {
   RefreshCcw,
   ListIcon,
   GridIcon,
+  BellDot,
 } from "lucide-react";
 import EmployeeDirectory from "@/components/Employee/EmployeeDirectory ";
 import EmployeeStats from "@/components/Employee/EmployeeStats";
@@ -40,6 +41,11 @@ import {
 import DeptOption from "@/components/DeptOption";
 import RoleSelect from "@/components/RoleSelect";
 import { RxCross1 } from "react-icons/rx";
+import NotificationPanel from "@/components/Dashboard/NotificationPanel";
+import { useNotifications } from "@/context/NotificationContext";
+import DepartmentsChart from "@/components/Dashboard/DepartmentsChart";
+
+const EMPLOYEES_PER_PAGE = 6;
 
 const calculatePercentageChange = (current, previous) => {
   // Check for invalid or zero previous value to avoid division by zero
@@ -53,6 +59,7 @@ const calculatePercentageChange = (current, previous) => {
 const EmployeesPage = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { toggleNotificationPanel, notifications } = useNotifications();
 
   const [view, setView] = useState("grid");
   const [loading, setLoading] = useState(false);
@@ -99,6 +106,16 @@ const EmployeesPage = () => {
   const [newHiresCount, setNewHiresCount] = useState(0);
   const [yoyGrowthPercentage, setYoYGrowthPercentage] = useState("0.00%");
 
+  const [departmentCount, setDepartmentCount] = useState(null);
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const [statusFilter, setStatusFilter] = useState("All");
+
+  const handleStatusFilter = (status) => {
+    setStatusFilter(status);
+    setCurrentPage(1);
+  };
+
   const getAllEmployee = async () => {
     setLoading(true);
     const sevenDaysAgo = new Date();
@@ -140,6 +157,7 @@ const EmployeesPage = () => {
       `${import.meta.env.VITE_API_URL}/api/employeePage/data1`,
       { withCredentials: true }
     );
+    setDepartmentCount(res.data.data);
   };
 
   const handleDelete = async (id) => {
@@ -219,9 +237,11 @@ const EmployeesPage = () => {
 
   // Memorized filter logic (from old Employees.jsx)
   const filteredEmployees = useMemo(() => {
+    setCurrentPage(1);
+
     const lowerCasedTerm = searchTerm.toLowerCase();
-    if (!lowerCasedTerm) return employee;
-    return employee.filter((emp) => {
+
+    let filteredBySearch = employee.filter((emp) => {
       const nameMatch = emp.username.toLowerCase().includes(lowerCasedTerm);
       const roleMatch = emp.role.toLowerCase().includes(lowerCasedTerm);
       const deptMatch = emp.departmentId?.name
@@ -229,7 +249,33 @@ const EmployeesPage = () => {
         .includes(lowerCasedTerm);
       return nameMatch || roleMatch || deptMatch;
     });
-  }, [searchTerm, employee]);
+
+    if (statusFilter !== "All") {
+      // Normalize status to match data (assuming data uses "Active", "Inactive", "On Leave")
+      const targetStatus = statusFilter;
+
+      filteredBySearch = filteredBySearch.filter(
+        (emp) => emp.status === targetStatus
+      );
+    }
+
+    return filteredBySearch;
+  }, [searchTerm, employee, statusFilter]);
+
+  const totalPages = Math.ceil(filteredEmployees.length / EMPLOYEES_PER_PAGE);
+
+  const startIndex = (currentPage - 1) * EMPLOYEES_PER_PAGE;
+  const endIndex = startIndex + EMPLOYEES_PER_PAGE;
+
+  const employeesToDisplay = filteredEmployees.slice(startIndex, endIndex);
+
+  const goToPreviousPage = () => {
+    setCurrentPage((prev) => Math.max(1, prev - 1));
+  };
+
+  const goToNextPage = () => {
+    setCurrentPage((prev) => Math.min(totalPages, prev + 1));
+  };
 
   // Memorize suggestions generation (from old Employees.jsx)
   const searchSuggestions = useMemo(() => {
@@ -283,20 +329,15 @@ const EmployeesPage = () => {
     };
   }, [user.organizationId]);
 
-  // --- JSX Structure ---
-
   return (
     <div className="flex h-screen bg-gray-50">
-      {/* Sidebar - assuming you have a Sidebar component */}
       <Sidebar
         isOpen={sidebarOpen}
         setIsOpen={setSidebarOpen}
         handleLogout={handleLogout}
         isLoggingOut={isLoggingOut}
       />
-      {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Top Navigation */}
         <header className="bg-white shadow-sm z-10">
           <div className="px-4 sm:px-6 lg:px-8">
             <div className="flex items-center justify-between h-16">
@@ -319,7 +360,7 @@ const EmployeesPage = () => {
                     />
                   </svg>
                 </button>
-                <div className="ml-4 flex items-center lg:ml-0 relative w-64">
+                <div className="ml-4 flex flex-col items-center lg:ml-0 relative w-64">
                   <div className="relative w-full">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                       <SearchIcon className="h-5 w-5 text-gray-400" />
@@ -333,7 +374,7 @@ const EmployeesPage = () => {
                       }
                       className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-gray-50 placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                       placeholder="Search by name, role, or department..."
-                      type="search"
+                      type="text"
                       autoComplete="off"
                     />
                     {searchTerm?.length > 0 && (
@@ -345,9 +386,8 @@ const EmployeesPage = () => {
                       </button>
                     )}
                   </div>
-                  {/* Suggestion Dropdown */}
                   {showSuggestions && searchSuggestions.length > 0 && (
-                    <ul className="absolute z-20 w-full mt-2 bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-y-auto">
+                    <ul className="absolute z-20 w-full mt-10 bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-y-auto">
                       {searchSuggestions.map((suggestion, index) => (
                         <li
                           key={index}
@@ -362,9 +402,16 @@ const EmployeesPage = () => {
                 </div>
               </div>
               <div className="flex items-center">
-                <button className="flex-shrink-0 p-1 mr-4 text-gray-400 rounded-full hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                <button
+                  onClick={toggleNotificationPanel}
+                  className="flex-shrink-0 p-1 text-gray-400 rounded-full hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                >
                   <span className="sr-only">View notifications</span>
-                  <BellIcon className="h-6 w-6" />
+                  {notifications && notifications.length > 0 ? (
+                    <BellDot className="h-6 w-6 text-green-500" />
+                  ) : (
+                    <BellIcon className="h-6 w-6 text-gray-400" />
+                  )}
                 </button>
                 <div className="ml-3 relative">
                   <div>
@@ -378,7 +425,6 @@ const EmployeesPage = () => {
             </div>
           </div>
         </header>
-        {/* Main Content */}
         <main className="flex-1 overflow-auto p-4 sm:p-6 lg:p-8">
           <div className="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center">
             <h1 className="text-2xl font-semibold text-gray-900 mb-4 sm:mb-0">
@@ -467,18 +513,15 @@ const EmployeesPage = () => {
               )}
             </div>
           </div>
-          {/* Employee Stats - assuming it fetches real data or you're fine with dummy data */}
           <EmployeeStats
             totalEmployee={employeeCount}
             employeeIncresed={yoyGrowthPercentage}
             newHires={newHiresCount}
           />
           <div className="mt-8 grid grid-cols-1 gap-8 lg:grid-cols-3">
-            {/* Department Distribution - assuming it fetches real data or you're fine with dummy data */}
             <div className="lg:col-span-1">
-              <DepartmentDistribution />
+              <DepartmentsChart departmentCounts={departmentCount} />
             </div>
-            {/* Employee Directory */}
             <div className="lg:col-span-2">
               <div className="mb-4 flex justify-between items-center">
                 <div className="flex items-center space-x-0 rounded-md shadow-sm border border-gray-300">
@@ -510,7 +553,7 @@ const EmployeesPage = () => {
                     <DropdownMenuTrigger asChild>
                       <button className="inline-flex items-center px-3 py-1.5 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
                         <FilterIcon className="h-4 w-4 mr-1" />
-                        Filter
+                        {statusFilter === "All" ? "Filter" : statusFilter}
                       </button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent
@@ -518,13 +561,28 @@ const EmployeesPage = () => {
                       className="w-56 bg-white shadow-lg rounded-md p-1"
                     >
                       <DropdownMenuGroup>
-                        <DropdownMenuItem className="cursor-pointer hover:bg-gray-100 p-2 rounded-md">
+                        <DropdownMenuItem
+                          onClick={() => handleStatusFilter("All")}
+                          className="cursor-pointer hover:bg-gray-100 p-2 rounded-md"
+                        >
+                          All Employees
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          className="cursor-pointer hover:bg-gray-100 p-2 rounded-md"
+                          onClick={() => handleStatusFilter("Active")}
+                        >
                           Active
                         </DropdownMenuItem>
-                        <DropdownMenuItem className="cursor-pointer hover:bg-gray-100 p-2 rounded-md">
+                        <DropdownMenuItem
+                          className="cursor-pointer hover:bg-gray-100 p-2 rounded-md"
+                          onClick={() => handleStatusFilter("Inactive")}
+                        >
                           Inactive
                         </DropdownMenuItem>
-                        <DropdownMenuItem className="cursor-pointer hover:bg-gray-100 p-2 rounded-md">
+                        <DropdownMenuItem
+                          className="cursor-pointer hover:bg-gray-100 p-2 rounded-md"
+                          onClick={() => handleStatusFilter("On Leave")}
+                        >
                           On Leave
                         </DropdownMenuItem>
                       </DropdownMenuGroup>
@@ -550,13 +608,19 @@ const EmployeesPage = () => {
                 employees={employee}
                 loading={loading}
                 searchTerm={searchTerm}
-                filteredEmployees={filteredEmployees}
                 handleDelete={handleDelete}
+                filteredEmployees={filteredEmployees}
+                employeesToDisplay={employeesToDisplay}
+                currentPage={currentPage}
+                totalPages={totalPages}
+                goToPreviousPage={goToPreviousPage}
+                goToNextPage={goToNextPage}
               />
             </div>
           </div>
         </main>
       </div>
+      <NotificationPanel />
     </div>
   );
 };
