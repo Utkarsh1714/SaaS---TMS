@@ -57,7 +57,7 @@ const calculatePercentageChange = (current, previous) => {
 };
 
 const EmployeesPage = () => {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const navigate = useNavigate();
   const { toggleNotificationPanel, notifications } = useNotifications();
 

@@ -10,7 +10,6 @@ const DepartmentList = ({
   setSelectedDepartment,
   departments,
 }) => {
-  console.log(departments);
   //   const departments = [
   //     {
   //       id: 'engineering',

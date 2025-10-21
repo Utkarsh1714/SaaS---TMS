@@ -125,7 +125,10 @@ export const registerOrg = async (req, res) => {
 
 export const login = async (req, res) => {
   const { email, password } = req.body;
-  const user = await User.findOne({ email }).populate("organizationId", "name");
+  const user = await User.findOne({ email }).populate(
+    "organizationId",
+    "name country"
+  );
 
   if (!user) {
     return res.status(400).json({ message: "Invalid credentials" });

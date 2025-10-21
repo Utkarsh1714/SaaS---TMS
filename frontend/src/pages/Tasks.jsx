@@ -23,7 +23,7 @@ import NotificationPanel from "@/components/Dashboard/NotificationPanel";
 
 const TasksPage = () => {
   // --- State Management ---
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const [tasks, setTasks] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [originalTasks, setOriginalTasks] = useState([]);
