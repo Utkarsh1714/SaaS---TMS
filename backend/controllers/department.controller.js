@@ -119,6 +119,7 @@ export const getSingleDepartmentWithDetails = async (req, res) => {
                 username: 1,
                 email: 1,
                 role: 1,
+                contactNo: 1,
               },
             },
           ],
@@ -154,10 +155,7 @@ export const getSingleDepartmentWithDetails = async (req, res) => {
                 input: "$users",
                 as: "user",
                 cond: {
-                  $and: [
-                    { $ne: ["$$user.role", "Manager"] },
-                    { $ne: ["$$user.role", "Boss"] },
-                  ],
+                  $and: [{ $ne: ["$$user.role", "Boss"] }],
                 },
               },
             },
@@ -166,6 +164,7 @@ export const getSingleDepartmentWithDetails = async (req, res) => {
       },
       {
         $project: {
+          createdAt: 1,
           name: 1,
           manager: {
             $cond: [
@@ -174,6 +173,7 @@ export const getSingleDepartmentWithDetails = async (req, res) => {
                 id: "$manager._id",
                 username: "$manager.username",
                 email: "$manager.email",
+                role: "$manager.role",
                 contactNo: "$manager.contactNo",
               },
               null,

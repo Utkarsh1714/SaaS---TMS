@@ -1,5 +1,6 @@
 import NotificationPanel from "@/components/Dashboard/NotificationPanel";
 import DepartmentList from "@/components/Departments/DepartmentList";
+import DepartmentSummary from "@/components/Departments/DepartmentSummary";
 import Sidebar from "@/components/Layout/Sidebar";
 import { Button } from "@/components/ui/button";
 import {
@@ -29,8 +30,8 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
 const Departments = () => {
+  const { logout } = useAuth();
   const navigate = useNavigate();
-  const { user } = useAuth();
   const { toggleNotificationPanel, notifications } = useNotifications();
 
   const [open, setOpen] = useState(false);
@@ -544,6 +545,12 @@ const Departments = () => {
                 setSelectedDepartment={setSelectedDepartment}
                 departments={departments}
               />
+            </div>
+            <div className="lg:col-span-2 space-y-8">
+              <DepartmentSummary departmentId={selectedDepartment} />
+              {/* <DepartmentEmployeeDistribution
+                departmentId={selectedDepartment}
+              /> */}
             </div>
           </div>
         </main>
