@@ -171,9 +171,10 @@ export const getSingleDepartmentWithDetails = async (req, res) => {
             $cond: [
               { $gt: ["$manager", null] },
               {
+                id: "$manager._id",
                 username: "$manager.username",
                 email: "$manager.email",
-                id: "$manager._id",
+                contactNo: "$manager.contactNo",
               },
               null,
             ],

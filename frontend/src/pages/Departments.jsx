@@ -1,3 +1,6 @@
+import NotificationPanel from "@/components/Dashboard/NotificationPanel";
+import DepartmentList from "@/components/Departments/DepartmentList";
+import Sidebar from "@/components/Layout/Sidebar";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -8,8 +11,16 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { useAuth } from "@/context/AuthContext";
+import { useNotifications } from "@/context/NotificationContext";
 import axios from "axios";
-import { RefreshCcw } from "lucide-react";
+import {
+  BellDot,
+  BellIcon,
+  PlusIcon,
+  RefreshCcw,
+  SearchIcon,
+  UserIcon,
+} from "lucide-react";
 import React, { useEffect, useMemo, useState } from "react";
 import { IoSearch } from "react-icons/io5";
 import { MdOutlineCreate } from "react-icons/md";
@@ -18,7 +29,10 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
 const Departments = () => {
+  const navigate = useNavigate();
   const { user } = useAuth();
+  const { toggleNotificationPanel, notifications } = useNotifications();
+
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [departments, setDepartments] = useState([]);
@@ -26,8 +40,53 @@ const Departments = () => {
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [selectedDepartment, setSelectedDepartment] = useState(null);
 
-  const navigate = useNavigate();
+  // Sidebar state
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const handleLogout = async () => {
+    setIsLoggingOut(true); // Start loading state
+
+    try {
+      await axios.post(
+        `${import.meta.env.VITE_API_URL}/api/auth/logout`,
+        {},
+        { withCredentials: true }
+      );
+
+      logout();
+      toast("Logged out successfully!");
+      navigate("/login");
+    } catch (error) {
+      console.error("Logout failed:", error);
+      // alert or toast error message
+      alert("Logout failed");
+    } finally {
+      setIsLoggingOut(false); // Stop loading state (should ideally not run if navigate works)
+    }
+  };
+
+  const searchSuggestions = useMemo(() => {
+    if (!searchTerm) return [];
+
+    const lowerCasedTerm = searchTerm.toLowerCase();
+    const suggestions = new Set();
+
+    departments.forEach((dep) => {
+      if (dep.name.toLowerCase().includes(lowerCasedTerm)) {
+        suggestions.add(dep.name);
+      }
+      // if (emp.role.toLowerCase().includes(lowerCasedTerm)) {
+      //   suggestions.add(emp.role);
+      // }
+      // if (emp.departmentId?.name.toLowerCase().includes(lowerCasedTerm)) {
+      //   suggestions.add(emp.departmentId.name);
+      // }
+    });
+
+    return Array.from(suggestions).slice(0, 10);
+  }, [searchTerm, departments]);
 
   // NEW: Memoized filtered departments to prevent re-calculating on every render
   const filteredDepartments = useMemo(() => {
@@ -122,146 +181,374 @@ const Departments = () => {
     fetchDepartmentDetails();
   }, []);
   return (
-    <div className="w-full h-[90vh] px-4 py-5">
-      <div className="w-full flex items-center justify-between gap-3">
-        <div className="relative w-full max-w-md">
-          <div className="flex items-center justify-between gap-2 rounded-full bg-[#121212]">
-            <input
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              onFocus={() => setShowSuggestions(true)} // NEW: Show suggestions on focus
-              // NEW: Hide suggestions on blur with a small delay to allow clicking
-              onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
-              className="w-full py-2 placeholder:text-gray-200 rounded-l-full text-white outline-none px-4"
-              type={"text"}
-              placeholder={"Search..."}
-              autoComplete="off" // NEW: Prevent browser's default autocomplete
-            />
-            <div className="flex items-center justify-center gap-2">
-              {searchTerm?.length > 0 && (
-                <button onClick={clearSearchTerm}>
-                  <RxCross1 color="white" />
+    // <div className="w-full h-[90vh] px-4 py-5">
+    //   <div className="w-full flex items-center justify-between gap-3">
+    //     <div className="relative w-full max-w-md">
+    //       <div className="flex items-center justify-between gap-2 rounded-full bg-[#121212]">
+    //         <input
+    //           value={searchTerm}
+    //           onChange={(e) => setSearchTerm(e.target.value)}
+    //           onFocus={() => setShowSuggestions(true)} // NEW: Show suggestions on focus
+    //           // NEW: Hide suggestions on blur with a small delay to allow clicking
+    //           onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
+    //           className="w-full py-2 placeholder:text-gray-200 rounded-l-full text-white outline-none px-4"
+    //           type={"text"}
+    //           placeholder={"Search..."}
+    //           autoComplete="off" // NEW: Prevent browser's default autocomplete
+    //         />
+    //         <div className="flex items-center justify-center gap-2">
+    //           {searchTerm?.length > 0 && (
+    //             <button onClick={clearSearchTerm}>
+    //               <RxCross1 color="white" />
+    //             </button>
+    //           )}
+    //           <button className="bg-[#222222] px-4 py-2.5 rounded-r-full">
+    //             <IoSearch color="white" size={20} />
+    //           </button>
+    //         </div>
+    //       </div>
+    //       {/* Suggestion Dropdown */}
+    //       {showSuggestions && searchTerm && filteredDepartments.length > 0 && (
+    //         <ul className="absolute z-10 w-full mt-2 bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-y-auto">
+    //           {filteredDepartments.map((dept) => (
+    //             <li
+    //               key={dept._id}
+    //               className="px-4 py-2 text-gray-800 cursor-pointer hover:bg-gray-100"
+    //               // Use onMouseDown to prevent the onBlur from firing first
+    //               onMouseDown={() => handleSuggestionClick(dept.name)}
+    //             >
+    //               {dept.name}
+    //             </li>
+    //           ))}
+    //         </ul>
+    //       )}
+    //     </div>
+    //     <div className="flex items-center justify-center gap-3">
+    //       {user.role === "Boss" && (
+    //         <Dialog open={open} onOpenChange={setOpen}>
+    //           <DialogTrigger asChild>
+    //             <Button className="bg-slate-200 text-black hover:text-white rounded-md cursor-pointer">
+    //               <MdOutlineCreate />
+    //               Create
+    //             </Button>
+    //           </DialogTrigger>
+    //           <DialogContent className="sm:max-w-[500px]">
+    //             <DialogHeader>
+    //               <DialogTitle>Create New Department</DialogTitle>
+    //               <DialogDescription>
+    //                 Fill in the details to add a new department.
+    //               </DialogDescription>
+    //             </DialogHeader>
+    //             <form className="space-y-4" onSubmit={handleSubmit}>
+    //               <input
+    //                 type="text"
+    //                 name="name"
+    //                 value={name}
+    //                 onChange={(e) => setName(e.target.value)}
+    //                 placeholder="Department Name"
+    //                 className="w-full border px-3 py-2 rounded-md"
+    //               />
+    //               <Button type="submit" className="w-full">
+    //                 {loading ? "Creating..." : "Create Department"}
+    //               </Button>
+    //             </form>
+    //           </DialogContent>
+    //         </Dialog>
+    //       )}
+    //       <Button
+    //         onClick={() => fetchDepartmentDetails()}
+    //         variant={"ghost"}
+    //         className={"cursor-pointer"}
+    //       >
+    //         <RefreshCcw /> <span className="hidden sm:flex">Refresh</span>
+    //       </Button>
+    //     </div>
+    //   </div>
+    //   {loading ? (
+    //     <div className="flex items-center justify-center h-full gap-3">
+    //       <p className="text-lg">Loading departments data</p>
+    //       <span className="loading loading-dots loading-xl"></span>
+    //     </div>
+    //   ) : (
+    //     <>
+    //       {departments.length > 0 && filteredDepartments.length === 0 ? (
+    //         <p>No department found. Please create an department!</p>
+    //       ) : filteredDepartments.length === 0 ? (
+    //         <p className="text-center mt-10">
+    //           No departments exist. Please create one!
+    //         </p>
+    //       ) : (
+    //         <div className="Departments-cards w-full grid sm:grid-cols-2 md:grid-cols-2 gap-4 mt-6">
+    //           {filteredDepartments.map((dept) => (
+    //             <div
+    //               key={dept._id}
+    //               className="p-4 bg-white shadow-md rounded-lg flex items-center justify-between gap-0.5"
+    //             >
+    //               <div>
+    //                 <h2 className="text-xl font-semibold text-black">
+    //                   {dept.name}
+    //                 </h2>
+    //                 <div className="mt-2 text-gray-700 text-sm space-y-1">
+    //                   <p>
+    //                     <span className="font-medium">Manager:</span>{" "}
+    //                     {dept.manager ? dept.manager.username : "Not assigned"}
+    //                   </p>
+    //                   {dept.manager?.email && (
+    //                     <p>
+    //                       <span className="font-medium">Email:</span>{" "}
+    //                       {dept.manager ? dept.manager.email : ""}
+    //                     </p>
+    //                   )}
+    //                   <p>
+    //                     <span className="font-medium">Total Employees:</span>{" "}
+    //                     {dept.totalEmployees}
+    //                   </p>
+    //                 </div>
+    //               </div>
+    //               <div className="flex items-start justify-start">
+    //                 <Button
+    //                   onClick={() => navigate(`/departments/${dept._id}`)}
+    //                   className={
+    //                     "cursor-pointer bg-green-600 hover:bg-green-600 hover:opacity-70 w-full"
+    //                   }
+    //                 >
+    //                   View
+    //                 </Button>
+    //               </div>
+    //             </div>
+    //           ))}
+    //         </div>
+    //       )}
+    //     </>
+    //   )}
+    // </div>
+    <div className="flex h-screen bg-gray-50">
+      <Sidebar
+        isOpen={sidebarOpen}
+        setIsOpen={setSidebarOpen}
+        handleLogout={handleLogout}
+        isLoggingOut={isLoggingOut}
+      />
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <header className="bg-white shadow-sm z-10">
+          <div className="px-4 sm:px-6 lg:px-8">
+            <div className="flex items-center justify-between h-16">
+              <div className="flex">
+                <button
+                  onClick={() => setSidebarOpen(!sidebarOpen)}
+                  className="text-gray-500 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 lg:hidden"
+                >
+                  <svg
+                    className="h-6 w-6"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M4 6h16M4 12h16M4 18h7"
+                    />
+                  </svg>
                 </button>
-              )}
-              <button className="bg-[#222222] px-4 py-2.5 rounded-r-full">
-                <IoSearch color="white" size={20} />
-              </button>
-            </div>
-          </div>
-          {/* Suggestion Dropdown */}
-          {showSuggestions && searchTerm && filteredDepartments.length > 0 && (
-            <ul className="absolute z-10 w-full mt-2 bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-y-auto">
-              {filteredDepartments.map((dept) => (
-                <li
-                  key={dept._id}
-                  className="px-4 py-2 text-gray-800 cursor-pointer hover:bg-gray-100"
-                  // Use onMouseDown to prevent the onBlur from firing first
-                  onMouseDown={() => handleSuggestionClick(dept.name)}
-                >
-                  {dept.name}
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-        <div className="flex items-center justify-center gap-3">
-          {user.role === "Boss" && (
-            <Dialog open={open} onOpenChange={setOpen}>
-              <DialogTrigger asChild>
-                <Button className="bg-slate-200 text-black hover:text-white rounded-md cursor-pointer">
-                  <MdOutlineCreate />
-                  Create
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-[500px]">
-                <DialogHeader>
-                  <DialogTitle>Create New Department</DialogTitle>
-                  <DialogDescription>
-                    Fill in the details to add a new department.
-                  </DialogDescription>
-                </DialogHeader>
-                <form className="space-y-4" onSubmit={handleSubmit}>
-                  <input
-                    type="text"
-                    name="name"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    placeholder="Department Name"
-                    className="w-full border px-3 py-2 rounded-md"
-                  />
-                  <Button type="submit" className="w-full">
-                    {loading ? "Creating..." : "Create Department"}
-                  </Button>
-                </form>
-              </DialogContent>
-            </Dialog>
-          )}
-          <Button
-            onClick={() => fetchDepartmentDetails()}
-            variant={"ghost"}
-            className={"cursor-pointer"}
-          >
-            <RefreshCcw /> <span className="hidden sm:flex">Refresh</span>
-          </Button>
-        </div>
-      </div>
-      {loading ? (
-        <div className="flex items-center justify-center h-full gap-3">
-          <p className="text-lg">Loading departments data</p>
-          <span className="loading loading-dots loading-xl"></span>
-        </div>
-      ) : (
-        <>
-          {departments.length > 0 && filteredDepartments.length === 0 ? (
-            <p>No department found. Please create an department!</p>
-          ) : filteredDepartments.length === 0 ? (
-            <p className="text-center mt-10">
-              No departments exist. Please create one!
-            </p>
-          ) : (
-            <div className="Departments-cards w-full grid sm:grid-cols-2 md:grid-cols-2 gap-4 mt-6">
-              {filteredDepartments.map((dept) => (
-                <div
-                  key={dept._id}
-                  className="p-4 bg-white shadow-md rounded-lg flex items-center justify-between gap-0.5"
-                >
-                  <div>
-                    <h2 className="text-xl font-semibold text-black">
-                      {dept.name}
-                    </h2>
-                    <div className="mt-2 text-gray-700 text-sm space-y-1">
-                      <p>
-                        <span className="font-medium">Manager:</span>{" "}
-                        {dept.manager ? dept.manager.username : "Not assigned"}
-                      </p>
-                      {dept.manager?.email && (
-                        <p>
-                          <span className="font-medium">Email:</span>{" "}
-                          {dept.manager ? dept.manager.email : ""}
-                        </p>
-                      )}
-                      <p>
-                        <span className="font-medium">Total Employees:</span>{" "}
-                        {dept.totalEmployees}
-                      </p>
+                <div className="ml-4 flex flex-col items-center lg:ml-0 relative w-64">
+                  <div className="relative w-full">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <SearchIcon className="h-5 w-5 text-gray-400" />
                     </div>
-                  </div>
-                  <div className="flex items-start justify-start">
-                    <Button
-                      onClick={() => navigate(`/departments/${dept._id}`)}
-                      className={
-                        "cursor-pointer bg-green-600 hover:bg-green-600 hover:opacity-70 w-full"
+                    <input
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      onFocus={() => setShowSuggestions(true)}
+                      onBlur={() =>
+                        setTimeout(() => setShowSuggestions(false), 150)
                       }
-                    >
-                      View
-                    </Button>
+                      className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-gray-50 placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                      placeholder="Search by name, role, or department..."
+                      type="text"
+                      autoComplete="off"
+                    />
+                    {searchTerm?.length > 0 && (
+                      <button
+                        onClick={clearSearchTerm}
+                        className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                      >
+                        <RxCross1 className="h-4 w-4 text-gray-400 hover:text-gray-600" />
+                      </button>
+                    )}
+                  </div>
+                  {showSuggestions && searchSuggestions.length > 0 && (
+                    <ul className="absolute z-20 w-full mt-10 bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-y-auto">
+                      {searchSuggestions.map((suggestion, index) => (
+                        <li
+                          key={index}
+                          className="px-4 py-2 text-gray-800 cursor-pointer hover:bg-gray-100"
+                          onMouseDown={() => handleSuggestionClick(suggestion)}
+                        >
+                          {suggestion}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              </div>
+              <div className="flex items-center">
+                <button
+                  onClick={toggleNotificationPanel}
+                  className="flex-shrink-0 p-1 text-gray-400 rounded-full hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                >
+                  <span className="sr-only">View notifications</span>
+                  {notifications && notifications.length > 0 ? (
+                    <BellDot className="h-6 w-6 text-green-500" />
+                  ) : (
+                    <BellIcon className="h-6 w-6 text-gray-400" />
+                  )}
+                </button>
+                <div className="ml-3 relative">
+                  <div>
+                    <button className="flex items-center max-w-xs bg-gray-100 p-1 rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                      <span className="sr-only">Open user menu</span>
+                      <UserIcon className="h-8 w-8 rounded-full p-1" />
+                    </button>
                   </div>
                 </div>
-              ))}
+              </div>
             </div>
-          )}
-        </>
-      )}
+          </div>
+        </header>
+        <main className="flex-1 overflow-auto p-4 sm:p-6 lg:p-8">
+          {/* <div className="w-full h-[90vh] px-4 py-5">
+            <div className="w-full flex items-center justify-between gap-3">
+              <div className="relative w-full max-w-md">
+                <h1 className="text-2xl font-semibold text-gray-900">
+                  Departments
+                </h1>
+              </div>
+              <div className="flex items-center justify-center gap-3">
+                {user.role === "Boss" && (
+                  <Dialog open={open} onOpenChange={setOpen}>
+                    <DialogTrigger asChild>
+                      <Button className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700">
+                        <PlusIcon className="h-5 w-5 mr-2" />
+                        Add Department
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="sm:max-w-[500px]">
+                      <DialogHeader>
+                        <DialogTitle>Create New Department</DialogTitle>
+                        <DialogDescription>
+                          Fill in the details to add a new department.
+                        </DialogDescription>
+                      </DialogHeader>
+                      <form className="space-y-4" onSubmit={handleSubmit}>
+                        <input
+                          type="text"
+                          name="name"
+                          value={name}
+                          onChange={(e) => setName(e.target.value)}
+                          placeholder="Department Name"
+                          className="w-full border px-3 py-2 rounded-md"
+                        />
+                        <Button type="submit" className="w-full">
+                          {loading ? "Creating..." : "Create Department"}
+                        </Button>
+                      </form>
+                    </DialogContent>
+                  </Dialog>
+                )}
+                <Button
+                  onClick={() => fetchDepartmentDetails()}
+                  variant={"ghost"}
+                  className={"cursor-pointer"}
+                >
+                  <RefreshCcw /> <span className="hidden sm:flex">Refresh</span>
+                </Button>
+              </div>
+            </div>
+            {loading ? (
+              <div className="flex items-center justify-center h-full gap-3">
+                <p className="text-lg">Loading departments data</p>
+                <span className="loading loading-dots loading-xl"></span>
+              </div>
+            ) : (
+              <>
+                {departments.length > 0 && filteredDepartments.length === 0 ? (
+                  <p>No department found. Please create an department!</p>
+                ) : filteredDepartments.length === 0 ? (
+                  <p className="text-center mt-10">
+                    No departments exist. Please create one!
+                  </p>
+                ) : (
+                  <div className="Departments-cards w-full grid sm:grid-cols-2 md:grid-cols-2 gap-4 mt-6">
+                    {filteredDepartments.map((dept) => (
+                      <div
+                        key={dept._id}
+                        className="p-4 bg-white shadow-md rounded-lg flex items-center justify-between gap-0.5"
+                      >
+                        <div>
+                          <h2 className="text-xl font-semibold text-black">
+                            {dept.name}
+                          </h2>
+                          <div className="mt-2 text-gray-700 text-sm space-y-1">
+                            <p>
+                              <span className="font-medium">Manager:</span>{" "}
+                              {dept.manager
+                                ? dept.manager.username
+                                : "Not assigned"}
+                            </p>
+                            {dept.manager?.email && (
+                              <p>
+                                <span className="font-medium">Email:</span>{" "}
+                                {dept.manager ? dept.manager.email : ""}
+                              </p>
+                            )}
+                            <p>
+                              <span className="font-medium">
+                                Total Employees:
+                              </span>{" "}
+                              {dept.totalEmployees}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex items-start justify-start">
+                          <Button
+                            onClick={() => navigate(`/departments/${dept._id}`)}
+                            className={
+                              "cursor-pointer bg-green-600 hover:bg-green-600 hover:opacity-70 w-full"
+                            }
+                          >
+                            View
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </>
+            )}
+          </div> */}
+          <div className="mb-6 flex justify-between items-center">
+            <h1 className="text-2xl font-semibold text-gray-900">
+              Departments
+            </h1>
+            <button className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700">
+              <PlusIcon className="h-5 w-5 mr-2" />
+              Add Department
+            </button>
+          </div>
+          <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
+            <div className="lg:col-span-1">
+              <DepartmentList
+                selectedDepartment={selectedDepartment}
+                setSelectedDepartment={setSelectedDepartment}
+                departments={departments}
+              />
+            </div>
+          </div>
+        </main>
+      </div>
+      <NotificationPanel />
     </div>
   );
 };
