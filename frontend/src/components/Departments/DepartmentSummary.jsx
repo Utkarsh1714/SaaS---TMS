@@ -92,8 +92,8 @@ const DepartmentSummary = ({ departmentId }) => {
       </div>
       <div className="px-6 py-5">
         <p className="text-gray-700 mb-6">
-          Responsible for product development, technical infrastructure, and
-          software maintenance.
+          {department.description ||
+            "No description available for this department."}
         </p>
         <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
           <div className="flex items-center mb-4 md:mb-0 gap-4">
