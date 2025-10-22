@@ -4,12 +4,12 @@ import Message from "../models/MessageModel.js";
 const initializeSocket = (io) => {
   // 🔑 This is our powerful authentication middleware
   io.use((socket, next) => {
-    const cookieHeader = socket.handshake.headers.cookie
+    const cookieHeader = socket.handshake.headers.cookie;
 
     if (!cookieHeader) {
-        console.error("Socket Auth Error: No cookie header provided.");
-        // Stop the connection attempt immediately
-        return next(new Error("Authentication Error: Cookie not provided."));
+      console.error("Socket Auth Error: No cookie header provided.");
+      // Stop the connection attempt immediately
+      return next(new Error("Authentication Error: Cookie not provided."));
     }
 
     const token = cookieHeader
@@ -18,12 +18,16 @@ const initializeSocket = (io) => {
       ?.split("=")[1];
 
     if (!token) {
-        console.error("Socket Auth Error: 'token' cookie missing from header.");
-        return next(new Error("Authentication Error: Token not provided."));
+      console.error("Socket Auth Error: 'token' cookie missing from header.");
+      return next(new Error("Authentication Error: Token not provided."));
     }
 
     jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
-      if (err) return next(new Error("Authentication Error: Invalid token.")); // SECURITY CHECK: Ensure the token has the necessary info
+      if (err) {
+        // 🚨 ADD THIS LINE TO SEE THE JWT ERROR REASON (e.g., 'TokenExpiredError')
+        console.error("JWT Verification Error:", err.name, err.message);
+        return next(new Error("Authentication Error: Invalid token."));
+      }
 
       if (!decoded.id || !decoded.organizationId)
         return next(
@@ -41,11 +45,17 @@ const initializeSocket = (io) => {
   });
 
   io.on("connection", (socket) => {
-    console.log(
-      `✅ User connected: ${socket.user.id} from org: ${socket.user.organizationId}`
-    ); // We MUST join the user to a room specific to their organization. // This is the key to isolating communication.
-
     socket.join(socket.user.organizationId); // 1. Logic for joining a specific chat room // The frontend will emit this event when user click on chat.
+
+    socket.on("joinOrgRoom", (organizationId) => {
+      // We log to ensure the client is communicating properly
+      console.log(
+        `🏠 Client ${socket.user.id} explicitly joined status room: ${organizationId}`
+      );
+
+      // Safety: Ensure the client is joining the correct room ID (which should match the JWT one)
+      socket.join(organizationId);
+    });
 
     socket.on("joinChat", (channelId) => {
       socket.join(channelId);

@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { motion } from "framer-motion";
 
 const Registration = () => {
-  const [departments, setDepartments] = useState([]);
+  // const [departments, setDepartments] = useState([]);
   const [password, setPassword] = useState("");
   const [isVisible, setIsVisible] = useState(false);
   const [logoUrl, setLogoUrl] = useState("");
@@ -88,7 +88,7 @@ const Registration = () => {
       password,
       logoUrl,
       websiteUrl: formData.get("websiteUrl"),
-      departments: departments.map((dept) => dept.value),
+      // departments: departments.map((dept) => dept.value),
     };
 
     try {
@@ -359,7 +359,7 @@ const Registration = () => {
               />
             </label>
           </div>
-          <div className="w-full flex items-center justify-center gap-8">
+          <div className="w-full flex items-start justify-center gap-8">
             <label className="block text-left mt-4 w-full">
               <span className="text-gray-700">
                 Upload Company Logo (URL)
@@ -384,13 +384,13 @@ const Registration = () => {
               />
             </div>
           </div>
-          <div className="w-full flex items-center justify-center gap-8">
+          {/* <div className="w-full flex items-center justify-center gap-8">
             <DepartmentSelect
               selectedDepartments={departments}
               setSelectedDepartments={setDepartments}
               isMulti={true}
             />
-          </div>
+          </div> */}
           <div className="w-full flex justify-center mt-8">
             <button
               type="submit"
