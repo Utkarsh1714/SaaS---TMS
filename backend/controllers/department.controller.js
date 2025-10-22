@@ -4,7 +4,7 @@ import User from "../models/user.model.js";
 
 export const createDepartment = async (req, res) => {
   try {
-    const { name } = req.body;
+    const { name, description, budget } = req.body;
 
     if (!name)
       return res.status(400).json({ message: "Department name is required" });
@@ -19,6 +19,8 @@ export const createDepartment = async (req, res) => {
 
     const department = await Department.create({
       name,
+      description,
+      budget,
       organizationId: req.user.organizationId,
     });
 
@@ -166,6 +168,8 @@ export const getSingleDepartmentWithDetails = async (req, res) => {
         $project: {
           createdAt: 1,
           name: 1,
+          description: 1,
+          budget: 1,
           manager: {
             $cond: [
               { $gt: ["$manager", null] },
