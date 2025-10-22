@@ -304,31 +304,126 @@ const EmployeesPage = () => {
     getDepartmentCount();
   }, []);
 
+  // useEffect(() => {
+  //   if (!user.organizationId._id) {
+  //     console.log("Socket: Waiting for organization ID...");
+  //     return;
+  //   }
+
+  //   const handleConnect = () => {
+  //     socket.emit("joinOrgRoom", user.organizationId._id);
+  //   };
+
+  //   const handleStatusUpdate = ({ userId, status }) => {
+  //     console.log("📬 Status update received:", userId, status);
+  //     setEmployee((prev) =>
+  //       prev.map((emp) => (emp._id === userId ? { ...emp, status } : emp))
+  //     );
+  //   };
+
+  //   socket.on("connect", handleConnect);
+  //   socket.on("statusUpdate", handleStatusUpdate);
+
+  //   if (socket.connected) handleConnect();
+
+  //   return () => {
+  //     socket.off("connect", handleConnect);
+  //     socket.off("statusUpdate", handleStatusUpdate);
+  //   };
+  // }, [user.organizationId._id]);
+  // Corrected useEffect in EmployeesPage.jsx
+
+  // useEffect(() => {
+  //   // 1. Safe check for the organization ID string
+  //   const orgId = user?.organizationId?._id;
+
+  //   if (!orgId) {
+  //     console.log(
+  //       "Socket: Waiting for user or nested organization ID to load..."
+  //     );
+  //     return;
+  //   }
+
+  //   const handleConnect = () => {
+  //     // 2. Emit the final string ID to the server
+  //     console.log(`Client is joining room: ${orgId}`);
+  //     socket.emit("joinOrgRoom", orgId);
+  //   };
+
+  //   const handleStatusUpdate = ({ userId, status }) => {
+  //     console.log("📬 Status update received:", userId, status);
+  //     setEmployee((prev) =>
+  //       prev.map((emp) => (emp._id === userId ? { ...emp, status } : emp))
+  //     );
+  //   };
+
+  //   // --- Setup Listeners ---
+  //   socket.on("connect", handleConnect);
+  //   socket.on("statusUpdate", handleStatusUpdate);
+
+  //   // Initial call to join room if the socket is already connected
+  //   if (socket.connected) handleConnect();
+
+  //   // --- Cleanup Listeners ---
+  //   return () => {
+  //     socket.off("connect", handleConnect);
+  //     socket.off("statusUpdate", handleStatusUpdate);
+  //   };
+  //   // 3. Dependency is the safe, final string ID
+  // }, [user?.organizationId?._id]);
+
+  // EmployeesPage.jsx
+
+  // ... (existing code lines 1 to 316)
+
+  // Corrected useEffect (replace your existing final useEffect)
   useEffect(() => {
-    if (!user?.organizationId) return;
+    // 1. Safely extract the organization ID string from the nested user object
+    const orgId = user?.organizationId?._id;
+
+    if (!orgId) {
+      console.log("Socket: Waiting for organization ID...");
+      return;
+    }
 
     const handleConnect = () => {
-      socket.emit("joinOrgRoom", user.organizationId);
+      // Log to confirm connection established and room join attempted
+      console.log(`✅ Socket CONNECTED. Client joining room: ${orgId}`);
+      socket.emit("joinOrgRoom", orgId);
     };
 
     const handleStatusUpdate = ({ userId, status }) => {
+      // This is the success log you are looking for
       console.log("📬 Status update received:", userId, status);
       setEmployee((prev) =>
         prev.map((emp) => (emp._id === userId ? { ...emp, status } : emp))
       );
     };
 
+    // 2. NEW: Add error listener for deep connection debugging
+    const handleConnectError = (error) => {
+      console.error("❌ Socket Connection Error:", error);
+    };
+
+    // --- Setup Listeners ---
     socket.on("connect", handleConnect);
+    socket.on("connect_error", handleConnectError); // <-- CRITICAL DEBUG TOOL
     socket.on("statusUpdate", handleStatusUpdate);
 
-    if (socket.connected) handleConnect();
+    // Initial check: Call handleConnect if the socket is already connected
+    if (socket.connected) {
+      handleConnect();
+    }
 
+    // --- Cleanup Listeners ---
     return () => {
       socket.off("connect", handleConnect);
+      socket.off("connect_error", handleConnectError);
       socket.off("statusUpdate", handleStatusUpdate);
     };
-  }, [user.organizationId]);
-
+    // 3. Dependency is the final string ID
+  }, [user?.organizationId?._id]);
+  // You can remove the console.log(user) you added outside this effect as it causes noise
   return (
     <div className="flex h-screen bg-gray-50">
       <Sidebar

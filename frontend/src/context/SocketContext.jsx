@@ -17,12 +17,14 @@ export const SocketProvider = ({ children }) => {
   useEffect(() => {
     const currentToken = localStorage.getItem("token");
     // Only connect if we have a token AND haven't connected yet.
+    Cookies.set("token", currentToken, { secure: true, sameSite: "Strict" });
     if (currentToken && !socketRef.current) {
       const newSocket = io(import.meta.env.VITE_API_URL, {
         auth: {
           token: currentToken, // Use the locally retrieved token directly
         },
         transports: ["websocket"],
+        withCredentials: true,
       });
 
       // ... (Your event listeners and cleanup logic remain the same)
