@@ -91,7 +91,7 @@ const EmployeeCard = ({ employee, user, navigate, handleDelete }) => {
         <h3 className="text-lg font-medium text-gray-900">
           {employee.username}
         </h3>
-        <p className="text-sm text-gray-600">{employee.role}</p>
+        <p className="text-sm text-gray-600">{employee.jobTitle}</p>
         <span
           className={`mt-1 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusClasses}`}
         >
@@ -118,7 +118,7 @@ const EmployeeCard = ({ employee, user, navigate, handleDelete }) => {
             <MessageSquareIcon className="h-4 w-4" />
           </button>
         </Link>
-        {user.role === "Boss" && (
+        {user.role?.name === "Boss" && (
           <>
             <button
               onClick={() => navigate(`/employees/${employee._id}`)}
@@ -286,7 +286,7 @@ const EmployeeDirectory = ({
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm text-gray-900">
-                        {employee.role}
+                        {employee.jobTitle}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -310,7 +310,7 @@ const EmployeeDirectory = ({
                             <MessageSquareIcon className="h-4 w-4" />
                           </button>
                         </Link>
-                        {user.role === "Boss" && (
+                        {user.role?.name === "Boss" && (
                           <>
                             <button
                               onClick={() =>
@@ -331,70 +331,6 @@ const EmployeeDirectory = ({
                   </tr>
                 ))
               )}
-              {/* {employeesToDisplay.map((employee) => (
-                <tr
-                  key={employee._id}
-                  className="hover:bg-gray-50 transition-colors"
-                >
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center">
-                      <div className="flex-shrink-0 h-10 w-10 bg-gray-200 rounded-full flex items-center justify-center text-sm font-medium text-gray-800">
-                        {getInitials(employee.username)}
-                      </div>
-                      <div className="ml-4">
-                        <div className="text-sm font-medium text-gray-900">
-                          {employee.username}
-                        </div>
-                        <div className="text-xs text-gray-500">
-                          {employee.email}
-                        </div>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">{employee.role}</div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">
-                      {employee.departmentId?.name || "—"}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span
-                      className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusStyles(
-                        employee.status
-                      )}`}
-                    >
-                      {employee.status}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                    <div className="flex justify-end space-x-2">
-                      <Link to={`/messages`}>
-                        <button className="text-gray-500 hover:text-blue-600 p-1">
-                          <MessageSquareIcon className="h-4 w-4" />
-                        </button>
-                      </Link>
-                      {user.role === "Boss" && (
-                        <>
-                          <button
-                            onClick={() =>
-                              navigate(`/employees/${employee._id}`)
-                            }
-                            className="text-gray-500 hover:text-green-600 p-1"
-                          >
-                            <EditIcon className="h-4 w-4" />
-                          </button>
-                          <DeleteDialog
-                            employee={employee}
-                            handleDelete={handleDelete}
-                          />
-                        </>
-                      )}
-                    </div>
-                  </td>
-                </tr>
-              ))} */}
             </tbody>
           </table>
         </div>

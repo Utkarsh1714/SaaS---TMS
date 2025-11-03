@@ -26,8 +26,8 @@ router.post("/verify-payment", paymentVerification);
 router.get("/me", verifyToken, async (req, res) => {
   try {
     const user = await User.findById(req.user.id).populate(
-      "organizationId",
-      "name country"
+      "organizationId role",
+      "name country logoUrl"
     );
 
     if (!user) {

@@ -1,7 +1,7 @@
 import { useId, useMemo, useState } from "react";
 import DepartmentSelect from "../components/DepartmentSelect";
 import axios from "axios";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { toast } from "react-hot-toast";
 import { CheckIcon, EyeIcon, EyeOffIcon, XIcon } from "lucide-react";
@@ -9,7 +9,9 @@ import { Input } from "@/components/ui/input";
 import { motion } from "framer-motion";
 
 const Registration = () => {
-  // const [departments, setDepartments] = useState([]);
+  const [searchParams] = useSearchParams();
+  const planValue = searchParams.get("plan");
+
   const [password, setPassword] = useState("");
   const [isVisible, setIsVisible] = useState(false);
   const [logoUrl, setLogoUrl] = useState("");
@@ -24,6 +26,7 @@ const Registration = () => {
     state: "",
     pincode: "",
     country: "",
+    plan: planValue,
   });
 
   const navigate = useNavigate();
@@ -69,8 +72,7 @@ const Registration = () => {
   // ✅ Check if all required fields are filled
   const isFormValid =
     Object.values(formFields).every((val) => val.trim() !== "") &&
-    password.trim() !== "" &&
-    departments.length > 0;
+    password.trim() !== "";
 
   const handleChange = (e) => {
     setFormFields((prev) => ({
@@ -88,7 +90,6 @@ const Registration = () => {
       password,
       logoUrl,
       websiteUrl: formData.get("websiteUrl"),
-      // departments: departments.map((dept) => dept.value),
     };
 
     try {
@@ -394,7 +395,7 @@ const Registration = () => {
           <div className="w-full flex justify-center mt-8">
             <button
               type="submit"
-              //disabled={!isFormValid}
+              disabled={!isFormValid}
               className={`px-6 py-2 font-semibold rounded-md ${
                 isFormValid
                   ? "bg-yellow-400 text-white hover:bg-yellow-500"

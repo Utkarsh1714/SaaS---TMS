@@ -81,9 +81,9 @@ const TasksPage = () => {
     async (filter) => {
       const currentFilter = filter || activeFilter;
       let endpoint =
-        user.role === "Boss"
+        user.role?.name === "Boss"
           ? `api/task/boss`
-          : user.role === "Manager"
+          : user.role?.name === "Manager"
           ? `api/task/manager`
           : `api/task/employee`;
       let queryParams = "";
@@ -265,7 +265,7 @@ const TasksPage = () => {
       return `No tasks found for your search term: "${searchTerm}".`;
     }
     if (activeFilter === "None") {
-      if (user.role !== "Boss") {
+      if (user.role?.name !== "Boss") {
         return "No tasks are available at the moment. Kindly check again later!";
       }
       return "No tasks have been created yet. Please check back later or create a new task.";
@@ -401,7 +401,7 @@ const TasksPage = () => {
           <div className="mb-6 flex justify-between items-center">
             <h1 className="text-2xl font-semibold text-gray-900">Tasks</h1>
             {/* Create Task Dialog (Only for Boss role) */}
-            {user.role === "Boss" && (
+            {user.role?.name === "Boss" && (
               <TaskCreateDialog
                 open={open}
                 setOpen={setOpen}

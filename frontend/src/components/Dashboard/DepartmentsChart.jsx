@@ -54,14 +54,14 @@ const DepartmentsChart = ({ departmentCounts }) => {
   return (
     <div className="bg-white rounded-lg shadow p-6">
       <div className="flex justify-between items-center mb-4">
-        <h2 className="text-lg font-medium text-gray-900 flex items-center space-x-2">
+        <h2 className="text-lg font-medium text-gray-900 flex items-center space-x-1">
           <span>Employee Distribution</span>
-          <span className="inline-flex items-center rounded-full bg-indigo-100 px-3 py-0.5 text-sm font-medium text-indigo-800">
+          <span className="inline-flex items-center rounded-full bg-indigo-100 px-3 md:px-5 py-0.5 text-sm font-medium text-indigo-800">
             Total: {totalEmployees}
           </span>
         </h2>
       </div>
-      <div className="h-80">
+      <div className="h-100 xl:h-120">
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>
             <Pie
