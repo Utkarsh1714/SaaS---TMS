@@ -20,8 +20,13 @@ const UserSchema = new mongoose.Schema(
       required: true,
     },
     role: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Role",
+      required: true,
+    },
+    jobTitle: {
       type: String,
-      default: "Employee",
+      required: true,
     },
     organizationId: {
       type: mongoose.Schema.Types.ObjectId,
@@ -32,9 +37,6 @@ const UserSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "Department",
       default: null,
-      required: function () {
-        return this.role !== "Boss"; // only required for Manager or Employee
-      },
     },
     status: {
       type: String,

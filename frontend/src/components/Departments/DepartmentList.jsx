@@ -10,62 +10,6 @@ const DepartmentList = ({
   setSelectedDepartment,
   departments,
 }) => {
-  //   const departments = [
-  //     {
-  //       id: 'engineering',
-  //       name: 'Engineering',
-  //       employeeCount: 42,
-  //       managerName: 'Michael Johnson',
-  //       managerAvatar:
-  //         'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
-  //       color: 'bg-blue-100 text-blue-800',
-  //     },
-  //     {
-  //       id: 'marketing',
-  //       name: 'Marketing',
-  //       employeeCount: 21,
-  //       managerName: 'Sarah Davis',
-  //       managerAvatar:
-  //         'https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
-  //       color: 'bg-green-100 text-green-800',
-  //     },
-  //     {
-  //       id: 'sales',
-  //       name: 'Sales',
-  //       employeeCount: 25,
-  //       managerName: 'Robert Wilson',
-  //       managerAvatar:
-  //         'https://images.unsplash.com/photo-1519244703995-f4e0f30006d5?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
-  //       color: 'bg-yellow-100 text-yellow-800',
-  //     },
-  //     {
-  //       id: 'hr',
-  //       name: 'Human Resources',
-  //       employeeCount: 12,
-  //       managerName: 'Emily Thompson',
-  //       managerAvatar:
-  //         'https://images.unsplash.com/photo-1517841905240-472988babdf9?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
-  //       color: 'bg-pink-100 text-pink-800',
-  //     },
-  //     {
-  //       id: 'finance',
-  //       name: 'Finance',
-  //       employeeCount: 16,
-  //       managerName: 'David Brown',
-  //       managerAvatar:
-  //         'https://images.unsplash.com/photo-1531427186611-ecfd6d936c79?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
-  //       color: 'bg-indigo-100 text-indigo-800',
-  //     },
-  //     {
-  //       id: 'design',
-  //       name: 'Design',
-  //       employeeCount: 12,
-  //       managerName: 'Jessica Miller',
-  //       managerAvatar:
-  //         'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
-  //       color: 'bg-purple-100 text-purple-800',
-  //     },
-  //   ]
   return (
     <div className="bg-white shadow rounded-lg overflow-hidden">
       <div className="px-6 py-4 border-b border-gray-200">

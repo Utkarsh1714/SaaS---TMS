@@ -144,6 +144,9 @@ const Departments = () => {
       });
 
       setName("");
+      setDescription("");
+      setBudget("");
+      toast.success("Department created successfully");
       setOpen(false);
     } catch (error) {
       console.log(error);
@@ -394,7 +397,7 @@ const Departments = () => {
             <h1 className="text-2xl font-semibold text-gray-900">
               Departments
             </h1>
-            {user.role === "Boss" && (
+            {user.role?.name === "Boss" && (
               <Dialog open={open} onOpenChange={setOpen}>
                 <DialogTrigger asChild>
                   <Button className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700">

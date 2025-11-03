@@ -97,6 +97,8 @@ const EmployeesPage = () => {
     username: "",
     email: "",
     contactNo: "",
+    jobTitle: "",
+    roleName: "",
   });
   const [selectedRoles, setSelectedRoles] = useState(null);
   const [selectedDept, setSelectedDept] = useState(null);
@@ -184,7 +186,6 @@ const EmployeesPage = () => {
     try {
       const payload = {
         ...formData,
-        role: selectedRoles.value,
         departmentId: selectedDept.value,
         organizationId: user.organizationId,
       };
@@ -198,19 +199,28 @@ const EmployeesPage = () => {
       );
 
       toast.success("Employee created successfully");
-      setFormData({ username: "", email: "", contactNo: "" });
+      setFormData({
+        username: "",
+        email: "",
+        contactNo: "",
+        jobTitle: "",
+        roleName: "",
+      });
       setSelectedDept(null);
-      setSelectedRoles(null);
+      // setSelectedRoles(null);
       setIsCreateDialogOpen(false);
 
-      const newEmployee = res.data;
-      setEmployee((prevEmployee) => {
-        const exists = prevEmployee.some((emp) => emp._id === newEmployee._id);
-        if (!exists) {
-          return [newEmployee, ...prevEmployee];
-        }
-        return prevEmployee;
-      });
+      // fetch employee list
+      getAllEmployee();
+
+      // const newEmployee = res.data;
+      // setEmployee((prevEmployee) => {
+      //   const exists = prevEmployee.some((emp) => emp._id === newEmployee._id);
+      //   if (!exists) {
+      //     return [newEmployee, ...prevEmployee];
+      //   }
+      //   return prevEmployee;
+      // });
     } catch (err) {
       console.error(err);
       if (
@@ -243,7 +253,7 @@ const EmployeesPage = () => {
 
     let filteredBySearch = employee.filter((emp) => {
       const nameMatch = emp.username.toLowerCase().includes(lowerCasedTerm);
-      const roleMatch = emp.role.toLowerCase().includes(lowerCasedTerm);
+      const roleMatch = emp.jobTitle.toLowerCase().includes(lowerCasedTerm);
       const deptMatch = emp.departmentId?.name
         ?.toLowerCase()
         .includes(lowerCasedTerm);
@@ -285,13 +295,13 @@ const EmployeesPage = () => {
     const suggestions = new Set();
 
     employee.forEach((emp) => {
-      if (emp.username.toLowerCase().includes(lowerCasedTerm)) {
+      if (emp.username?.toLowerCase().includes(lowerCasedTerm)) {
         suggestions.add(emp.username);
       }
-      if (emp.role.toLowerCase().includes(lowerCasedTerm)) {
+      if (emp.jobTitle?.toLowerCase().includes(lowerCasedTerm)) {
         suggestions.add(emp.role);
       }
-      if (emp.departmentId?.name.toLowerCase().includes(lowerCasedTerm)) {
+      if (emp.departmentId?.name?.toLowerCase().includes(lowerCasedTerm)) {
         suggestions.add(emp.departmentId.name);
       }
     });
@@ -534,7 +544,7 @@ const EmployeesPage = () => {
                 <UploadIcon className="h-4 w-4 mr-2" />
                 Import
               </button>
-              {user.role === "Boss" && (
+              {user.role?.name === "Boss" && (
                 <Dialog
                   open={isCreateDialogOpen}
                   onOpenChange={setIsCreateDialogOpen}
@@ -584,10 +594,28 @@ const EmployeesPage = () => {
                         selectedDept={selectedDept}
                         setSelectedDept={setSelectedDept}
                       />
-                      <RoleSelect
+                      <input
+                        type="text"
+                        name="jobTitle"
+                        value={formData.jobTitle}
+                        onChange={handleChange}
+                        placeholder="Job Ttile"
+                        className="w-full border px-3 py-2 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                        required
+                      />
+                      <input
+                        type="text"
+                        name="roleName"
+                        value={formData.roleName}
+                        onChange={handleChange}
+                        placeholder="Role Name"
+                        className="w-full border px-3 py-2 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                        required
+                      />
+                      {/* <RoleSelect
                         selectedRoles={selectedRoles}
                         setSelectedRoles={setSelectedRoles}
-                      />
+                      /> */}
                       <Button
                         type="submit"
                         className="w-full bg-blue-600 hover:bg-blue-700"
@@ -613,7 +641,7 @@ const EmployeesPage = () => {
             employeeIncresed={yoyGrowthPercentage}
             newHires={newHiresCount}
           />
-          <div className="mt-8 grid grid-cols-1 gap-8 lg:grid-cols-3">
+          <div className="mt-8 grid grid-cols-1 gap-8 xl:grid-cols-3">
             <div className="lg:col-span-1">
               <DepartmentsChart departmentCounts={departmentCount} />
             </div>

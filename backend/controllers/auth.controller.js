@@ -8,6 +8,7 @@ import { sendOTPByEmail, sendPasswordResetEmail } from "../utils/send.mail.js";
 import crypto from "crypto";
 import dotenv from "dotenv";
 import Payment from "../models/paymentModel.js";
+import Role from "../models/Role.model.js";
 dotenv.config();
 
 export const registerOrg = async (req, res) => {
@@ -27,6 +28,7 @@ export const registerOrg = async (req, res) => {
       logoUrl,
       websiteUrl,
       departments,
+      plan,
     } = req.body;
 
     const existing = await User.findOne({ email });
@@ -34,6 +36,14 @@ export const registerOrg = async (req, res) => {
       return res
         .status(400)
         .json({ message: "User with this email already exists" });
+    }
+
+    const bossRole = await Role.findOne({ name: "Boss" });
+    if (!bossRole) {
+      // This is a critical error, means the seed script wasn't run
+      return res.status(500).json({
+        message: "Default 'Boss' role not found. Server setup error.",
+      });
     }
 
     const newOrg = new Organization({
@@ -46,7 +56,8 @@ export const registerOrg = async (req, res) => {
       country,
       logoUrl,
       websiteUrl,
-      createdBy: null, // This will be set after user creation
+      createdBy: null,
+      plan: plan,
     });
 
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -56,9 +67,11 @@ export const registerOrg = async (req, res) => {
       email,
       contactNo,
       password: hashedPassword,
-      role: "Boss", // Default role for the organization creator
+      status: "Active",
+      role: bossRole._id,
+      jobTitle: "Boss",
       organizationId: newOrg._id,
-      departmentId: null, // Assuming no department is created at this point
+      departmentId: null,
     });
 
     await newUser.save();
@@ -90,11 +103,14 @@ export const registerOrg = async (req, res) => {
       message: "Organization registered successfully",
       user: {
         id: newUser._id,
-        name: newUser.name,
+        name: newUser.username,
         email: newUser.email,
-        role: newUser.role,
+        contactNo: newUser.contactNo,
+        status: newUser.status,
+        jobTitle: newUser.jobTitle,
+        role: bossRole.name,
         organizationId: newOrg._id,
-        organizationName: newOrg._id,
+        organizationName: newOrg.name,
       },
       token,
     });
@@ -107,8 +123,8 @@ export const registerOrg = async (req, res) => {
 export const login = async (req, res) => {
   const { email, password } = req.body;
   const user = await User.findOne({ email }).populate(
-    "organizationId",
-    "name country"
+    "organizationId role",
+    "name country logoUrl"
   );
 
   if (!user) {

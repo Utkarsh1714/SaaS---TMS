@@ -1,0 +1,61 @@
+import Role from "../models/Role.model.js";
+import User from "../models/user.model.js";
+
+// A cache to store role permissions and avoid DB calls
+const rolePermissionsCache = new Map();
+
+// Function to get permissions for a role
+const getRolePermissions = async (roleId) => {
+  if (rolePermissionsCache.has(roleId)) {
+    return rolePermissionsCache.get(roleId);
+  }
+
+  const role = await Role.findById(roleId).populate("permissions").lean();
+  if (!role) {
+    return null;
+  }
+
+  const permissions = new Set(role.permissions.map((p) => p.name));
+  rolePermissionsCache.set(roleId, permissions);
+
+  return permissions;
+};
+
+// The Middleware
+export const authorizePermission = (requiredPermission) => {
+  return async (req, res, next) => {
+    try {
+      if (!req.user || !req.user.role) {
+        return res.status(403).json({ message: "Forbidden: No user role." });
+      }
+
+      // req.user.role should be the ROLE ID (from verifyToken)
+      const permissions = await getRolePermissions(req.user.role);
+
+      if (!permissions) {
+        return res.status(403).json({ message: "Forbidden: Invalid role." });
+      }
+
+      // Check if the role's permissions include the required one
+      if (permissions.has(requiredPermission)) {
+        next(); // User has permission
+      } else {
+        return res.status(403).json({
+          message: "Forbidden: You do not have permission for this action.",
+        });
+      }
+    } catch (error) {
+      console.error("Authorization Error:", error);
+      res.status(500).json({ message: "Error during authorization." });
+    }
+  };
+};
+
+// Helper to clear cache if roles are updated (optional but good)
+export const clearRoleCache = (roleId) => {
+  if (roleId) {
+    rolePermissionsCache.delete(roleId);
+  } else {
+    rolePermissionsCache.clear();
+  }
+};

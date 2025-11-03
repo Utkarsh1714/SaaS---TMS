@@ -18,7 +18,6 @@ const Sidebar = ({ isOpen, setIsOpen, handleLogout, isLoggingOut }) => {
   const location = useLocation();
 
   const handleLinkClick = () => {
-    // Only close if the sidebar is currently open (on mobile)
     if (isOpen) {
       setIsOpen(!isOpen);
     }
@@ -43,7 +42,7 @@ const Sidebar = ({ isOpen, setIsOpen, handleLogout, isLoggingOut }) => {
           {/* Logo */}
           <div className="h-16 flex items-center px-6 border-b border-gray-200">
             <Link to="/" className="flex items-center">
-              <span className="text-xl font-bold text-blue-600">WorkSpace</span>
+              <span className="text-xl font-bold text-blue-600">Taskify</span>
             </Link>
             <button
               onClick={() => setIsOpen(!isOpen)}
@@ -143,12 +142,16 @@ const Sidebar = ({ isOpen, setIsOpen, handleLogout, isLoggingOut }) => {
           {/* User profile */}
           <div className="p-4 border-t border-gray-200">
             <div className="flex items-center">
-              <div className="bg-gray-200 rounded-full p-1">
-                <UsersIcon size={24} className="text-gray-600" />
+              <div className="w-14 bg-gray-200 rounded-full p-0.5 object-cover">
+                <img
+                  src={user.organizationId?.logoUrl}
+                  alt="Company Logo"
+                  className="w-16 rounded-full"
+                />
               </div>
               <div className="ml-3">
                 <p className="text-sm font-medium text-gray-900">
-                  {user.organizationId?.name || "N/A"}
+                  {user.organizationId?.name || user.organizationName}
                 </p>
                 <p className="text-xs text-gray-500">Administrator</p>
               </div>

@@ -6,14 +6,21 @@ import {
   BarChartIcon,
   PencilIcon,
   Loader,
+  User,
 } from "lucide-react";
 import axios from "axios";
 import { useAuth } from "@/context/AuthContext";
+import { Link } from "react-router-dom";
 
 const DepartmentSummary = ({ departmentId }) => {
   const { user } = useAuth();
   const [department, setDepartment] = useState(null);
   const [formattedDate, setFormattedDate] = useState("");
+
+  const formatter = new Intl.NumberFormat("en-US", {
+    notation: "compact",
+    maximumFractionDigits: 1,
+  });
 
   const formatDate = (isoDateString) => {
     if (!isoDateString) return "N/A";
@@ -39,6 +46,7 @@ const DepartmentSummary = ({ departmentId }) => {
         `${import.meta.env.VITE_API_URL}/api/department/details/${id}`,
         { withCredentials: true }
       );
+      console.log(res.data);
       setDepartment(res.data);
       setFormattedDate(formatDate(res.data.createdAt));
     } catch (error) {
@@ -85,10 +93,12 @@ const DepartmentSummary = ({ departmentId }) => {
             {department?.name} Department
           </h2>
         </div>
-        <button className="inline-flex items-center px-3 py-1.5 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
-          <PencilIcon className="h-4 w-4 mr-1" />
-          Edit
-        </button>
+        <Link to={`/departments/${department._id}`}>
+          <button className="inline-flex items-center px-3 py-1.5 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+            <PencilIcon className="h-4 w-4 mr-1" />
+            Edit
+          </button>
+        </Link>
       </div>
       <div className="px-6 py-5">
         <p className="text-gray-700 mb-6">
@@ -105,11 +115,11 @@ const DepartmentSummary = ({ departmentId }) => {
             <span
               className={`inline-flex items-center justify-center w-10 h-10 rounded-full bg-[#DBEAFE] text-blue-600 font-semibold text-lg`}
             >
-              {department.manager?.username.charAt(0)}
+              {department.manager?.username.charAt(0) || <User />}
             </span>
             <div>
               <h3 className="text-sm font-medium text-gray-900">
-                {department.manager?.username}
+                {department.manager?.username || "No Manager Assigned"}
               </h3>
               <p className="text-sm text-gray-500">
                 {department.manager?.role}
@@ -134,7 +144,9 @@ const DepartmentSummary = ({ departmentId }) => {
               </span>
               <div className="ml-2">
                 <p className="text-xs text-gray-500">Budget</p>
-                <p className="text-sm font-medium">$4.2M</p>
+                <p className="text-sm font-medium">
+                  ₹{formatter.format(department.budget)}
+                </p>
               </div>
             </div>
             <div className="flex items-center">

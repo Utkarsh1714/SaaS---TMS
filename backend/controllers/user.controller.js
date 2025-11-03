@@ -3,6 +3,7 @@ import { sendWelcomeEmail } from "../utils/send.mail.js";
 import crypto from "crypto";
 import bcrypt from "bcryptjs";
 import Department from "../models/department.model.js";
+import Role from "../models/Role.model.js";
 
 export const getAllEmployeesAndStats = async (req, res) => {
   // 1. Calculate the date one year ago
@@ -72,7 +73,14 @@ export const getSingleEmployee = async (req, res) => {
 
 export const createEmployee = async (req, res) => {
   try {
-    const { username, email, contactNo, role, departmentId } = req.body;
+    const { username, email, contactNo, roleName, jobTitle, departmentId } =
+      req.body;
+
+    if (roleName !== "Boss" && !departmentId) {
+      return res.status(400).json({
+        message: "A department ID is required for Managers and Employees.",
+      });
+    }
 
     const existingUser = await User.findOne({
       email,
@@ -83,6 +91,11 @@ export const createEmployee = async (req, res) => {
       return res
         .status(400)
         .json({ message: "User with this email already registered!" });
+    }
+
+    const role = await Role.findOne({ name: roleName });
+    if (!role) {
+      return res.status(400).json({ message: "Invalid role specified." });
     }
 
     const tempPassword = crypto.randomBytes(8).toString("hex");
@@ -101,7 +114,8 @@ export const createEmployee = async (req, res) => {
       email,
       contactNo,
       password: hashedPassword,
-      role: role || "Employee",
+      jobTitle,
+      role: role._id,
       departmentId,
       organizationId: req.user.organizationId,
       resetToken: hashedResetToken,
