@@ -118,11 +118,16 @@ const DepartmentSummary = ({ departmentId }) => {
               {department.manager?.username.charAt(0) || <User />}
             </span>
             <div>
-              <h3 className="text-sm font-medium text-gray-900">
-                {department.manager?.username || "No Manager Assigned"}
-              </h3>
+              <div className="flex items-center justify-center gap-1">
+                <h3 className="text-sm font-medium text-gray-900">
+                  {department.manager?.username || "No Manager Assigned"}
+                </h3>
+                <p className="text-sm text-gray-500">
+                  ({department.manager?.role})
+                </p>
+              </div>
               <p className="text-sm text-gray-500">
-                {department.manager?.role}
+                {department.manager?.jobTitle}
               </p>
             </div>
           </div>
@@ -171,19 +176,19 @@ const DepartmentSummary = ({ departmentId }) => {
             </div>
           </div>
         </div>
-        {/* <div className="mt-6">
+        <div className="mt-6">
           <h3 className="text-sm font-medium text-gray-900 mb-3">Teams</h3>
           <div className="flex flex-wrap gap-2">
             {department.teams.map((team, index) => (
               <span
                 key={index}
-                className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${department.color}`}
+                className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-[#DBEAFE] text-blue-600`}
               >
-                {team}
+                {team.name}
               </span>
             ))}
           </div>
-        </div> */}
+        </div>
       </div>
       <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 flex justify-between">
         <button className="text-sm font-medium text-blue-600 hover:text-blue-500">
