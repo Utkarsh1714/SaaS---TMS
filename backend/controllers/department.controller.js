@@ -101,7 +101,7 @@ export const getSingleDepartmentWithDetails = async (req, res) => {
       {
         $match: {
           _id: new mongoose.Types.ObjectId(id),
-          organizationId: new mongoose.Types.ObjectId(req.user.organizationId),
+          organizationId: req.user.organizationId,
         },
       },
       {
@@ -117,15 +117,62 @@ export const getSingleDepartmentWithDetails = async (req, res) => {
               },
             },
             {
+              $lookup: {
+                from: "roles", // The name of your roles collection
+                localField: "role",
+                foreignField: "_id",
+                as: "roleDetails",
+              },
+            },
+            {
               $project: {
                 username: 1,
                 email: 1,
-                role: 1,
+                jobTitle: 1,
+                role: { $first: "$roleDetails.name" },
                 contactNo: 1,
               },
             },
           ],
           as: "users",
+        },
+      },
+      {
+        $lookup: {
+          from: "teams", // Your 'teams' collection name
+          localField: "teams", // The array of IDs in the Department model
+          foreignField: "_id",
+          as: "teams", // Overwrite the IDs with team objects
+          pipeline: [
+            // This pipeline runs for each team to populate its members
+            {
+              $lookup: {
+                from: "users",
+                localField: "members",
+                foreignField: "_id",
+                as: "members_data",
+                pipeline: [
+                  // Project only what you need from members
+                  {
+                    $project: {
+                      _id: 1,
+                      username: 1,
+                      email: 1,
+                      jobTitle: 1,
+                    },
+                  },
+                ],
+              },
+            },
+            {
+              // Clean up the team object
+              $project: {
+                _id: 1,
+                name: 1,
+                members: "$members_data", // Overwrite member IDs with populated data
+              },
+            },
+          ],
         },
       },
       {
@@ -170,6 +217,7 @@ export const getSingleDepartmentWithDetails = async (req, res) => {
           name: 1,
           description: 1,
           budget: 1,
+          teams: 1,
           manager: {
             $cond: [
               { $gt: ["$manager", null] },
@@ -178,6 +226,7 @@ export const getSingleDepartmentWithDetails = async (req, res) => {
                 username: "$manager.username",
                 email: "$manager.email",
                 role: "$manager.role",
+                jobTitle: "$manager.jobTitle",
                 contactNo: "$manager.contactNo",
               },
               null,
@@ -192,6 +241,8 @@ export const getSingleDepartmentWithDetails = async (req, res) => {
                 username: "$$emp.username",
                 email: "$$emp.email",
                 role: "$$emp.role",
+                jobTitle: "$$emp.jobTitle",
+                contactNo: "$$emp.contactNo",
                 _id: "$$emp._id",
               },
             },

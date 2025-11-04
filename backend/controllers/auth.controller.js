@@ -39,6 +39,7 @@ export const registerOrg = async (req, res) => {
     }
 
     const bossRole = await Role.findOne({ name: "Boss" });
+    console.log(bossRole);
     if (!bossRole) {
       // This is a critical error, means the seed script wasn't run
       return res.status(500).json({
@@ -108,7 +109,10 @@ export const registerOrg = async (req, res) => {
         contactNo: newUser.contactNo,
         status: newUser.status,
         jobTitle: newUser.jobTitle,
-        role: bossRole.name,
+        role: {
+          _id: bossRole._id,
+          name: bossRole.name,
+        },
         organizationId: newOrg._id,
         organizationName: newOrg.name,
       },

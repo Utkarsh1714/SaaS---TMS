@@ -6,8 +6,10 @@ const rolePermissionsCache = new Map();
 
 // Function to get permissions for a role
 const getRolePermissions = async (roleId) => {
-  if (rolePermissionsCache.has(roleId)) {
-    return rolePermissionsCache.get(roleId);
+  const roleIdString = roleId.toString();
+
+  if (rolePermissionsCache.has(roleIdString)) {
+    return rolePermissionsCache.get(roleIdString);
   }
 
   const role = await Role.findById(roleId).populate("permissions").lean();
@@ -16,7 +18,7 @@ const getRolePermissions = async (roleId) => {
   }
 
   const permissions = new Set(role.permissions.map((p) => p.name));
-  rolePermissionsCache.set(roleId, permissions);
+  rolePermissionsCache.set(roleIdString, permissions);
 
   return permissions;
 };
@@ -25,12 +27,16 @@ const getRolePermissions = async (roleId) => {
 export const authorizePermission = (requiredPermission) => {
   return async (req, res, next) => {
     try {
+      console.log(req.user);
       if (!req.user || !req.user.role) {
         return res.status(403).json({ message: "Forbidden: No user role." });
       }
 
+      const roleId = req.user.role._id ? req.user.role._id : req.user.role;
+      console.log(roleId);
+
       // req.user.role should be the ROLE ID (from verifyToken)
-      const permissions = await getRolePermissions(req.user.role);
+      const permissions = await getRolePermissions(roleId);
 
       if (!permissions) {
         return res.status(403).json({ message: "Forbidden: Invalid role." });

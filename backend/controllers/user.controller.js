@@ -124,10 +124,20 @@ export const createEmployee = async (req, res) => {
 
     await newEmployee.save();
 
-    if (role === "Manager" && departmentId) {
-      await Department.findByIdAndUpdate(departmentId, {
-        $set: { manager: newEmployee._id },
-      });
+    if (roleName === "Manager" && departmentId) {
+      const updatedDept = await Department.findOneAndUpdate(
+        { _id: departmentId, organizationId: req.user.organizationId },
+        { $set: { manager: newEmployee._id } }
+      );
+
+      await updatedDept.save();
+
+      if (!updatedDept) {
+        // This means the departmentId was invalid or didn't belong to the org
+        console.warn(
+          `Warning: Could not assign manager. Department ${departmentId} not found in org ${req.user.organizationId}.`
+        );
+      }
     }
 
     const resetLink = `${process.env.FRONTEND_URL}/reset-password?email=${email}&token=${resetToken}`;
