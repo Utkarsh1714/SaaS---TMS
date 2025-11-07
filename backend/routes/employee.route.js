@@ -7,12 +7,13 @@ import { authorizePermission } from "../middlewares/authorizePermission.js";
 import {
   createEmployee,
   deleteEmployee,
+  getAllEmployees,
   getAllEmployeesAndStats,
   getSingleEmployee,
   updateEmployee,
 } from "../controllers/user.controller.js";
 
-router.get("/", verifyToken, getAllEmployeesAndStats);
+router.get("/all-employee", verifyToken, getAllEmployees);
 router.get("/:id", verifyToken, getSingleEmployee);
 router.post(
   "/",

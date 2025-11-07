@@ -395,44 +395,31 @@ export const verifyOTPAndAllowPasswordChange = async (req, res) => {
 
 export const resetPassword = async (req, res) => {
   try {
-    const { newPassword, resetToken } = req.body;
+    const { email, token, newPassword } = req.body;
+    const user = await User.findOne({ email });
 
-    // 1. Verify the temporary reset token
-    let decoded;
-    try {
-      decoded = jwt.verify(resetToken, process.env.JWT_SECRET);
-    } catch (err) {
-      return res.status(401).json({
-        message:
-          "Invalid or expired reset session. Please restart the process.",
-      });
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    // Compare hashed tokens
+    const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
+
+    if (
+      user.resetToken !== hashedToken ||
+      user.resetTokenExpires < Date.now()
+    ) {
+      return res.status(400).json({ message: "Invalid or expired token" });
     }
 
-    // Check if the token is intended for password reset
-    if (decoded.purpose !== "password_reset") {
-      return res.status(401).json({ message: "Invalid token purpose." });
-    }
-
-    const user = await User.findById(decoded.id);
-
-    if (!user) {
-      return res.status(404).json({ message: "User not found." });
-    }
-
-    // 2. Hash the new password
-    const salt = await bcrypt.genSalt(10);
-    user.password = await bcrypt.hash(newPassword, salt);
-
-    // 3. Save the new password
+    // Hash new password and clear resetToken
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    user.password = hashedPassword;
+    user.resetToken = undefined;
+    user.resetTokenExpires = undefined;
     await user.save();
 
-    res.status(200).json({
-      message: "Password has been successfully updated. You can now login.",
-    });
+    res.json({ success: true, message: "Password reset successful" });
   } catch (error) {
-    console.error("Error resetting password:", error);
-    res
-      .status(500)
-      .json({ message: "Server error. Failed to update password." });
+    console.error(error);
+    res.status(500).json({ message: "Server error" });
   }
 };

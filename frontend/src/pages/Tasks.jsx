@@ -116,9 +116,10 @@ const TasksPage = () => {
 
       try {
         const res = await axios.get(
-          `${import.meta.env.VITE_API_URL}/${endpoint}${queryParams}`,
+          `${import.meta.env.VITE_API_URL}/api/task/getTask${queryParams}`,
           { withCredentials: true }
         );
+        console.log(res.data);
 
         // Set both lists to the full fetched data
         setTasks(res.data);

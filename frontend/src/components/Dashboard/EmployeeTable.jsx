@@ -22,32 +22,27 @@ const calculatePercentage = (part, whole) => {
 };
 
 const EmployeeTable = ({ onStatsCalculated }) => {
-  // --- STATE FOR DATA AND LOADING ---
   const [employees, setEmployees] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
 
   const [currentEmployeeCount, setCurrentEmployeeCount] = useState(0);
-  const [lastYearEmployeeCount, setLastYearEmployeeCount] = useState(null);
 
-  // --- STATE FOR PAGINATION ---
   const [currentPage, setCurrentPage] = useState(1);
 
-  // 1. Fetch Employee Data
   useEffect(() => {
     const fetchEmployees = async () => {
       try {
         const res = await axios.get(
-          `${import.meta.env.VITE_API_URL}/api/employee/`,
+          `${import.meta.env.VITE_API_URL}/api/employee/all-employee`,
           { withCredentials: true }
         );
 
-        const { employees, stats } = res.data;
+        const employeesData = res.data;
 
-        setEmployees(employees);
-        setCurrentEmployeeCount(stats.currentCount);
-        setLastYearEmployeeCount(stats.lastYearCount);
+        setEmployees(employeesData);
+        setCurrentEmployeeCount(employeesData.length);
       } catch (err) {
         console.error("Failed to fetch employees:", err);
         setError("Failed to load employee data.");
@@ -58,9 +53,7 @@ const EmployeeTable = ({ onStatsCalculated }) => {
     fetchEmployees();
   }, []);
 
-  // 2. Filter Logic (Memoized)
   const filteredEmployees = useMemo(() => {
-    // Reset page to 1 whenever the filter changes
     setCurrentPage(1);
 
     return employees.filter(
@@ -68,7 +61,7 @@ const EmployeeTable = ({ onStatsCalculated }) => {
         // Assuming employee objects have 'username', 'email', 'role', and a department name nested
         employee.username?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         employee.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        employee.role?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        employee.role?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         employee.departmentId?.name
           ?.toLowerCase()
           .includes(searchTerm.toLowerCase())
@@ -177,7 +170,7 @@ const EmployeeTable = ({ onStatsCalculated }) => {
                 scope="col"
                 className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
               >
-                Role
+                Job Role
               </th>
               <th
                 scope="col"
@@ -225,7 +218,7 @@ const EmployeeTable = ({ onStatsCalculated }) => {
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {employee.role}
+                    {employee.jobTitle}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     {employee.departmentId?.name || "N/A"}

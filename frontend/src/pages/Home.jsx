@@ -61,17 +61,9 @@ const Home = () => {
           { withCredentials: true }
         );
 
-        const {
-          taskPriorityCount,
-          departmentCount,
-          taskStatusCount,
-          monthlyTaskCompletion,
-          ...restOverviewData
-        } = res.data;
-
-        setOverviewData(restOverviewData);
-        setDepartmentCount(departmentCount);
-        setMonthlyTaskCompletion(monthlyTaskCompletion);
+        setOverviewData(res.data);
+        setDepartmentCount(res.data.departmentEmployeeCounts);
+        setMonthlyTaskCompletion(res.data.monthlyTaskCompletion);
       } catch (error) {
         console.error("Failed to fetch data:", error);
       } finally {
@@ -80,6 +72,7 @@ const Home = () => {
     };
 
     fetchData();
+    console.log(monthlyTaskCompletion);
   }, []);
 
   if (loading) {
@@ -167,10 +160,10 @@ const Home = () => {
             <h1 className="text-2xl font-semibold text-gray-900">Dashboard</h1>
           </div>
           <StatsCards
-            taskCount={overviewData.taskCount}
-            activeUser={overviewData.activeUser}
+            taskCount={overviewData.totalTaskCount}
+            activeUser={overviewData.activeEmployeeCount}
             overdueTaskCount={overviewData.overdueTaskCount}
-            averageCompletionDays={overviewData.averageCompletionDays}
+            averageCompletionDays={overviewData.avgTaskCompletionDays}
           />
           <div className="mt-8 grid grid-cols-1 gap-8 lg:grid-cols-2">
             <TasksChart monthlyTaskCompletion={monthlyTaskCompletion} />

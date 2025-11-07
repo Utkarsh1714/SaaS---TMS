@@ -2,6 +2,169 @@ import mongoose from "mongoose";
 import Task from "../models/task.model.js";
 import User from "../models/user.model.js";
 
+const getInitialMonthlyCountsArray = (year) => {
+  const months = Array.from({ length: 12 }, (_, i) => i + 1);
+
+  return months.map((month) => ({
+    month: month,
+    year: year,
+    Pending: 0,
+    Active: 0,
+    Completed: 0,
+  }));
+};
+
+export const getDashboardAnalytics = async (req, res) => {
+  try {
+    const { organizationId } = req.user;
+    if (!organizationId) {
+      return res.status(401).json({
+        message: "Authentication error: Organization ID not found.",
+      });
+    }
+
+    const orgId = new mongoose.Types.ObjectId(organizationId);
+    const now = new Date();
+
+    const currentYear = now.getFullYear();
+    const startOfYear = new Date(currentYear, 0, 1);
+    const endOfYear = new Date(currentYear, 11, 31, 23, 59, 59);
+
+    const [
+      totalTaskCount,
+      activeEmployeeCount,
+      overdueTaskCount,
+      avgCompletionData,
+      monthlyTaskAggregation,
+      departmentEmployeeAggregation,
+    ] = await Promise.all([
+      // 1. Total task count
+      Task.countDocuments({ organizationId: orgId }),
+
+      // 2. Active employee count
+      User.countDocuments({ organizationId: orgId, status: "Active" }),
+
+      // 3. Overdue task count
+      Task.countDocuments({
+        organizationId: orgId,
+        status: { $ne: "Completed" },
+        deadline: { $lt: now },
+      }),
+
+      // 4. Avg task completion (days)
+      Task.aggregate([
+        { $match: { organizationId: orgId, status: "Completed" } },
+        {
+          $project: {
+            durationInDays: {
+              $divide: [
+                { $subtract: ["$updatedAt", "$createdAt"] },
+                1000 * 60 * 60 * 24,
+              ],
+            },
+          },
+        },
+        {
+          $group: {
+            _id: null,
+            avgCompletionDays: { $avg: "$durationInDays" },
+          },
+        },
+      ]),
+
+      // 5. Monthly task status count for full year
+      Task.aggregate([
+        {
+          $match: {
+            organizationId: orgId,
+            createdAt: { $gte: startOfYear, $lte: endOfYear },
+          },
+        },
+        {
+          $group: {
+            _id: {
+              month: { $month: "$createdAt" },
+              status: "$status",
+            },
+            count: { $sum: 1 },
+          },
+        },
+        { $sort: { "_id.month": 1 } },
+      ]),
+
+      // 6. Number of employee count in each department
+      User.aggregate([
+        { $match: { organizationId: orgId } },
+        {
+          $group: {
+            _id: "$departmentId",
+            employeeCount: { $sum: 1 },
+          },
+        },
+        {
+          $lookup: {
+            from: "departments",
+            localField: "_id",
+            foreignField: "_id",
+            as: "department",
+          },
+        },
+        {
+          $project: {
+            _id: 0,
+            departmentId: "$_id",
+            departmentName: {
+              $ifNull: [
+                { $arrayElemAt: ["$department.name", 0] },
+                "Unassigned",
+              ],
+            },
+            employeeCount: "$employeeCount",
+          },
+        },
+      ]),
+    ]);
+
+    // Process Avg Completion
+    const avgTaskCompletionDays = avgCompletionData[0]?.avgCompletionDays || 0;
+
+    const monthlyTaskCompletion = getInitialMonthlyCountsArray(currentYear);
+
+    for (const item of monthlyTaskAggregation) {
+      const month = item._id.month;
+      const status = item._id.status;
+      const count = item.count;
+
+      const monthData = monthlyTaskCompletion.find((m) => m.month === month);
+
+      if (monthData) {
+        if (status === "In Progress") {
+          monthData.Active = count;
+        } else if (status === "Completed") {
+          monthData.Completed = count;
+        } else if (status === "Pending") {
+          monthData.Pending = count;
+        }
+      }
+    }
+
+    res.status(200).json({
+      totalTaskCount,
+      activeEmployeeCount,
+      overdueTaskCount,
+      avgTaskCompletionDays: parseFloat(avgTaskCompletionDays.toFixed(2)),
+      monthlyTaskCompletion: monthlyTaskCompletion,
+      departmentEmployeeCounts: departmentEmployeeAggregation,
+    });
+  } catch (error) {
+    console.error("Error in getDashboardAnalytics:", error);
+    res.status(500).json({
+      message: "Server error while fetching analytics.",
+      error: error.message,
+    });
+  }
+};
+
 export const overview = async (req, res) => {
   try {
     const { _id, role, organizationId } = req.user;
@@ -428,23 +591,24 @@ export const getUpcomingDeadlines = async (req, res) => {
     const { organizationId } = req.user;
     const now = new Date();
 
-    // 1. MODIFIED: The query is now always based on the organizationId.
-    // The if/else block for checking the user's role has been removed.
-    let query = {
-      organizationId: new mongoose.Types.ObjectId(organizationId),
-    };
+    const upcomingTasks = await Task.find({
+      organizationId: organizationId,
+      deadline: { $gte: now },
+      status: { $ne: "Completed" },
+    })
+      .sort({ deadline: 1 })
+      .populate("department")
+      .populate(
+        "createdBy",
+        "-resetToken -resetTokenExpires -password -otp -otpExpires"
+      )
+      .populate(
+        "assignedManager",
+        "-resetToken -resetTokenExpires -password -otp -otpExpires"
+      );
 
-    // 2. Add conditions for deadline and status (this part remains the same)
-    query.deadline = { $gte: now };
-    query.status = { $ne: "Completed" };
-
-    // 3. Execute the query
-    const upcomingTasks = await Task.find(query)
-      .sort({ deadline: 1 }) // Sorts to show the nearest deadlines first
-      .limit(10) // Shows a maximum of 10 tasks
-      .populate("department", "name")
-      .populate("assignedManager", "username")
-      .select("title deadline status assignedManager department");
+    if (!upcomingTasks && upcomingTasks.length === 0)
+      return res.status(200).json([]);
 
     res.status(200).json(upcomingTasks);
   } catch (error) {

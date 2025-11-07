@@ -4,17 +4,15 @@ const router = express.Router();
 import {
   addEmployeeToTask,
   addMilestones,
+  assignTaskToTeam,
   createTask,
   deleteTask,
-  getTasksByBoss,
-  getTasksByEmployee,
-  getTasksByManager,
+  getTasks,
   removeEmployeeFromTask,
   updateMilestone,
   updateTaskStatus,
 } from "../controllers/task.controller.js";
 import verifyToken from "../middlewares/verifyToken.js";
-import authorizeRole from "../middlewares/authorizeRole.js";
 import { authorizePermission } from "../middlewares/authorizePermission.js";
 
 router.post(
@@ -59,9 +57,17 @@ router.put(
   authorizePermission("can_update_milestone"),
   updateMilestone
 );
+router.post(
+  "/:taskId/assign-team",
+  verifyToken,
+  authorizePermission("can_create_task"), // didn't create the 'can_assign_teamToTask' permission, therefore this permission is used
+  assignTaskToTeam
+);
 
-router.get("/boss", verifyToken, getTasksByBoss);
-router.get("/manager", verifyToken, getTasksByManager);
-router.get("/employee", verifyToken, getTasksByEmployee);
+router.get("/getTask", verifyToken, getTasks);
+
+// router.get("/boss", verifyToken, getTasksByBoss);
+// router.get("/manager", verifyToken, getTasksByManager);
+// router.get("/employee", verifyToken, getTasksByEmployee);
 
 export default router;

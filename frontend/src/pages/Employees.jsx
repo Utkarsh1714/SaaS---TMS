@@ -107,6 +107,7 @@ const EmployeesPage = () => {
   const [employeeCount, setEmployeeCount] = useState(null);
   const [newHiresCount, setNewHiresCount] = useState(0);
   const [yoyGrowthPercentage, setYoYGrowthPercentage] = useState("0.00%");
+  const [activeEmployeeCount, setActiveEmployeeCount] = useState(null);
 
   const [departmentCount, setDepartmentCount] = useState(null);
 
@@ -125,27 +126,34 @@ const EmployeesPage = () => {
 
     try {
       const res = await axios.get(
-        `${import.meta.env.VITE_API_URL}/api/employee`,
+        `${import.meta.env.VITE_API_URL}/api/employeePage/analytics`,
         {
           withCredentials: true,
         }
       );
-      const { employees, stats } = res.data;
 
-      const newHires = employees.filter((employee) => {
-        const createdDate = new Date(employee.createdAt);
-        return createdDate > sevenDaysAgo;
-      });
+      const {
+        totalEmployeeCount,
+        newHiresThisMonth,
+        activeEmployeeCount,
+        employeeList,
+      } = res.data;
 
-      setEmployee(employees);
-      setEmployeeCount(stats.currentCount);
-      setNewHiresCount(newHires.length);
+      // const newHires = employees.filter((employee) => {
+      //   const createdDate = new Date(employee.createdAt);
+      //   return createdDate > sevenDaysAgo;
+      // });
 
-      const yoyPercentage = calculatePercentageChange(
-        stats.currentCount,
-        stats.lastYearCount
-      );
-      setYoYGrowthPercentage(yoyPercentage);
+      setEmployee(employeeList);
+      setEmployeeCount(totalEmployeeCount);
+      setNewHiresCount(newHiresThisMonth);
+      setActiveEmployeeCount(activeEmployeeCount);
+
+      // const yoyPercentage = calculatePercentageChange(
+      //   stats.currentCount,
+      //   stats.lastYearCount
+      // );
+      // setYoYGrowthPercentage(yoyPercentage);
     } catch (error) {
       console.error("Error fetching employee", error);
       toast.error("Failed to fetch employee data.");
@@ -272,6 +280,7 @@ const EmployeesPage = () => {
     return filteredBySearch;
   }, [searchTerm, employee, statusFilter]);
 
+  // Pagination
   const totalPages = Math.ceil(filteredEmployees.length / EMPLOYEES_PER_PAGE);
 
   const startIndex = (currentPage - 1) * EMPLOYEES_PER_PAGE;
@@ -287,7 +296,7 @@ const EmployeesPage = () => {
     setCurrentPage((prev) => Math.min(totalPages, prev + 1));
   };
 
-  // Memorize suggestions generation (from old Employees.jsx)
+  // Search feature
   const searchSuggestions = useMemo(() => {
     if (!searchTerm) return [];
 
@@ -299,7 +308,7 @@ const EmployeesPage = () => {
         suggestions.add(emp.username);
       }
       if (emp.jobTitle?.toLowerCase().includes(lowerCasedTerm)) {
-        suggestions.add(emp.role);
+        suggestions.add(emp.jobTitle);
       }
       if (emp.departmentId?.name?.toLowerCase().includes(lowerCasedTerm)) {
         suggestions.add(emp.departmentId.name);
@@ -314,81 +323,7 @@ const EmployeesPage = () => {
     getDepartmentCount();
   }, []);
 
-  // useEffect(() => {
-  //   if (!user.organizationId._id) {
-  //     console.log("Socket: Waiting for organization ID...");
-  //     return;
-  //   }
-
-  //   const handleConnect = () => {
-  //     socket.emit("joinOrgRoom", user.organizationId._id);
-  //   };
-
-  //   const handleStatusUpdate = ({ userId, status }) => {
-  //     console.log("📬 Status update received:", userId, status);
-  //     setEmployee((prev) =>
-  //       prev.map((emp) => (emp._id === userId ? { ...emp, status } : emp))
-  //     );
-  //   };
-
-  //   socket.on("connect", handleConnect);
-  //   socket.on("statusUpdate", handleStatusUpdate);
-
-  //   if (socket.connected) handleConnect();
-
-  //   return () => {
-  //     socket.off("connect", handleConnect);
-  //     socket.off("statusUpdate", handleStatusUpdate);
-  //   };
-  // }, [user.organizationId._id]);
-  // Corrected useEffect in EmployeesPage.jsx
-
-  // useEffect(() => {
-  //   // 1. Safe check for the organization ID string
-  //   const orgId = user?.organizationId?._id;
-
-  //   if (!orgId) {
-  //     console.log(
-  //       "Socket: Waiting for user or nested organization ID to load..."
-  //     );
-  //     return;
-  //   }
-
-  //   const handleConnect = () => {
-  //     // 2. Emit the final string ID to the server
-  //     console.log(`Client is joining room: ${orgId}`);
-  //     socket.emit("joinOrgRoom", orgId);
-  //   };
-
-  //   const handleStatusUpdate = ({ userId, status }) => {
-  //     console.log("📬 Status update received:", userId, status);
-  //     setEmployee((prev) =>
-  //       prev.map((emp) => (emp._id === userId ? { ...emp, status } : emp))
-  //     );
-  //   };
-
-  //   // --- Setup Listeners ---
-  //   socket.on("connect", handleConnect);
-  //   socket.on("statusUpdate", handleStatusUpdate);
-
-  //   // Initial call to join room if the socket is already connected
-  //   if (socket.connected) handleConnect();
-
-  //   // --- Cleanup Listeners ---
-  //   return () => {
-  //     socket.off("connect", handleConnect);
-  //     socket.off("statusUpdate", handleStatusUpdate);
-  //   };
-  //   // 3. Dependency is the safe, final string ID
-  // }, [user?.organizationId?._id]);
-
-  // EmployeesPage.jsx
-
-  // ... (existing code lines 1 to 316)
-
-  // Corrected useEffect (replace your existing final useEffect)
   useEffect(() => {
-    // 1. Safely extract the organization ID string from the nested user object
     const orgId = user?.organizationId?._id;
 
     if (!orgId) {
@@ -397,43 +332,34 @@ const EmployeesPage = () => {
     }
 
     const handleConnect = () => {
-      // Log to confirm connection established and room join attempted
-      console.log(`✅ Socket CONNECTED. Client joining room: ${orgId}`);
       socket.emit("joinOrgRoom", orgId);
     };
 
     const handleStatusUpdate = ({ userId, status }) => {
-      // This is the success log you are looking for
       console.log("📬 Status update received:", userId, status);
       setEmployee((prev) =>
         prev.map((emp) => (emp._id === userId ? { ...emp, status } : emp))
       );
     };
 
-    // 2. NEW: Add error listener for deep connection debugging
     const handleConnectError = (error) => {
       console.error("❌ Socket Connection Error:", error);
     };
 
-    // --- Setup Listeners ---
     socket.on("connect", handleConnect);
-    socket.on("connect_error", handleConnectError); // <-- CRITICAL DEBUG TOOL
+    socket.on("connect_error", handleConnectError);
     socket.on("statusUpdate", handleStatusUpdate);
 
-    // Initial check: Call handleConnect if the socket is already connected
     if (socket.connected) {
       handleConnect();
     }
 
-    // --- Cleanup Listeners ---
     return () => {
       socket.off("connect", handleConnect);
       socket.off("connect_error", handleConnectError);
       socket.off("statusUpdate", handleStatusUpdate);
     };
-    // 3. Dependency is the final string ID
   }, [user?.organizationId?._id]);
-  // You can remove the console.log(user) you added outside this effect as it causes noise
   return (
     <div className="flex h-screen bg-gray-50">
       <Sidebar
@@ -640,6 +566,7 @@ const EmployeesPage = () => {
             totalEmployee={employeeCount}
             employeeIncresed={yoyGrowthPercentage}
             newHires={newHiresCount}
+            activeEmployee={activeEmployeeCount}
           />
           <div className="mt-8 grid grid-cols-1 gap-8 xl:grid-cols-3">
             <div className="lg:col-span-1">

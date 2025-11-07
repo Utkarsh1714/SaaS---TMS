@@ -69,3 +69,51 @@ export const EmployeeDirectory = async (req, res) => {
     });
   }
 };
+
+export const employeePageAnalytics = async (req, res) => {
+  try {
+    const { organizationId } = req.user;
+
+    const now = new Date();
+
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+
+    const [employeeList, newHiresThisMonth, activeEmployeeCount] =
+      await Promise.all([
+        User.find({
+          organizationId: organizationId,
+        })
+          .select("-resetToken -resetTokenExpires -password -otp -otpExpires")
+          .populate("departmentId", "_id name")
+          .populate("role", "_id name"),
+
+        User.countDocuments({
+          organizationId: organizationId,
+          createdAt: {
+            $gte: startOfMonth,
+            $lt: endOfMonth,
+          },
+        }),
+
+        User.countDocuments({
+          organizationId: organizationId,
+          status: "Active",
+        }),
+      ]);
+
+    const totalEmployeeCount = employeeList.length;
+
+    return res
+      .status(200)
+      .json({
+        totalEmployeeCount,
+        newHiresThisMonth,
+        activeEmployeeCount,
+        employeeList,
+      });
+  } catch (error) {
+    console.log("Error in employeePageAnalytics:", error);
+    res.status(500).json({ error: "Failed to fetch employee analytics" });
+  }
+};
