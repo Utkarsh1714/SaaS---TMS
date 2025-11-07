@@ -57,6 +57,22 @@ export const getAllEmployeesAndStats = async (req, res) => {
   }
 };
 
+export const getAllEmployees = async (req, res) => {
+  const { organizationId } = req.user;
+  try {
+    const allEmployee = await User.find({
+      organizationId: organizationId,
+    })
+      .select("-password -otp -otpExpires -resetToken -resetTokenExpires")
+      .populate("departmentId")
+      .populate("role", "_id name");
+    res.status(200).json(allEmployee);
+  } catch (error) {
+    console.error("Error fetching user:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
 export const getSingleEmployee = async (req, res) => {
   const { id } = req.params;
   try {
@@ -145,7 +161,7 @@ export const createEmployee = async (req, res) => {
     await sendWelcomeEmail({
       email,
       name: username,
-      role,
+      role: jobTitle,
       tempPassword,
       resetLink,
     });

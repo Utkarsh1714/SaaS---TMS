@@ -2,8 +2,192 @@ import Task from "../models/task.model.js";
 import mongoose from "mongoose";
 import User from "../models/user.model.js";
 import { sendTaskNotificationEmail } from "../utils/send.mail.js";
+import Team from "../models/team.model.js";
 
 // Helper function to apply common filtering/sorting logic
+// const applyTaskFilters = async (
+//   baseQuery,
+//   req,
+//   res,
+//   noTaskMessage = "No task found"
+// ) => {
+//   try {
+//     const { sort, order, status } = req.query;
+
+//     const sortOrder = order === "desc" ? -1 : 1;
+
+//     let filter = { ...baseQuery };
+//     let pipeline = [];
+
+//     if (status) {
+//       if (status === "Overdue") {
+//         filter.deadline = { $lt: new Date() };
+//         filter.status = { $ne: "Completed" };
+//       } else {
+//         filter.status = status;
+//       }
+//     }
+
+//     if (Object.keys(filter).length > 0) {
+//       pipeline.push({ $match: filter });
+//     }
+
+//     let tasks;
+
+//     if (sort === "priority") {
+//       pipeline.push({
+//         $addFields: {
+//           priorityValue: {
+//             $switch: {
+//               branches: [
+//                 { case: { $eq: ["$priority", "Low"] }, then: 1 },
+//                 { case: { $eq: ["$priority", "Medium"] }, then: 2 },
+//                 { case: { $eq: ["$priority", "High"] }, then: 3 },
+//               ],
+//               default: 0,
+//             },
+//           },
+//         },
+//       });
+
+//       pipeline.push({ $sort: { priorityValue: sortOrder } });
+
+//       // Add $lookup stages for population
+//       pipeline.push(
+//         {
+//           $lookup: {
+//             from: "departments",
+//             localField: "department",
+//             foreignField: "_id",
+//             as: "department",
+//           },
+//         },
+//         { $unwind: { path: "$department", preserveNullAndEmptyArrays: true } }
+//       );
+//       pipeline.push(
+//         {
+//           $lookup: {
+//             from: "users",
+//             localField: "assignedManager",
+//             foreignField: "_id",
+//             as: "assignedManager",
+//           },
+//         },
+//         {
+//           $unwind: {
+//             path: "$assignedManager",
+//             preserveNullAndEmptyArrays: true,
+//           },
+//         },
+//         {
+//           $lookup: {
+//             from: "roles",
+//             localField: "assignedManager.role",
+//             foreignField: "_id",
+//             as: "managerRole",
+//           },
+//         },
+//         { $unwind: { path: "$managerRole", preserveNullAndEmptyArrays: true } }
+//       );
+//       pipeline.push({
+//         $lookup: {
+//           from: "users",
+//           localField: "assignedEmployees",
+//           foreignField: "_id",
+//           as: "assignedEmployees",
+//         },
+//       });
+//       pipeline.push(
+//         {
+//           $lookup: {
+//             from: "users",
+//             localField: "createdBy",
+//             foreignField: "_id",
+//             as: "createdBy",
+//           },
+//         },
+//         { $unwind: { path: "$createdBy", preserveNullAndEmptyArrays: true } },
+//         {
+//           $lookup: {
+//             from: "roles", // The collection name for your Role model
+//             localField: "createdBy.role",
+//             foreignField: "_id",
+//             as: "creatorRole",
+//           },
+//         },
+//         { $unwind: { path: "$creatorRole", preserveNullAndEmptyArrays: true } }
+//       );
+
+//       // Project to match original populate structure
+//       pipeline.push({
+//         $project: {
+//           _id: 1, // Include _id of the task itself
+//           title: 1,
+//           description: 1,
+//           department: { _id: "$department._id", name: "$department.name" },
+//           createdBy: {
+//             _id: "$createdBy._id",
+//             username: "$createdBy.username",
+//             email: "$createdBy.email",
+//           },
+//           // FIX HERE: Use $assignedManager.field, not $$assignedManager.field
+//           assignedManager: {
+//             _id: "$assignedManager._id",
+//             username: "$assignedManager.username",
+//             email: "$assignedManager.email",
+//             jobTitle: "$assignedManager.jobTitle",
+//             role: "$assignedManager.roleName",
+//             jobTitle: "$assignedManager.jobTitile",
+//           },
+//           // assignedEmployees still uses $map and $$emp for iteration over the array
+//           assignedEmployees: {
+//             $map: {
+//               input: "$assignedEmployees",
+//               as: "emp",
+//               in: {
+//                 _id: "$$emp._id",
+//                 username: "$$emp.username",
+//                 email: "$$emp.email",
+//                 role: "$$emp.role",
+//               },
+//             },
+//           },
+//           priority: 1,
+//           status: 1,
+//           deadline: 1,
+//           milestones: 1,
+//           dependencies: 1,
+//           createdAt: 1,
+//           updatedAt: 1,
+//         },
+//       });
+
+//       tasks = await Task.aggregate(pipeline);
+//     } else {
+//       let sortOptionsForFind = {};
+//       if (sort === "createdAt") {
+//         sortOptionsForFind.createdAt = sortOrder;
+//       } else {
+//         sortOptionsForFind.createdAt = -1; // Default
+//       }
+
+//       tasks = await Task.find(filter)
+//         .populate("department", "name")
+//         .populate("assignedManager", "username email")
+//         .populate("assignedEmployees", "username email role")
+//         .populate("createdBy", "username email")
+//         .sort(sortOptionsForFind);
+//     }
+
+//     res.status(200).json(tasks);
+//   } catch (error) {
+//     console.error("Error fetching tasks with filters:", error);
+//     res.status(500).json({ message: "Failed to fetch tasks" });
+//   }
+// };
+// Make sure you import your 'Task' model
+// import Task from "../models/task.model.js";
+
 const applyTaskFilters = async (
   baseQuery,
   req,
@@ -18,6 +202,8 @@ const applyTaskFilters = async (
     let filter = { ...baseQuery };
     let pipeline = [];
 
+    // --- Status Filter ---
+    // (This logic is unchanged)
     if (status) {
       if (status === "Overdue") {
         filter.deadline = { $lt: new Date() };
@@ -33,6 +219,7 @@ const applyTaskFilters = async (
 
     let tasks;
 
+    // --- AGGREGATION BRANCH (for priority sort) ---
     if (sort === "priority") {
       pipeline.push({
         $addFields: {
@@ -51,7 +238,9 @@ const applyTaskFilters = async (
 
       pipeline.push({ $sort: { priorityValue: sortOrder } });
 
-      // Add $lookup stages for population
+      // --- START: Manual Population via $lookup ---
+
+      // 1. Populate department
       pipeline.push(
         {
           $lookup: {
@@ -63,6 +252,30 @@ const applyTaskFilters = async (
         },
         { $unwind: { path: "$department", preserveNullAndEmptyArrays: true } }
       );
+
+      // 2. Populate createdBy and its role
+      pipeline.push(
+        {
+          $lookup: {
+            from: "users",
+            localField: "createdBy",
+            foreignField: "_id",
+            as: "createdBy",
+          },
+        },
+        { $unwind: { path: "$createdBy", preserveNullAndEmptyArrays: true } },
+        {
+          $lookup: {
+            from: "roles", // The collection name for your Role model
+            localField: "createdBy.role",
+            foreignField: "_id",
+            as: "creatorRole",
+          },
+        },
+        { $unwind: { path: "$creatorRole", preserveNullAndEmptyArrays: true } }
+      );
+
+      // 3. Populate assignedManager and its role
       pipeline.push(
         {
           $lookup: {
@@ -77,48 +290,69 @@ const applyTaskFilters = async (
             path: "$assignedManager",
             preserveNullAndEmptyArrays: true,
           },
-        }
-      );
-      pipeline.push({
-        $lookup: {
-          from: "users",
-          localField: "assignedEmployees",
-          foreignField: "_id",
-          as: "assignedEmployees",
         },
-      });
+        {
+          $lookup: {
+            from: "roles",
+            localField: "assignedManager.role",
+            foreignField: "_id",
+            as: "managerRole",
+          },
+        },
+        { $unwind: { path: "$managerRole", preserveNullAndEmptyArrays: true } }
+      );
+
+      // 4. Populate assignedEmployees and their roles
       pipeline.push(
         {
           $lookup: {
             from: "users",
-            localField: "createdBy",
+            localField: "assignedEmployees",
             foreignField: "_id",
-            as: "createdBy",
+            as: "assignedEmployees",
           },
         },
-        { $unwind: { path: "$createdBy", preserveNullAndEmptyArrays: true } }
+        {
+          $lookup: {
+            from: "roles",
+            localField: "assignedEmployees.role",
+            foreignField: "_id",
+            as: "employeeRoles",
+          },
+        }
       );
 
-      // Project to match original populate structure
+      // --- END: Manual Population ---
+
+      // 5. Project to match the final structure
       pipeline.push({
         $project: {
-          _id: 1, // Include _id of the task itself
+          _id: 1,
           title: 1,
           description: 1,
           department: { _id: "$department._id", name: "$department.name" },
-          // FIX HERE: Use $createdBy.field, not $$createdBy.field
           createdBy: {
             _id: "$createdBy._id",
             username: "$createdBy.username",
             email: "$createdBy.email",
+            jobTitle: "$createdBy.jobTitle", // Added
+            role: {
+              // Added
+              _id: "$creatorRole._id",
+              name: "$creatorRole.name",
+            },
           },
-          // FIX HERE: Use $assignedManager.field, not $$assignedManager.field
           assignedManager: {
             _id: "$assignedManager._id",
             username: "$assignedManager.username",
             email: "$assignedManager.email",
+            jobTitle: "$assignedManager.jobTitle", // Added
+            role: {
+              // Added
+              _id: "$managerRole._id",
+              name: "$managerRole.name",
+            },
           },
-          // assignedEmployees still uses $map and $$emp for iteration over the array
           assignedEmployees: {
             $map: {
               input: "$assignedEmployees",
@@ -127,7 +361,30 @@ const applyTaskFilters = async (
                 _id: "$$emp._id",
                 username: "$$emp.username",
                 email: "$$emp.email",
-                role: "$$emp.role",
+                jobTitle: "$$emp.jobTitle", // Added
+                role: {
+                  // Added
+                  $let: {
+                    vars: {
+                      roleObj: {
+                        $arrayElemAt: [
+                          {
+                            $filter: {
+                              input: "$employeeRoles",
+                              as: "r",
+                              cond: { $eq: ["$$r._id", "$$emp.role"] },
+                            },
+                          },
+                          0,
+                        ],
+                      },
+                    },
+                    in: {
+                      _id: "$$roleObj._id",
+                      name: "$$roleObj.name",
+                    },
+                  },
+                },
               },
             },
           },
@@ -142,6 +399,8 @@ const applyTaskFilters = async (
       });
 
       tasks = await Task.aggregate(pipeline);
+
+      // --- .find() BRANCH (for simple sorts) ---
     } else {
       let sortOptionsForFind = {};
       if (sort === "createdAt") {
@@ -152,9 +411,24 @@ const applyTaskFilters = async (
 
       tasks = await Task.find(filter)
         .populate("department", "name")
-        .populate("assignedManager", "username email")
-        .populate("assignedEmployees", "username email role")
-        .populate("createdBy", "username email")
+        .populate({
+          // MODIFIED
+          path: "assignedManager",
+          select: "username email jobTitle",
+          populate: { path: "role", select: "name" },
+        })
+        .populate({
+          // MODIFIED
+          path: "assignedEmployees",
+          select: "username email jobTitle",
+          populate: { path: "role", select: "name" },
+        })
+        .populate({
+          // MODIFIED for consistency
+          path: "createdBy",
+          select: "username email jobTitle",
+          populate: { path: "role", select: "name" },
+        })
         .sort(sortOptionsForFind);
     }
 
@@ -216,6 +490,85 @@ export const createTask = async (req, res) => {
   } catch (error) {
     console.log(error);
     res.status(500).json({ message: "Failed to create task" });
+  }
+};
+
+export const assignTaskToTeam = async (req, res) => {
+  const { taskId } = req.params;
+  const { teamId } = req.body;
+  const { organizationId, _id: userId } = req.user;
+
+  if (!teamId) {
+    return res.status(400).json({ message: "Team ID is required" });
+  }
+
+  try {
+    const task = await Task.findOne({
+      _id: taskId,
+      organizationId: organizationId,
+    });
+
+    if (!task) {
+      return res.status(404).json({ message: "Task not found" });
+    }
+
+    const team = await Team.findOne({
+      _id: teamId,
+      organizationId: organizationId,
+    });
+
+    if (!team) {
+      return res.status(404).json({ message: "Team not found" });
+    }
+
+    const isManager = task.assignedManager.toString() === userId.toString();
+    const isCreator = task.createdBy.toString() === userId.toString();
+
+    if (!isManager && !isCreator) {
+      return res.status(403).json({
+        message:
+          "Not authorized. Only the task creator or assigned manager can assign a team.",
+      });
+    }
+
+    if (task.department.toString() !== team.departmentId.toString()) {
+      return res.status(400).json({
+        message: "Team must be in the same department as the task.",
+      });
+    }
+
+    const oldTeamId = task.team;
+
+    if (oldTeamId && oldTeamId.toString() !== teamId) {
+      await Team.findOneAndUpdate(
+        { _id: oldTeamId, organizationId: organizationId },
+        { $pull: { tasks: taskId } }
+      );
+    }
+
+    task.team = teamId;
+    await task.save();
+
+    await Team.findOneAndUpdate(
+      { _id: teamId, organizationId: organizationId },
+      { $addToSet: { tasks: taskId } }
+    );
+
+    const populatedTask = await Task.findOne({
+      _id: taskId,
+      organizationId: organizationId,
+    })
+      .populate("assignedManager", "username email jobTitle _id")
+      .populate("department", "name _id")
+      .populate("team", "name _id");
+
+    res.status(200).json({
+      message: "Task successfully assigned to team",
+      task: populatedTask,
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: "Failed to assign team" });
   }
 };
 
@@ -294,35 +647,38 @@ export const updateTaskStatus = async (req, res) => {
       return res.status(404).json({ message: "Task not found" });
     }
 
-    // --- ACCESS CONTROL LOGIC ---
+    const roleName = role.name ? role.name : role;
 
-    // 1. Convert IDs to strings for reliable comparison
-    const assignedManagerId = task.assignedManager ? task.assignedManager.toString() : null;
+    const assignedManagerId = task.assignedManager
+      ? task.assignedManager.toString()
+      : null;
     const currentUserId = userId.toString();
 
-    // 2. Check if the user is authorized to update the status
-    const isBoss = role === "Boss";
-    const isAssignedManager = assignedManagerId && assignedManagerId === currentUserId;
+    const isBoss = roleName === "Boss"; // Check against the name
+    const isAssignedManager =
+      assignedManagerId && assignedManagerId === currentUserId;
 
     // Check for authorization: Boss OR Assigned Manager
     if (!isBoss && !isAssignedManager) {
       return res.status(403).json({
-        message: "Forbidden: Only the assigned manager or a Boss can update the task status."
+        message:
+          "Forbidden: Only the assigned manager or a Boss can update the task status.",
       });
     }
 
     // 3. Check if the new status is valid (Good practice)
     const validStatuses = ["Pending", "In Progress", "Completed"];
     if (!validStatuses.includes(status)) {
-        return res.status(400).json({ message: `Invalid status value: ${status}` });
+      return res
+        .status(400)
+        .json({ message: `Invalid status value: ${status}` });
     }
-    
+
     // --- Update Task Status ---
     task.status = status;
     await task.save();
 
     res.status(200).json(task);
-
   } catch (error) {
     console.error(error); // Log the actual error
     res.status(500).json({ message: "Failed to update task status" });
@@ -371,7 +727,7 @@ export const deleteTask = async (req, res) => {
 
   try {
     const task = await Task.findByIdAndDelete(taskId);
-    if (!task) return res.status(404).json({ message: "Task not found" });  
+    if (!task) return res.status(404).json({ message: "Task not found" });
 
     res.status(200).json({ message: "Task deleted" });
   } catch (error) {
@@ -399,29 +755,47 @@ export const getTaskById = async (req, res) => {
   }
 };
 
-export const getTasksByBoss = async (req, res) => {
-  await applyTaskFilters(
-    { createdBy: req.user._id },
-    req,
-    res,
-    "No tasks created by boss found"
-  );
+export const getTasks = async (req, res) => {
+  const { _id: userId, role, organizationId } = req.user;
+
+  const roleName = role.name ? role.name : role;
+
+  let baseQuery = { organizationId: organizationId };
+
+  if (roleName !== "Boss") {
+    baseQuery.$or = [
+      { createdBy: userId },
+      { assignedManager: userId },
+      { assignedEmployees: userId },
+    ];
+  }
+
+  await applyTaskFilters(baseQuery, req, res, "No tasks found");
 };
 
-export const getTasksByManager = async (req, res) => {
-  await applyTaskFilters(
-    { assignedManager: req.user._id },
-    req,
-    res,
-    "No tasks assigned to manager found"
-  );
-};
+// export const getTasksByBoss = async (req, res) => {
+//   await applyTaskFilters(
+//     { createdBy: req.user._id },
+//     req,
+//     res,
+//     "No tasks created by boss found"
+//   );
+// };
 
-export const getTasksByEmployee = async (req, res) => {
-  await applyTaskFilters(
-    { assignedEmployees: req.user._id },
-    req,
-    res,
-    "No tasks assigned to employee found"
-  );
-};
+// export const getTasksByManager = async (req, res) => {
+//   await applyTaskFilters(
+//     { assignedManager: req.user._id },
+//     req,
+//     res,
+//     "No tasks assigned to manager found"
+//   );
+// };
+
+// export const getTasksByEmployee = async (req, res) => {
+//   await applyTaskFilters(
+//     { assignedEmployees: req.user._id },
+//     req,
+//     res,
+//     "No tasks assigned to employee found"
+//   );
+// };

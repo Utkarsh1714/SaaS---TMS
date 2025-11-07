@@ -19,6 +19,7 @@ import Reports from "./pages/Reports";
 import Profile from "./pages/Profile";
 import DepartmentDetails from "./pages/DeptDetails";
 import { Loader } from "lucide-react";
+import ResetPassword from "./pages/ResetPassword";
 
 // Lazy load the pages... (keep all your lazy imports here)
 const Home = lazy(() => import("./pages/Home"));
@@ -62,11 +63,12 @@ function App() {
             }
           />
           <Route path="/plans" element={<Pricing />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
 
           <Route element={<ProtectedRoute />}>
             <Route path="/dashboard" element={<Home />} />
             <Route path="/tasks" element={<Tasks />} />
-            <Route path="/tasks/:id" element={<TaskDetails />} />
+            <Route path="/tasks/:taskId" element={<TaskDetails />} />
             <Route path="/departments" element={<Departments />} />
             <Route path="/departments/:id" element={<DepartmentDetails />} />
             <Route path="/employees" element={<Employees />} />

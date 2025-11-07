@@ -15,10 +15,14 @@ const calculatePercentage = (part, whole) => {
   return percentage.toFixed(2) + "%";
 };
 
-const EmployeeStats = ({ totalEmployee, employeeIncresed, newHires }) => {
+const EmployeeStats = ({
+  totalEmployee,
+  employeeIncresed,
+  newHires,
+  activeEmployee,
+}) => {
   // New Hire Percentage
   const newHirePercentage = calculatePercentage(newHires, totalEmployee);
-
   return (
     <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
       <StatCard
@@ -39,7 +43,7 @@ const EmployeeStats = ({ totalEmployee, employeeIncresed, newHires }) => {
       />
       <StatCard
         title="Active"
-        value="112"
+        value={activeEmployee}
         change="+8%"
         trend="up"
         icon={<UserCheckIcon className="h-6 w-6 text-indigo-600" />}

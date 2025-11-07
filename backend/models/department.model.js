@@ -29,6 +29,12 @@ const DepartmentSchema = new mongoose.Schema(
         ref: "Team",
       },
     ],
+    task: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Task",
+      },
+    ],
   },
   {
     timestamps: true,
