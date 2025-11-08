@@ -12,7 +12,6 @@ import DeptOption from "../DeptOption";
 import { MdDeleteForever, MdOutlineCreate } from "react-icons/md";
 import { PlusIcon } from "lucide-react";
 
-// Props are simplified to pass only necessary data and handlers
 const TaskCreateDialog = ({
   open,
   setOpen,
@@ -26,7 +25,7 @@ const TaskCreateDialog = ({
   setMileStoneInput,
   handleCreateTask,
   loading,
-  toast, // assuming toast is passed down or imported where needed
+  toast,
 }) => {
   const handleMilestoneAdd = () => {
     if (mileStoneInput.trim()) {
@@ -42,9 +41,7 @@ const TaskCreateDialog = ({
   };
 
   const handleMilestoneDelete = (index) => {
-    const updatedMilestones = taskData.milestones.filter(
-      (_, i) => i !== index
-    );
+    const updatedMilestones = taskData.milestones.filter((_, i) => i !== index);
     setTaskData({
       ...taskData,
       milestones: updatedMilestones,
@@ -68,7 +65,6 @@ const TaskCreateDialog = ({
         assignedManager: "",
       }));
       setHasManager(false);
-      // Ensure you have `toast` available here, or pass it down.
       toast.warning(
         "This department does not have a manager assigned. Please assign a manager before creating a task."
       );
@@ -90,7 +86,9 @@ const TaskCreateDialog = ({
           New Task
         </button>
       </DialogTrigger>
-      <DialogContent className={"sm:max-w-[500px]"}>
+      <DialogContent
+        className={"sm:max-w-[500px] max-h-[90vh] overflow-y-scroll"}
+      >
         <DialogHeader>
           <DialogTitle>Create New Task</DialogTitle>
           <DialogDescription>
@@ -154,7 +152,9 @@ const TaskCreateDialog = ({
             </select>
             {/* Milestone Input/List */}
             <div className="w-full h-auto flex flex-col items-start justify-start border p-2 rounded">
-              <label className="text-sm font-medium text-gray-700 mb-2">Milestones (Optional)</label>
+              <label className="text-sm font-medium text-gray-700 mb-2">
+                Milestones (Optional)
+              </label>
               <div className="w-full flex items-center space-x-2">
                 <input
                   type="text"

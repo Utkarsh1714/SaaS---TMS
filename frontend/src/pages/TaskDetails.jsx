@@ -1,4 +1,13 @@
 import Sidebar from "@/components/Layout/Sidebar";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { useAuth } from "@/context/AuthContext";
 import axios from "axios";
 import {
   AlertCircleIcon,
@@ -6,6 +15,7 @@ import {
   BellIcon,
   CheckCircleIcon,
   ClockIcon,
+  Pencil,
   PlusIcon,
   SaveIcon,
   UserIcon,
@@ -13,12 +23,25 @@ import {
 } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { toast } from "sonner";
 
 const TaskDetails = () => {
+  const { user } = useAuth();
   const { taskId } = useParams();
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isAssigning, setIsAssigning] = useState(false);
+  const [isAssignTeamDialogOpen, setIsAssignTeamDialogOpen] = useState(false);
+
+  const [taskDetail, setTaskDetail] = useState(null);
+  const [departmentTeams, setDepartmentTeams] = useState([]);
+  const [selectedTeam, setSelectedTeam] = useState(null);
+
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
   // Mock task data - in a real app, this would come from an API
   const [task, setTask] = useState({
     id: taskId,
@@ -65,14 +88,69 @@ const TaskDetails = () => {
   });
 
   const fetchTask = async () => {
-    const res = await axios.get(
-      `${import.meta.env.VITE_API_URL}/api/task/getTask`,
-      {
-        withCredentials: true,
-      }
-    );
+    setLoading(true);
+    try {
+      const res = await axios.get(
+        `${import.meta.env.VITE_API_URL}/api/task/${taskId}`,
+        {
+          withCredentials: true,
+        }
+      );
+      console.log(res.data);
+      setTaskDetail(res.data);
+      setTitle(res.data.title);
+      setDescription(res.data.description);
+      setDepartmentTeams(res.data.department.teams);
+    } catch (error) {
+      console.log(error);
+      toast.error(error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    console.log(res.data);
+  const handleUpdateTitleandDesc = async (taskId) => {
+    setIsSaving(true);
+    try {
+      await axios.put(
+        `${import.meta.env.VITE_API_URL}/api/task/${taskId}`,
+        { title, description },
+        {
+          withCredentials: true,
+        }
+      );
+      toast.success("Task updated successfully!");
+      await fetchTask();
+      setIsSaving(false);
+      setIsEditing(false);
+    } catch (error) {
+      console.log(error);
+      toast.error("Failed to update task.");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleTeamAssign = async () => {
+    setIsAssigning(true);
+    console.log(taskId);
+    try {
+      const res = await axios.post(
+        `${import.meta.env.VITE_API_URL}/api/task/${taskId}/assign-team`,
+        { teamId: selectedTeam },
+        { withCredentials: true }
+      );
+      if (res.status === 200) {
+        toast.success("Team assigned to task successfully");
+        setIsAssignTeamDialogOpen(false); // ✅ THIS CLOSES THE DIALOG
+        setSelectedTeam(null);
+      }
+    } catch (error) {
+      console.log(error);
+      toast.error("Failed to assign team.");
+    } finally {
+      setIsAssigning(false);
+    }
   };
 
   const handleStatusChange = (newStatus) => {
@@ -89,12 +167,14 @@ const TaskDetails = () => {
   };
   const getStatusIcon = (status) => {
     switch (status) {
-      case "completed":
+      case "Completed":
         return <CheckCircleIcon className="h-5 w-5 text-green-600" />;
-      case "in-progress":
+      case "In Progress":
         return <ClockIcon className="h-5 w-5 text-yellow-600" />;
-      case "overdue":
+      case "Overdue":
         return <AlertCircleIcon className="h-5 w-5 text-red-600" />;
+      case "Pending":
+        return <ClockIcon className="h-5 w-5 text-blue-600" />;
       default:
         return <ClockIcon className="h-5 w-5 text-gray-600" />;
     }
@@ -110,7 +190,7 @@ const TaskDetails = () => {
       case "low":
         return "bg-green-100 text-green-800";
       default:
-        return "bg-gray-100 text-gray-800";
+        return "bg-gray-100 text-blue-800";
     }
   };
 
@@ -174,67 +254,124 @@ const TaskDetails = () => {
               {/* Main Content */}
               <div className="lg:col-span-2 space-y-6">
                 {/* Task Header */}
-                <div className="bg-white shadow rounded-lg p-6">
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="flex items-center">
-                      {getStatusIcon(task.status)}
-                      <h1 className="ml-3 text-2xl font-semibold text-gray-900">
-                        {task.title}
-                      </h1>
+                {loading ? (
+                  <p>Loading...</p>
+                ) : (
+                  <div className="bg-white shadow rounded-lg p-6">
+                    <div className="flex flex-col md:flex-row space-y-4 items-start justify-between mb-4">
+                      <div className="flex items-center">
+                        {getStatusIcon(taskDetail?.status)}
+                        <h1 className="ml-3 text-2xl font-semibold text-gray-900">
+                          {taskDetail?.title}
+                        </h1>
+                      </div>
+                      <div className="flex items-center justify-center gap-2">
+                        {(user.role.name === "Boss" ||
+                          user.role.name === "Manager") && (
+                          <Dialog
+                            open={isAssignTeamDialogOpen}
+                            onOpenChange={setIsAssignTeamDialogOpen}
+                          >
+                            <DialogTrigger asChild>
+                              <Button className="inline-flex items-center px-4 py-1.5 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700">
+                                Assign Team
+                              </Button>
+                            </DialogTrigger>
+                            <DialogContent className="sm:max-w-[425px]">
+                              <DialogHeader>
+                                <DialogTitle>
+                                  Select a team to complete the task
+                                </DialogTitle>
+                              </DialogHeader>
+                              <div className="bg-white shadow rounded-lg p-4">
+                                <h3 className="text-sm font-medium text-gray-500 mb-3">
+                                  Select a Team
+                                </h3>
+                                <div className="flex flex-wrap gap-2">
+                                  {departmentTeams.map((team) => (
+                                    <button
+                                      key={team._id}
+                                      onClick={() =>
+                                        setSelectedTeam(
+                                          selectedTeam === team._id
+                                            ? null
+                                            : team._id
+                                        )
+                                      }
+                                      className={`
+                                                inline-flex items-center px-3 py-1.5 rounded-md text-sm font-medium transition-colors
+                                                ${
+                                                  selectedTeam === team._id
+                                                    ? "bg-blue-600 text-white shadow-sm"
+                                                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                                                }
+                                        `}
+                                    >
+                                      {team.name}
+                                    </button>
+                                  ))}
+                                </div>
+                                <hr className="my-5" />
+                                <Button
+                                  onClick={() => handleTeamAssign()}
+                                  disabled={!selectedTeam}
+                                  className={"w-full"}
+                                >
+                                  {isAssigning ? "Assigning..." : "Assign Team"}
+                                </Button>
+                              </div>
+                            </DialogContent>
+                          </Dialog>
+                        )}
+
+                        <button
+                          onClick={() => setIsEditing(!isEditing)}
+                          className="inline-flex items-center px-3 py-1.5 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+                        >
+                          {isEditing ? "Cancel" : <Pencil size={20} />}
+                        </button>
+                      </div>
                     </div>
-                    <button
-                      onClick={() => setIsEditing(!isEditing)}
-                      className="inline-flex items-center px-3 py-1.5 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
-                    >
-                      {isEditing ? "Cancel" : "Edit"}
-                    </button>
+                    {isEditing ? (
+                      <div className="space-y-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Title
+                          </label>
+                          <input
+                            type="text"
+                            value={title}
+                            onChange={(e) => setTitle(e.target.value)}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Description
+                          </label>
+                          <textarea
+                            value={description}
+                            onChange={(e) => setDescription(e.target.value)}
+                            rows={4}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                          />
+                        </div>
+                        <button
+                          onClick={() =>
+                            handleUpdateTitleandDesc(taskDetail._id)
+                          }
+                          className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700"
+                        >
+                          <SaveIcon className="h-4 w-4 mr-2" />
+                          {!isSaving ? "Save Changes" : "Saving..."}
+                        </button>
+                      </div>
+                    ) : (
+                      <p className="text-gray-700">{taskDetail?.description}</p>
+                    )}
                   </div>
-                  {isEditing ? (
-                    <div className="space-y-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Title
-                        </label>
-                        <input
-                          type="text"
-                          value={task.title}
-                          onChange={(e) =>
-                            setTask({
-                              ...task,
-                              title: e.target.value,
-                            })
-                          }
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Description
-                        </label>
-                        <textarea
-                          value={task.description}
-                          onChange={(e) =>
-                            setTask({
-                              ...task,
-                              description: e.target.value,
-                            })
-                          }
-                          rows={4}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                        />
-                      </div>
-                      <button
-                        onClick={() => setIsEditing(false)}
-                        className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700"
-                      >
-                        <SaveIcon className="h-4 w-4 mr-2" />
-                        Save Changes
-                      </button>
-                    </div>
-                  ) : (
-                    <p className="text-gray-700">{task.description}</p>
-                  )}
-                </div>
+                )}
+
                 {/* Comments Section */}
                 <div className="bg-white shadow rounded-lg p-6">
                   <h2 className="text-lg font-medium text-gray-900 mb-4">

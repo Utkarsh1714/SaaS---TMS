@@ -7,10 +7,12 @@ import {
   assignTaskToTeam,
   createTask,
   deleteTask,
+  getTaskById,
   getTasks,
   removeEmployeeFromTask,
   updateMilestone,
   updateTaskStatus,
+  updateTitleAndDesc,
 } from "../controllers/task.controller.js";
 import verifyToken from "../middlewares/verifyToken.js";
 import { authorizePermission } from "../middlewares/authorizePermission.js";
@@ -63,8 +65,15 @@ router.post(
   authorizePermission("can_create_task"), // didn't create the 'can_assign_teamToTask' permission, therefore this permission is used
   assignTaskToTeam
 );
+router.put(
+  "/:id",
+  verifyToken,
+  authorizePermission("can_create_task"),
+  updateTitleAndDesc
+);
 
 router.get("/getTask", verifyToken, getTasks);
+router.get("/:id", verifyToken, getTaskById);
 
 // router.get("/boss", verifyToken, getTasksByBoss);
 // router.get("/manager", verifyToken, getTasksByManager);
