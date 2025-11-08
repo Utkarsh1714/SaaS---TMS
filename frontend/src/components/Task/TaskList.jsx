@@ -194,7 +194,7 @@ const TaskList = ({
           <TaskItem
             key={task._id}
             task={task}
-            userRole={user.role}
+            userRole={user.role.name}
             userId={user._id}
             navigate={navigate}
             handleDeleteTask={handleDeleteTask}
