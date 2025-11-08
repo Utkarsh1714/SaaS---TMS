@@ -1,3 +1,4 @@
+import NotificationPanel from "@/components/Dashboard/NotificationPanel";
 import Sidebar from "@/components/Layout/Sidebar";
 import { Button } from "@/components/ui/button";
 import {
@@ -8,10 +9,12 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { useAuth } from "@/context/AuthContext";
+import { useNotifications } from "@/context/NotificationContext";
 import axios from "axios";
 import {
   AlertCircleIcon,
   ArrowLeftIcon,
+  BellDot,
   BellIcon,
   CheckCircleIcon,
   ClockIcon,
@@ -29,6 +32,9 @@ const TaskDetails = () => {
   const { user } = useAuth();
   const { taskId } = useParams();
   const navigate = useNavigate();
+  const { addNotification, toggleNotificationPanel, notifications } =
+    useNotifications();
+
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -44,6 +50,7 @@ const TaskDetails = () => {
   const [taskStatus, setTaskStatus] = useState("");
   const [taskPriority, setTaskPriority] = useState("");
   const [deadline, setDeadline] = useState("");
+  const [teamName, setTeamName] = useState("");
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -116,6 +123,7 @@ const TaskDetails = () => {
       setTaskStatus(res.data.status);
       setTaskPriority(res.data.priority);
       setDeadline(res.data.deadline);
+      setTeamName(res.data.team?.name);
     } catch (error) {
       console.log(error);
       toast.error(error.message);
@@ -146,12 +154,11 @@ const TaskDetails = () => {
     }
   };
 
-  const handleTeamAssign = async () => {
+  const handleTeamAssign = async (id) => {
     setIsAssigning(true);
-    console.log(taskId);
     try {
       const res = await axios.post(
-        `${import.meta.env.VITE_API_URL}/api/task/${taskId}/assign-team`,
+        `${import.meta.env.VITE_API_URL}/api/task/${id}/assign-team`,
         { teamId: selectedTeam },
         { withCredentials: true }
       );
@@ -246,7 +253,7 @@ const TaskDetails = () => {
 
   useEffect(() => {
     fetchTask();
-  }, [taskId]);
+  }, [taskId, teamName]);
   return (
     <div className="flex h-screen bg-gray-50">
       <Sidebar isOpen={sidebarOpen} setIsOpen={setSidebarOpen} />
@@ -282,9 +289,16 @@ const TaskDetails = () => {
                 </button>
               </div>
               <div className="flex items-center">
-                <button className="flex-shrink-0 p-1 mr-4 text-gray-400 rounded-full hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                <button
+                  onClick={toggleNotificationPanel}
+                  className="flex-shrink-0 p-1 text-gray-400 rounded-full hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                >
                   <span className="sr-only">View notifications</span>
-                  <BellIcon className="h-6 w-6" />
+                  {notifications && notifications.length > 0 ? (
+                    <BellDot className="h-6 w-6 text-green-500" />
+                  ) : (
+                    <BellIcon className="h-6 w-6 text-gray-400" />
+                  )}
                 </button>
                 <div className="ml-3 relative">
                   <div>
@@ -299,7 +313,7 @@ const TaskDetails = () => {
           </div>
         </header>
         <main className="flex-1 overflow-auto p-4 sm:p-6 lg:p-8">
-          <div className="max-w-5xl mx-auto">
+          <div className="max-w-6xl mx-auto">
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
               {/* Main Content */}
               <div className="lg:col-span-2 space-y-6">
@@ -316,39 +330,43 @@ const TaskDetails = () => {
                         </h1>
                       </div>
                       <div className="flex items-center justify-center gap-2">
-                        {(user.role.name === "Boss" ||
-                          user.role.name === "Manager") && (
-                          <Dialog
-                            open={isAssignTeamDialogOpen}
-                            onOpenChange={setIsAssignTeamDialogOpen}
-                          >
-                            <DialogTrigger asChild>
-                              <Button className="inline-flex items-center px-4 py-1.5 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700">
-                                Assign Team
-                              </Button>
-                            </DialogTrigger>
-                            <DialogContent className="sm:max-w-[425px]">
-                              <DialogHeader>
-                                <DialogTitle>
-                                  Select a team to complete the task
-                                </DialogTitle>
-                              </DialogHeader>
-                              <div className="bg-white shadow rounded-lg p-4">
-                                <h3 className="text-sm font-medium text-gray-500 mb-3">
-                                  Select a Team
-                                </h3>
-                                <div className="flex flex-wrap gap-2">
-                                  {departmentTeams.map((team) => (
-                                    <button
-                                      key={team._id}
-                                      onClick={() =>
-                                        setSelectedTeam(
-                                          selectedTeam === team._id
-                                            ? null
-                                            : team._id
-                                        )
-                                      }
-                                      className={`
+                        {!taskDetail?.team
+                          ? (user.role.name === "Boss" ||
+                              user.role.name === "Manager") && (
+                              <Dialog
+                                open={isAssignTeamDialogOpen}
+                                onOpenChange={setIsAssignTeamDialogOpen}
+                              >
+                                <DialogTrigger asChild>
+                                  <Button
+                                    onClick={() => setIsEditing(false)}
+                                    className="inline-flex items-center px-4 py-1.5 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700"
+                                  >
+                                    Assign Team
+                                  </Button>
+                                </DialogTrigger>
+                                <DialogContent className="sm:max-w-[425px]">
+                                  <DialogHeader>
+                                    <DialogTitle>
+                                      Select a team to complete the task
+                                    </DialogTitle>
+                                  </DialogHeader>
+                                  <div className="bg-white shadow rounded-lg p-4">
+                                    <h3 className="text-sm font-medium text-gray-500 mb-3">
+                                      Select a Team
+                                    </h3>
+                                    <div className="flex flex-wrap gap-2">
+                                      {departmentTeams.map((team) => (
+                                        <button
+                                          key={team._id}
+                                          onClick={() =>
+                                            setSelectedTeam(
+                                              selectedTeam === team._id
+                                                ? null
+                                                : team._id
+                                            )
+                                          }
+                                          className={`
                                                 inline-flex cursor-pointer items-center px-3 py-1.5 rounded-md text-sm font-medium transition-colors
                                                 ${
                                                   selectedTeam === team._id
@@ -356,33 +374,38 @@ const TaskDetails = () => {
                                                     : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                                                 }
                                         `}
+                                        >
+                                          {team.name}
+                                        </button>
+                                      ))}
+                                    </div>
+                                    <hr className="my-5" />
+                                    <Button
+                                      onClick={() =>
+                                        handleTeamAssign(taskDetail._id)
+                                      }
+                                      disabled={!selectedTeam}
+                                      className={"w-full"}
                                     >
-                                      {team.name}
-                                    </button>
-                                  ))}
-                                </div>
-                                <hr className="my-5" />
-                                <Button
-                                  onClick={() => handleTeamAssign()}
-                                  disabled={!selectedTeam}
-                                  className={"w-full"}
-                                >
-                                  {isAssigning ? "Assigning..." : "Assign Team"}
-                                </Button>
-                              </div>
-                            </DialogContent>
-                          </Dialog>
-                        )}
+                                      {isAssigning
+                                        ? "Assigning..."
+                                        : "Assign Team"}
+                                    </Button>
+                                  </div>
+                                </DialogContent>
+                              </Dialog>
+                            )
+                          : ""}
 
                         {isEditing ? (
-                          <button
-                            onClick={() => setIsEditing(!isEditing)}
-                            className="inline-flex items-center px-3 py-1.5 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+                          <Button
+                            onClick={() => setIsEditing(false)}
+                            variant={"destructive"}
                           >
-                            "Cancel"
-                          </button>
+                            Cancel
+                          </Button>
                         ) : (
-                          <Button>
+                          <Button onClick={() => setIsEditing(true)}>
                             <Pencil size={20} color="white" />
                           </Button>
                         )}
@@ -423,7 +446,12 @@ const TaskDetails = () => {
                         </button>
                       </div>
                     ) : (
-                      <p className="text-gray-700">{taskDetail?.description}</p>
+                      <>
+                        <p className="text-gray-700">
+                          {taskDetail?.description}
+                        </p>
+                        <p className="text-gray-700">display milestone here</p>
+                      </>
                     )}
                   </div>
                 )}
@@ -475,6 +503,18 @@ const TaskDetails = () => {
               <div className="space-y-6">
                 {/* Status & Priority */}
                 <div className="bg-white shadow rounded-lg p-6">
+                  <div className="flex flex-col items-center justify-between mb-4 bg-slate-200 py-3 rounded-md">
+                    <h2 className="text-xl text-center font-medium text-blue-600">
+                      Team
+                    </h2>
+                    <p className="font-semibold">
+                      {teamName || (
+                        <span className="text-md font-normal">
+                          Not Assigned
+                        </span>
+                      )}
+                    </p>
+                  </div>
                   <div className="flex items-center justify-between mb-4">
                     <h2 className="text-xl text-center font-medium text-gray-900">
                       Details
@@ -688,6 +728,7 @@ const TaskDetails = () => {
           </div>
         </main>
       </div>
+      <NotificationPanel />
     </div>
   );
 };

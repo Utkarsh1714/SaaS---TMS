@@ -44,7 +44,6 @@ const getPriorityClass = (priority) => {
 
 // --- TaskItem Component (Adapted from the original card structure) ---
 const TaskItem = ({ task, userRole, userId, navigate, handleDeleteTask }) => {
-  console.log(task);
   // Logic to truncate title and description (from original Tasks.jsx)
   const isDescriptionLong = task.description.length > DESCRIPTION_CHAR_LIMIT;
 
@@ -156,6 +155,7 @@ const TaskList = ({
   handleDeleteTask,
   user,
 }) => {
+  console.log(tasks);
   if (loading) {
     return (
       <div className="flex items-center justify-center h-48 gap-3 bg-white shadow rounded-lg">
