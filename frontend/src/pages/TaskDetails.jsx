@@ -35,10 +35,15 @@ const TaskDetails = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [isAssigning, setIsAssigning] = useState(false);
   const [isAssignTeamDialogOpen, setIsAssignTeamDialogOpen] = useState(false);
+  const [isUpdatingDetails, setIsUpdatingDetails] = useState(false);
+  const [updating, setUpdating] = useState(false);
 
   const [taskDetail, setTaskDetail] = useState(null);
   const [departmentTeams, setDepartmentTeams] = useState([]);
   const [selectedTeam, setSelectedTeam] = useState(null);
+  const [taskStatus, setTaskStatus] = useState("");
+  const [taskPriority, setTaskPriority] = useState("");
+  const [deadline, setDeadline] = useState("");
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -87,6 +92,13 @@ const TaskDetails = () => {
     ],
   });
 
+  const today = new Date();
+
+  const yyyy = today.getFullYear();
+  const mm = String(today.getMonth() + 1).padStart(2, "0");
+  const dd = String(today.getDate()).padStart(2, "0");
+  const minDate = `${yyyy}-${mm}-${dd}`;
+
   const fetchTask = async () => {
     setLoading(true);
     try {
@@ -101,6 +113,9 @@ const TaskDetails = () => {
       setTitle(res.data.title);
       setDescription(res.data.description);
       setDepartmentTeams(res.data.department.teams);
+      setTaskStatus(res.data.status);
+      setTaskPriority(res.data.priority);
+      setDeadline(res.data.deadline);
     } catch (error) {
       console.log(error);
       toast.error(error.message);
@@ -153,6 +168,29 @@ const TaskDetails = () => {
     }
   };
 
+  const handleTaskDetailUpdate = async (id) => {
+    setUpdating(true);
+    try {
+      const res = await axios.patch(
+        `${import.meta.env.VITE_API_URL}/api/task/${id}/status`,
+        { status: taskStatus, priority: taskPriority, deadline: deadline },
+        { withCredentials: true }
+      );
+
+      if (res.status === 200) {
+        toast.success("Task details updated successfully");
+        await fetchTask();
+        setUpdating(false);
+        setIsUpdatingDetails(false);
+      }
+    } catch (error) {
+      console.log(error);
+      toast.error("Failed to update task details.");
+    } finally {
+      setUpdating(false);
+    }
+  };
+
   const handleStatusChange = (newStatus) => {
     setTask({
       ...task,
@@ -179,18 +217,30 @@ const TaskDetails = () => {
         return <ClockIcon className="h-5 w-5 text-gray-600" />;
     }
   };
-  const getPriorityClass = (priority) => {
-    switch (priority) {
-      case "urgent":
-        return "bg-red-100 text-red-800";
-      case "high":
-        return "bg-orange-100 text-orange-800";
-      case "medium":
-        return "bg-yellow-100 text-yellow-800";
-      case "low":
-        return "bg-green-100 text-green-800";
+
+  const getStatusClasses = (status) => {
+    switch (status) {
+      case "Completed":
+        return "bg-green-100 text-green-700";
+      case "In Progress":
+        return "bg-blue-100 text-blue-700";
+      case "Pending":
+        return "bg-yellow-100 text-yellow-700";
       default:
-        return "bg-gray-100 text-blue-800";
+        return "bg-gray-100 text-gray-700";
+    }
+  };
+
+  const getPriorityClasses = (priority) => {
+    switch (priority) {
+      case "High":
+        return "bg-red-100 text-red-700";
+      case "Medium":
+        return "bg-yellow-100 text-yellow-700";
+      case "Low":
+        return "bg-green-100 text-green-700";
+      default:
+        return "bg-gray-100 text-gray-700";
     }
   };
 
@@ -299,7 +349,7 @@ const TaskDetails = () => {
                                         )
                                       }
                                       className={`
-                                                inline-flex items-center px-3 py-1.5 rounded-md text-sm font-medium transition-colors
+                                                inline-flex cursor-pointer items-center px-3 py-1.5 rounded-md text-sm font-medium transition-colors
                                                 ${
                                                   selectedTeam === team._id
                                                     ? "bg-blue-600 text-white shadow-sm"
@@ -324,12 +374,18 @@ const TaskDetails = () => {
                           </Dialog>
                         )}
 
-                        <button
-                          onClick={() => setIsEditing(!isEditing)}
-                          className="inline-flex items-center px-3 py-1.5 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
-                        >
-                          {isEditing ? "Cancel" : <Pencil size={20} />}
-                        </button>
+                        {isEditing ? (
+                          <button
+                            onClick={() => setIsEditing(!isEditing)}
+                            className="inline-flex items-center px-3 py-1.5 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+                          >
+                            "Cancel"
+                          </button>
+                        ) : (
+                          <Button>
+                            <Pencil size={20} color="white" />
+                          </Button>
+                        )}
                       </div>
                     </div>
                     {isEditing ? (
@@ -419,56 +475,128 @@ const TaskDetails = () => {
               <div className="space-y-6">
                 {/* Status & Priority */}
                 <div className="bg-white shadow rounded-lg p-6">
-                  <h2 className="text-sm font-medium text-gray-900 mb-4">
-                    Details
-                  </h2>
-                  <div className="space-y-4">
-                    <div>
-                      <label className="block text-xs font-medium text-gray-500 mb-2">
-                        Status
-                      </label>
-                      <select
-                        value={task.status}
-                        onChange={(e) => handleStatusChange(e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-blue-500 focus:border-blue-500"
-                      >
-                        <option value="in-progress">In Progress</option>
-                        <option value="completed">Completed</option>
-                        <option value="overdue">Overdue</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-xs font-medium text-gray-500 mb-2">
-                        Priority
-                      </label>
-                      <select
-                        value={task.priority}
-                        onChange={(e) => handlePriorityChange(e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-blue-500 focus:border-blue-500"
-                      >
-                        <option value="urgent">Urgent</option>
-                        <option value="high">High</option>
-                        <option value="medium">Medium</option>
-                        <option value="low">Low</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-xs font-medium text-gray-500 mb-2">
-                        Due Date
-                      </label>
-                      <input
-                        type="date"
-                        value={task.dueDate}
-                        onChange={(e) =>
-                          setTask({
-                            ...task,
-                            dueDate: e.target.value,
-                          })
-                        }
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-blue-500 focus:border-blue-500"
-                      />
-                    </div>
+                  <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-xl text-center font-medium text-gray-900">
+                      Details
+                    </h2>
+                    {(user.role.name === "Boss" ||
+                      user.role.name === "Manager") &&
+                      (isUpdatingDetails ? (
+                        <Button
+                          variant={"destructive"}
+                          onClick={() => setIsUpdatingDetails(false)}
+                        >
+                          Cancel
+                        </Button>
+                      ) : (
+                        <Button onClick={() => setIsUpdatingDetails(true)}>
+                          Update
+                        </Button>
+                      ))}
                   </div>
+                  {isUpdatingDetails ? (
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-xs font-medium text-gray-500 mb-2">
+                          Status
+                        </label>
+                        <select
+                          value={taskStatus}
+                          onChange={(e) => setTaskStatus(e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-blue-500 focus:border-blue-500"
+                        >
+                          <option value="In Progress">In Progress</option>
+                          <option value="Completed">Completed</option>
+                          <option value="Overdue">Overdue</option>
+                          <option value="Pending">Pending</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-gray-500 mb-2">
+                          Priority
+                        </label>
+                        <select
+                          value={taskPriority}
+                          onChange={(e) => setTaskPriority(e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-blue-500 focus:border-blue-500"
+                        >
+                          <option value="High">High</option>
+                          <option value="Medium">Medium</option>
+                          <option value="Low">Low</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-gray-500 mb-2">
+                          Due Date
+                        </label>
+                        <input
+                          type="date"
+                          value={deadline ? deadline.slice(0, 10) : ""}
+                          onChange={(e) => setDeadline(e.target.value)}
+                          min={minDate}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-blue-500 focus:border-blue-500"
+                        />
+                      </div>
+                      {isUpdatingDetails && (
+                        <div className="flex items-center justify-center">
+                          <Button
+                            onClick={() =>
+                              handleTaskDetailUpdate(taskDetail._id)
+                            }
+                            className="text-white bg-blue-600 hover:bg-blue-700"
+                          >
+                            {updating ? "Updating..." : "Update"}
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      <div>
+                        <h1 className="block text-xs font-medium text-gray-700 mb-2">
+                          Status
+                        </h1>
+                        <p
+                          className={`w-full px-3 py-2 rounded-md text-sm font-semibold text-center ${getStatusClasses(
+                            taskDetail?.status
+                          )}`}
+                        >
+                          {taskDetail?.status}
+                        </p>
+                      </div>
+                      <div>
+                        <h1 className="block text-xs font-medium text-gray-700 mb-2">
+                          Priority
+                        </h1>
+                        <p
+                          className={`w-full px-3 py-2 rounded-md text-sm font-semibold text-center ${getPriorityClasses(
+                            taskDetail?.priority
+                          )}`}
+                        >
+                          {taskDetail?.priority} Priority
+                        </p>
+                      </div>
+                      <div>
+                        <h1 className="block text-xs font-medium text-gray-700 mb-2">
+                          Due Date
+                        </h1>
+                        <p
+                          className={`w-full px-3 py-2 rounded-md text-sm font-semibold text-center border bg-slate-100`}
+                        >
+                          {taskDetail?.deadline
+                            ? new Date(taskDetail.deadline).toLocaleDateString(
+                                "en-US",
+                                {
+                                  year: "numeric",
+                                  month: "short",
+                                  day: "numeric",
+                                }
+                              )
+                            : "Not set"}
+                        </p>
+                      </div>
+                    </div>
+                  )}
                 </div>
                 {/* Assignees */}
                 <div className="bg-white shadow rounded-lg p-6">

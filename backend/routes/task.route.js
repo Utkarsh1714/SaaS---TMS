@@ -42,7 +42,7 @@ router.put(
   removeEmployeeFromTask
 );
 router.patch(
-  "/status/:taskId",
+  "/:taskId/status",
   verifyToken,
   authorizePermission("can_update_task_status"),
   updateTaskStatus
