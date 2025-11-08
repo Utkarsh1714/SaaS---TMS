@@ -139,6 +139,18 @@ const applyTaskFilters = async (
         }
       );
 
+      pipeline.push(
+        {
+          $lookup: {
+            from: "teams", // Collection name for Team model
+            localField: "team",
+            foreignField: "_id",
+            as: "team",
+          },
+        },
+        { $unwind: { path: "$team", preserveNullAndEmptyArrays: true } }
+      );
+
       // --- END: Manual Population ---
 
       // 5. Project to match the final structure
@@ -152,9 +164,8 @@ const applyTaskFilters = async (
             _id: "$createdBy._id",
             username: "$createdBy.username",
             email: "$createdBy.email",
-            jobTitle: "$createdBy.jobTitle", // Added
+            jobTitle: "$createdBy.jobTitle",
             role: {
-              // Added
               _id: "$creatorRole._id",
               name: "$creatorRole.name",
             },
@@ -163,9 +174,8 @@ const applyTaskFilters = async (
             _id: "$assignedManager._id",
             username: "$assignedManager.username",
             email: "$assignedManager.email",
-            jobTitle: "$assignedManager.jobTitle", // Added
+            jobTitle: "$assignedManager.jobTitle",
             role: {
-              // Added
               _id: "$managerRole._id",
               name: "$managerRole.name",
             },
@@ -205,6 +215,7 @@ const applyTaskFilters = async (
               },
             },
           },
+          team: { _id: "$team._id", name: "$team.name" },
           priority: 1,
           status: 1,
           deadline: 1,
@@ -246,6 +257,7 @@ const applyTaskFilters = async (
           select: "username email jobTitle",
           populate: { path: "role", select: "name" },
         })
+        .populate("team", "name _id")
         .sort(sortOptionsForFind);
     }
 
@@ -548,10 +560,27 @@ export const deleteTask = async (req, res) => {
   const { taskId } = req.params;
 
   try {
-    const task = await Task.findByIdAndDelete(taskId);
+    const task = await Task.findById(taskId);
     if (!task) return res.status(404).json({ message: "Task not found" });
 
-    res.status(200).json({ message: "Task deleted" });
+    // 2. If the task has a department, pull its ID from the department's 'task' array
+    if (task.department) {
+      await Department.findByIdAndUpdate(task.department._id, {
+        $pull: { task: taskId }, // 'task' is the array name in your Department schema
+      });
+    }
+
+    // 3. If the task is assigned to a team, pull its ID from the team's 'tasks' array
+    if (task.team) {
+      await Team.findByIdAndUpdate(task.team._id, {
+        $pull: { tasks: taskId }, // 'tasks' is the array name in your Team schema
+      });
+    }
+
+    // 4. Now, permanently delete the task
+    await Task.findByIdAndDelete(taskId);
+
+    res.status(200).json({ message: "Task deleted successfully" });
   } catch (error) {
     console.log(error);
     res.status(500).json({ message: "Failed to delete task" });
@@ -560,9 +589,10 @@ export const deleteTask = async (req, res) => {
 
 export const getTaskById = async (req, res) => {
   const { id } = req.params;
+  const { organizationId } = req.user;
 
   try {
-    const task = await Task.findById(id)
+    const task = await Task.findOne({ _id: id, organizationId: organizationId })
       .populate(
         "assignedManager",
         "-otp -otpExpires -password -resetToken -resetTokenExpires"
@@ -577,7 +607,12 @@ export const getTaskById = async (req, res) => {
           path: "teams",
         },
       })
-      .populate("team");
+      .populate({
+        path: "team",
+        populate: {
+          path: "tasks",
+        },
+      });
     res.status(200).json(task);
   } catch (error) {
     console.log("Failed to fetch task by ID:", error);
