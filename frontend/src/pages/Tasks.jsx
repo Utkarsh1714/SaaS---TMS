@@ -119,13 +119,10 @@ const TasksPage = () => {
           `${import.meta.env.VITE_API_URL}/api/task/getTask${queryParams}`,
           { withCredentials: true }
         );
-        console.log(res.data);
 
-        // Set both lists to the full fetched data
         setTasks(res.data);
         setOriginalTasks(res.data);
 
-        // Reset state
         setActiveFilter(currentFilter);
         setSearchTerm("");
       } catch (error) {
@@ -304,9 +301,7 @@ const TasksPage = () => {
         handleLogout={handleLogout}
         isLoggingOut={isLoggingOut}
       />
-      {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Top Navigation */}
         <header className="bg-white shadow-sm z-10">
           <div className="px-4 sm:px-6 lg:px-8">
             <div className="flex items-center justify-between h-16 gap-4 sm:gap-0">
@@ -397,11 +392,9 @@ const TasksPage = () => {
             </div>
           </div>
         </header>
-        {/* Main Content */}
         <main className="flex-1 overflow-auto p-4 sm:p-6 lg:p-8">
           <div className="mb-6 flex justify-between items-center">
             <h1 className="text-2xl font-semibold text-gray-900">Tasks</h1>
-            {/* Create Task Dialog (Only for Boss role) */}
             {user.role?.name === "Boss" && (
               <TaskCreateDialog
                 open={open}

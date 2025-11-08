@@ -23,14 +23,12 @@ const taskSchema = new mongoose.Schema(
       ref: "User",
       index: true,
     },
-    team: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Team",
-        index: true,
-        default: null,
-      },
-    ],
+    team: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Team",
+      index: true,
+      default: null,
+    },
     assignedEmployees: [
       { type: mongoose.Schema.Types.ObjectId, ref: "User", index: true },
     ],
