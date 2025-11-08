@@ -27,13 +27,11 @@ const getRolePermissions = async (roleId) => {
 export const authorizePermission = (requiredPermission) => {
   return async (req, res, next) => {
     try {
-      console.log(req.user);
       if (!req.user || !req.user.role) {
         return res.status(403).json({ message: "Forbidden: No user role." });
       }
 
       const roleId = req.user.role._id ? req.user.role._id : req.user.role;
-      console.log(roleId);
 
       // req.user.role should be the ROLE ID (from verifyToken)
       const permissions = await getRolePermissions(roleId);

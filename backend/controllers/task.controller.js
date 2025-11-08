@@ -467,54 +467,42 @@ export const removeEmployeeFromTask = async (req, res) => {
 
 export const updateTaskStatus = async (req, res) => {
   const { taskId } = req.params;
-  const { status } = req.body;
-
-  // Assuming req.user is populated by authentication middleware and contains:
-  // _id: the ID of the authenticated user
-  // role: the role of the authenticated user (e.g., "Boss")
-  const { _id: userId, role } = req.user;
+  const { status, priority, deadline } = req.body;
 
   try {
-    const task = await Task.findById(taskId);
-
-    if (!task) {
-      return res.status(404).json({ message: "Task not found" });
-    }
-
-    const roleName = role.name ? role.name : role;
-
-    const assignedManagerId = task.assignedManager
-      ? task.assignedManager.toString()
-      : null;
-    const currentUserId = userId.toString();
-
-    const isBoss = roleName === "Boss"; // Check against the name
-    const isAssignedManager =
-      assignedManagerId && assignedManagerId === currentUserId;
-
-    // Check for authorization: Boss OR Assigned Manager
-    if (!isBoss && !isAssignedManager) {
-      return res.status(403).json({
-        message:
-          "Forbidden: Only the assigned manager or a Boss can update the task status.",
-      });
-    }
-
-    // 3. Check if the new status is valid (Good practice)
-    const validStatuses = ["Pending", "In Progress", "Completed"];
-    if (!validStatuses.includes(status)) {
+    const validStatuses = ["Pending", "In Progress", "Completed", "Overdue"];
+    if (status && !validStatuses.includes(status)) {
       return res
         .status(400)
         .json({ message: `Invalid status value: ${status}` });
     }
 
-    // --- Update Task Status ---
-    task.status = status;
-    await task.save();
+    const validPriority = ["Low", "High", "Medium"];
+    if (priority && !validPriority.includes(priority)) {
+      return res
+        .status(400)
+        .json({ message: `Invalid priority value: ${priority}` });
+    }
 
-    res.status(200).json(task);
+    const updatedTask = await Task.findByIdAndUpdate(
+      taskId,
+      {
+        $set: {
+          status: status,
+          priority: priority,
+          deadline: deadline,
+        },
+      },
+      { new: true }
+    );
+
+    if (!updatedTask) {
+      return res.status(404).json({ message: "Task not found" });
+    }
+
+    res.status(200).json(updatedTask);
   } catch (error) {
-    console.error(error); // Log the actual error
+    console.error(error);
     res.status(500).json({ message: "Failed to update task status" });
   }
 };
