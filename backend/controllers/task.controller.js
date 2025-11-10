@@ -521,18 +521,30 @@ export const updateTaskStatus = async (req, res) => {
 
 export const addMilestones = async (req, res) => {
   const { taskId } = req.params;
-  const { title } = req.body;
+  // 1. Expect the 'milestones' array from the frontend
+  const { milestones } = req.body;
 
-  if (!title) return res.status(400).json({ message: "Title is required" });
+  // 2. Validate the incoming array
+  if (!milestones || !Array.isArray(milestones) || milestones.length === 0) {
+    return res.status(400).json({ message: "Milestones array is required" });
+  }
+
   try {
-    const task = await Task.findById(taskId);
-    if (!task) return res.status(404).json({ message: "Task not found" });
+    // 3. Use findByIdAndUpdate with $push to atomically update
+    const updatedTask = await Task.findByIdAndUpdate(
+      taskId,
+      {
+        // Use $push with $each to add all items from the 'milestones' array
+        $push: { milestones: { $each: milestones } },
+      },
+      { new: true } // Return the updated document
+    );
 
-    const newMileStone = { title };
-    task.milestones.push(newMileStone);
-    await task.save();
+    if (!updatedTask) {
+      return res.status(404).json({ message: "Task not found" });
+    }
 
-    res.status(200).json(task);
+    res.status(200).json(updatedTask);
   } catch (error) {
     console.log(error);
     res.status(500).json({ message: "Failed to add Milestones" });
@@ -540,16 +552,36 @@ export const addMilestones = async (req, res) => {
 };
 
 export const updateMilestone = async (req, res) => {
-  const { taskId, milestoneIndex } = req.params;
+  const { taskId } = req.params;
+  const { milestoneId, completed } = req.body;
+  const { organizationId, _id: userId } = req.user;
+
+  if (!milestoneId) {
+    return res.status(400).json({ message: "Milestone ID is required" });
+  }
+  if (typeof completed !== "boolean") {
+    return res
+      .status(400)
+      .json({ message: "'completed' field must be a boolean" });
+  }
 
   try {
-    const task = await Task.findById(taskId);
+    const task = await Task.findOne({
+      _id: taskId,
+      organizationId: organizationId,
+    });
     if (!task) return res.status(404).json({ message: "Task not found" });
 
-    task.milestones[milestoneIndex].completed = true;
-    await task.save();
+    const result = await Task.updateOne(
+      { _id: taskId, "milestones._id": milestoneId },
+      { $set: { "milestones.$.completed": completed } }
+    );
 
-    res.status(200).json(task);
+    if (result.matchedCount === 0) {
+      return res.status(404).json({ message: "Milestone not found" });
+    }
+
+    res.status(200).json({ message: "Milestone updated successfully" });
   } catch (error) {
     console.log(error);
     res.status(500).json({ message: "Failed to update Milestone " });
