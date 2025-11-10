@@ -53,8 +53,8 @@ router.post(
   authorizePermission("can_add_milestone"),
   addMilestones
 );
-router.put(
-  "/:taskId/milestone/:milestoneIndex",
+router.patch(
+  "/:taskId/milestone",
   verifyToken,
   authorizePermission("can_update_milestone"),
   updateMilestone

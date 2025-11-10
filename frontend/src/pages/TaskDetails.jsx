@@ -1,5 +1,12 @@
-import NotificationPanel from "@/components/Dashboard/NotificationPanel";
+import React, { useEffect, useMemo, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import { useAuth } from "@/context/AuthContext";
+import { useNotifications } from "@/context/NotificationContext";
+import axios from "axios";
+import { toast } from "sonner";
+import { MdDeleteForever } from "react-icons/md";
 import Sidebar from "@/components/Layout/Sidebar";
+import NotificationPanel from "@/components/Dashboard/NotificationPanel";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -8,9 +15,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { useAuth } from "@/context/AuthContext";
-import { useNotifications } from "@/context/NotificationContext";
-import axios from "axios";
 import {
   AlertCircleIcon,
   ArrowLeftIcon,
@@ -18,31 +22,30 @@ import {
   BellIcon,
   CheckCircleIcon,
   ClockIcon,
-  Pencil,
+  Plus,
   PlusIcon,
   SaveIcon,
   UserIcon,
   XIcon,
 } from "lucide-react";
-import React, { useEffect, useState } from "react";
-import { useNavigate, useParams, useSearchParams } from "react-router-dom";
-import { toast } from "sonner";
 
 const TaskDetails = () => {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const { taskId } = useParams();
   const navigate = useNavigate();
-  const { addNotification, toggleNotificationPanel, notifications } =
-    useNotifications();
+  const { toggleNotificationPanel, notifications } = useNotifications();
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isAssigning, setIsAssigning] = useState(false);
   const [isAssignTeamDialogOpen, setIsAssignTeamDialogOpen] = useState(false);
   const [isUpdatingDetails, setIsUpdatingDetails] = useState(false);
   const [updating, setUpdating] = useState(false);
+  const [updatingMilestone, setUpdatingMilestone] = useState(false);
+  const [creatingMilestone, setCreatingMilestone] = useState(false);
 
   const [taskDetail, setTaskDetail] = useState(null);
   const [departmentTeams, setDepartmentTeams] = useState([]);
@@ -50,11 +53,8 @@ const TaskDetails = () => {
   const [taskStatus, setTaskStatus] = useState("");
   const [taskPriority, setTaskPriority] = useState("");
   const [deadline, setDeadline] = useState("");
-  const [teamName, setTeamName] = useState("");
-
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  // Mock task data - in a real app, this would come from an API
   const [task, setTask] = useState({
     id: taskId,
     title: "Update website homepage design",
@@ -99,52 +99,72 @@ const TaskDetails = () => {
     ],
   });
 
-  const today = new Date();
+  const [milestones, setMilestones] = useState([]);
+  const [mileStoneInput, setMileStoneInput] = useState("");
+  const [isSavingMilestones, setIsSavingMilestones] = useState(false);
 
+  const today = new Date();
   const yyyy = today.getFullYear();
   const mm = String(today.getMonth() + 1).padStart(2, "0");
   const dd = String(today.getDate()).padStart(2, "0");
   const minDate = `${yyyy}-${mm}-${dd}`;
 
+  const handleLogout = async () => {
+    setIsLoggingOut(true); // Start loading state
+
+    try {
+      await axios.post(
+        `${import.meta.env.VITE_API_URL}/api/auth/logout`,
+        {},
+        { withCredentials: true }
+      );
+
+      logout();
+      toast("Logged out successfully!");
+      navigate("/login");
+    } catch (error) {
+      console.error("Logout failed:", error);
+      // alert or toast error message
+      alert("Logout failed");
+    } finally {
+      setIsLoggingOut(false); // Stop loading state (should ideally not run if navigate works)
+    }
+  };
+
   const fetchTask = async () => {
-    setLoading(true);
+    if (!loading) setLoading(true); // Show loader on refetch
     try {
       const res = await axios.get(
         `${import.meta.env.VITE_API_URL}/api/task/${taskId}`,
-        {
-          withCredentials: true,
-        }
+        { withCredentials: true }
       );
-      console.log(res.data);
       setTaskDetail(res.data);
+      // Set form states from fetched data
       setTitle(res.data.title);
       setDescription(res.data.description);
-      setDepartmentTeams(res.data.department.teams);
+      setDepartmentTeams(res.data.department?.teams || []);
       setTaskStatus(res.data.status);
       setTaskPriority(res.data.priority);
       setDeadline(res.data.deadline);
-      setTeamName(res.data.team?.name);
     } catch (error) {
       console.log(error);
-      toast.error(error.message);
+      toast.error(error.response?.data?.message || error.message);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleUpdateTitleandDesc = async (taskId) => {
+  const handleUpdateTitleandDesc = async () => {
+    // ... (Your existing function, which is correct)
     setIsSaving(true);
     try {
       await axios.put(
-        `${import.meta.env.VITE_API_URL}/api/task/${taskId}`,
+        `${import.meta.env.VITE_API_URL}/api/task/${taskDetail._id}`,
         { title, description },
-        {
-          withCredentials: true,
-        }
+        { withCredentials: true }
       );
       toast.success("Task updated successfully!");
-      await fetchTask();
-      setIsSaving(false);
+      await fetchTask(); // Refetch
       setIsEditing(false);
     } catch (error) {
       console.log(error);
@@ -154,18 +174,22 @@ const TaskDetails = () => {
     }
   };
 
-  const handleTeamAssign = async (id) => {
+  const handleTeamAssign = async () => {
+    // ... (Your existing function, which is correct)
     setIsAssigning(true);
     try {
       const res = await axios.post(
-        `${import.meta.env.VITE_API_URL}/api/task/${id}/assign-team`,
+        `${import.meta.env.VITE_API_URL}/api/task/${
+          taskDetail._id
+        }/assign-team`,
         { teamId: selectedTeam },
         { withCredentials: true }
       );
       if (res.status === 200) {
         toast.success("Team assigned to task successfully");
-        setIsAssignTeamDialogOpen(false); // ✅ THIS CLOSES THE DIALOG
+        setIsAssignTeamDialogOpen(false);
         setSelectedTeam(null);
+        await fetchTask(); // Refetch to show new team name
       }
     } catch (error) {
       console.log(error);
@@ -175,19 +199,18 @@ const TaskDetails = () => {
     }
   };
 
-  const handleTaskDetailUpdate = async (id) => {
+  const handleTaskDetailUpdate = async () => {
+    // ... (Your existing function, which is correct)
     setUpdating(true);
     try {
       const res = await axios.patch(
-        `${import.meta.env.VITE_API_URL}/api/task/${id}/status`,
+        `${import.meta.env.VITE_API_URL}/api/task/${taskDetail._id}/status`,
         { status: taskStatus, priority: taskPriority, deadline: deadline },
         { withCredentials: true }
       );
-
       if (res.status === 200) {
         toast.success("Task details updated successfully");
-        await fetchTask();
-        setUpdating(false);
+        await fetchTask(); // Refetch
         setIsUpdatingDetails(false);
       }
     } catch (error) {
@@ -198,28 +221,77 @@ const TaskDetails = () => {
     }
   };
 
-  const handleStatusChange = (newStatus) => {
-    setTask({
-      ...task,
-      status: newStatus,
-    });
+  const handleMilestoneToggle = async (milestoneId, newStatus) => {
+    setUpdatingMilestone(true);
+    try {
+      const res = await axios.patch(
+        `${import.meta.env.VITE_API_URL}/api/task/${taskDetail._id}/milestone`,
+        { milestoneId, completed: newStatus },
+        { withCredentials: true }
+      );
+      if (res.status === 200) {
+        toast.success("Milestone updated!");
+        fetchTask();
+      }
+    } catch (error) {
+      console.log(error);
+      toast.error("Failed to update milestone.");
+    } finally {
+      setUpdatingMilestone(false);
+    }
   };
-  const handlePriorityChange = (newPriority) => {
-    setTask({
-      ...task,
-      priority: newPriority,
-    });
+
+  const handleMilestoneAdd = () => {
+    if (mileStoneInput.trim()) {
+      setMilestones((prev) => [
+        ...prev,
+        { title: mileStoneInput.trim(), completed: false },
+      ]);
+      setMileStoneInput("");
+    }
   };
+
+  const handleMilestoneDelete = (index) => {
+    setMilestones((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const handleCreateMilestone = async (e) => {
+    e.preventDefault();
+    if (milestones.length === 0) {
+      toast.error("Please add at least one milestone.");
+      return;
+    }
+
+    setIsSavingMilestones(true);
+    try {
+      await axios.post(
+        `${import.meta.env.VITE_API_URL}/api/task/${taskDetail._id}/milestone`,
+        { milestones },
+        { withCredentials: true }
+      );
+
+      toast.success("Milestones added successfully!");
+      await fetchTask();
+      setCreatingMilestone(false);
+      setMilestones([]);
+    } catch (error) {
+      console.log(error);
+      toast.error("Failed to add milestones.");
+    } finally {
+      setIsSavingMilestones(false);
+    }
+  };
+
   const getStatusIcon = (status) => {
     switch (status) {
       case "Completed":
         return <CheckCircleIcon className="h-5 w-5 text-green-600" />;
       case "In Progress":
-        return <ClockIcon className="h-5 w-5 text-yellow-600" />;
+        return <ClockIcon className="h-5 w-5 text-blue-600" />;
       case "Overdue":
         return <AlertCircleIcon className="h-5 w-5 text-red-600" />;
       case "Pending":
-        return <ClockIcon className="h-5 w-5 text-blue-600" />;
+        return <ClockIcon className="h-5 w-5 text-yellow-600" />;
       default:
         return <ClockIcon className="h-5 w-5 text-gray-600" />;
     }
@@ -231,6 +303,8 @@ const TaskDetails = () => {
         return "bg-green-100 text-green-700";
       case "In Progress":
         return "bg-blue-100 text-blue-700";
+      case "Overdue":
+        return "bg-red-100 text-red-700";
       case "Pending":
         return "bg-yellow-100 text-yellow-700";
       default:
@@ -251,12 +325,56 @@ const TaskDetails = () => {
     }
   };
 
+  const isManagerOrBoss =
+    user?.role?.name === "Boss" || user?.role?.name === "Manager";
+
+  const milestoneTargets = useMemo(() => {
+    if (!taskDetail?.milestones || taskDetail.milestones.length === 0) {
+      return { completeTargetIndex: -1, incompleteTargetIndex: -1 };
+    }
+    const firstIncompleteIndex = taskDetail.milestones.findIndex(
+      (m) => !m.completed
+    );
+    let incompleteTargetIndex = -1;
+    if (firstIncompleteIndex === -1) {
+      incompleteTargetIndex = taskDetail.milestones.length - 1;
+    } else if (firstIncompleteIndex > 0) {
+      incompleteTargetIndex = firstIncompleteIndex - 1;
+    }
+    return {
+      completeTargetIndex: firstIncompleteIndex,
+      incompleteTargetIndex: incompleteTargetIndex,
+    };
+  }, [taskDetail?.milestones]);
+
   useEffect(() => {
     fetchTask();
-  }, [taskId, teamName]);
+  }, [taskId]);
+
+  if (loading) {
+    return (
+      <div className="flex h-screen bg-gray-50 items-center justify-center">
+        <p>Loading Task Details...</p>
+      </div>
+    );
+  }
+
+  if (!taskDetail) {
+    return (
+      <div className="flex h-screen bg-gray-50 items-center justify-center">
+        <p>Task not found.</p>
+      </div>
+    );
+  }
+
   return (
     <div className="flex h-screen bg-gray-50">
-      <Sidebar isOpen={sidebarOpen} setIsOpen={setSidebarOpen} />
+      <Sidebar
+        isOpen={sidebarOpen}
+        setIsOpen={setSidebarOpen}
+        handleLogout={handleLogout}
+        isLoggingOut={isLoggingOut}
+      />
       <div className="flex-1 flex flex-col overflow-hidden">
         <header className="bg-white shadow-sm z-10">
           <div className="px-4 sm:px-6 lg:px-8">
@@ -315,148 +433,291 @@ const TaskDetails = () => {
         <main className="flex-1 overflow-auto p-4 sm:p-6 lg:p-8">
           <div className="max-w-6xl mx-auto">
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-              {/* Main Content */}
               <div className="lg:col-span-2 space-y-6">
-                {/* Task Header */}
-                {loading ? (
-                  <p>Loading...</p>
-                ) : (
-                  <div className="bg-white shadow rounded-lg p-6">
-                    <div className="flex flex-col md:flex-row space-y-4 items-start justify-between mb-4">
-                      <div className="flex items-center">
-                        {getStatusIcon(taskDetail?.status)}
-                        <h1 className="ml-3 text-2xl font-semibold text-gray-900">
-                          {taskDetail?.title}
-                        </h1>
-                      </div>
-                      <div className="flex items-center justify-center gap-2">
-                        {!taskDetail?.team
-                          ? (user.role.name === "Boss" ||
-                              user.role.name === "Manager") && (
-                              <Dialog
-                                open={isAssignTeamDialogOpen}
-                                onOpenChange={setIsAssignTeamDialogOpen}
-                              >
-                                <DialogTrigger asChild>
-                                  <Button
-                                    onClick={() => setIsEditing(false)}
-                                    className="inline-flex items-center px-4 py-1.5 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700"
-                                  >
-                                    Assign Team
-                                  </Button>
-                                </DialogTrigger>
-                                <DialogContent className="sm:max-w-[425px]">
-                                  <DialogHeader>
-                                    <DialogTitle>
-                                      Select a team to complete the task
-                                    </DialogTitle>
-                                  </DialogHeader>
-                                  <div className="bg-white shadow rounded-lg p-4">
-                                    <h3 className="text-sm font-medium text-gray-500 mb-3">
-                                      Select a Team
-                                    </h3>
-                                    <div className="flex flex-wrap gap-2">
-                                      {departmentTeams.map((team) => (
-                                        <button
-                                          key={team._id}
-                                          onClick={() =>
-                                            setSelectedTeam(
-                                              selectedTeam === team._id
-                                                ? null
-                                                : team._id
-                                            )
-                                          }
-                                          className={`
-                                                inline-flex cursor-pointer items-center px-3 py-1.5 rounded-md text-sm font-medium transition-colors
-                                                ${
-                                                  selectedTeam === team._id
-                                                    ? "bg-blue-600 text-white shadow-sm"
-                                                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                                                }
-                                        `}
-                                        >
-                                          {team.name}
-                                        </button>
-                                      ))}
-                                    </div>
-                                    <hr className="my-5" />
-                                    <Button
-                                      onClick={() =>
-                                        handleTeamAssign(taskDetail._id)
-                                      }
-                                      disabled={!selectedTeam}
-                                      className={"w-full"}
-                                    >
-                                      {isAssigning
-                                        ? "Assigning..."
-                                        : "Assign Team"}
-                                    </Button>
-                                  </div>
-                                </DialogContent>
-                              </Dialog>
-                            )
-                          : ""}
-
-                        {isEditing ? (
-                          <Button
-                            onClick={() => setIsEditing(false)}
-                            variant={"destructive"}
-                          >
-                            Cancel
-                          </Button>
-                        ) : (
-                          <Button onClick={() => setIsEditing(true)}>
-                            <Pencil size={20} color="white" />
-                          </Button>
-                        )}
-                      </div>
+                <div className="bg-white shadow rounded-lg p-6">
+                  <div className="flex flex-col sm:flex-row space-y-4 items-start justify-between mb-4">
+                    <div className="flex items-center">
+                      {getStatusIcon(taskDetail?.status)}
+                      <h1 className="ml-3 text-2xl font-semibold text-gray-900">
+                        {taskDetail?.title}
+                      </h1>
                     </div>
-                    {isEditing ? (
-                      <div className="space-y-4">
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Title
-                          </label>
-                          <input
-                            type="text"
-                            value={title}
-                            onChange={(e) => setTitle(e.target.value)}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Description
-                          </label>
-                          <textarea
-                            value={description}
-                            onChange={(e) => setDescription(e.target.value)}
-                            rows={4}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                          />
-                        </div>
-                        <button
-                          onClick={() =>
-                            handleUpdateTitleandDesc(taskDetail._id)
-                          }
-                          className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700"
+                    <div className="flex items-center justify-center gap-2">
+                      {!taskDetail?.team && isManagerOrBoss && (
+                        <Dialog
+                          open={isAssignTeamDialogOpen}
+                          onOpenChange={setIsAssignTeamDialogOpen}
                         >
-                          <SaveIcon className="h-4 w-4 mr-2" />
-                          {!isSaving ? "Save Changes" : "Saving..."}
-                        </button>
+                          <DialogTrigger asChild>
+                            <Button className="inline-flex items-center px-4 py-1.5 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700">
+                              Assign Team
+                            </Button>
+                          </DialogTrigger>
+                          <DialogContent className="sm:max-w-[425px]">
+                            <DialogHeader>
+                              <DialogTitle>
+                                Select a team to complete the task
+                              </DialogTitle>
+                            </DialogHeader>
+                            <div className="p-4">
+                              <h3 className="text-sm font-medium text-gray-500 mb-3">
+                                Select a Team
+                              </h3>
+                              <div className="flex flex-wrap gap-2">
+                                {departmentTeams.map((team) => (
+                                  <button
+                                    key={team._id}
+                                    onClick={() =>
+                                      setSelectedTeam(
+                                        selectedTeam === team._id
+                                          ? null
+                                          : team._id
+                                      )
+                                    }
+                                    className={`inline-flex cursor-pointer items-center px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+                                      selectedTeam === team._id
+                                        ? "bg-blue-600 text-white shadow-sm"
+                                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                                    }`}
+                                  >
+                                    {team.name}
+                                  </button>
+                                ))}
+                              </div>
+                              <hr className="my-5" />
+                              <Button
+                                onClick={handleTeamAssign}
+                                disabled={!selectedTeam || isAssigning}
+                                className={"w-full"}
+                              >
+                                {isAssigning ? "Assigning..." : "Assign Team"}
+                              </Button>
+                            </div>
+                          </DialogContent>
+                        </Dialog>
+                      )}
+
+                      {isEditing ? (
+                        <Button
+                          onClick={() => setIsEditing(false)}
+                          variant={"destructive"}
+                        >
+                          Cancel
+                        </Button>
+                      ) : (
+                        <Button onClick={() => setIsEditing(true)}>Edit</Button>
+                      )}
+                    </div>
+                  </div>
+                  {isEditing ? (
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Title
+                        </label>
+                        <input
+                          type="text"
+                          value={title}
+                          onChange={(e) => setTitle(e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                        />
                       </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Description
+                        </label>
+                        <textarea
+                          value={description}
+                          onChange={(e) => setDescription(e.target.value)}
+                          rows={4}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                        />
+                      </div>
+                      <button
+                        onClick={handleUpdateTitleandDesc}
+                        disabled={isSaving}
+                        className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400"
+                      >
+                        <SaveIcon className="h-4 w-4 mr-2" />
+                        {isSaving ? "Saving..." : "Save Changes"}
+                      </button>
+                    </div>
+                  ) : (
+                    <p className="text-gray-700">{taskDetail?.description}</p>
+                  )}
+                </div>
+                <div className="bg-white shadow rounded-lg p-6">
+                  <div className="flex items-center justify-between">
+                    <h2 className="text-lg font-medium text-gray-900 mb-6">
+                      {taskDetail?.title} - Milestones
+                    </h2>
+                    {creatingMilestone ? (
+                      <Button
+                        onClick={() => setCreatingMilestone(false)}
+                        className={"mb-6"}
+                        variant={"destructive"}
+                      >
+                        Cancel
+                      </Button>
                     ) : (
-                      <>
-                        <p className="text-gray-700">
-                          {taskDetail?.description}
-                        </p>
-                        <p className="text-gray-700">display milestone here</p>
-                      </>
+                      <Button
+                        onClick={() => setCreatingMilestone(true)}
+                        className={"mb-6"}
+                      >
+                        <Plus className="mr-2 h-4 w-4" /> MileStone
+                      </Button>
                     )}
                   </div>
-                )}
+                  {taskDetail?.milestones &&
+                  taskDetail.milestones.length > 0 ? (
+                    <div className="overflow-x-auto pt-10 pb-4 px-10">
+                      <ol className="flex items-center w-full">
+                        {taskDetail.milestones.map((milestone, index) => {
+                          const isLastItem =
+                            index === taskDetail.milestones.length - 1;
+                          const showCompleteButton =
+                            isManagerOrBoss &&
+                            index === milestoneTargets.completeTargetIndex;
+                          const showIncompleteButton =
+                            isManagerOrBoss &&
+                            index === milestoneTargets.incompleteTargetIndex;
+                          const isLineBlue = milestone.completed;
 
-                {/* Comments Section */}
+                          return (
+                            <li
+                              key={milestone._id || index}
+                              className={`flex items-center ${
+                                !isLastItem ? "flex-1" : "" // The <li> grows, except for the last one
+                              }`}
+                            >
+                              <div className="relative flex flex-col items-center group">
+                                <div className="absolute bottom-full mb-3 w-32 text-center">
+                                  {showCompleteButton && (
+                                    <button
+                                      disabled={updatingMilestone}
+                                      onClick={() =>
+                                        handleMilestoneToggle(
+                                          milestone._id,
+                                          true
+                                        )
+                                      }
+                                      className="whitespace-nowrap px-2 py-0.5 text-xs rounded-md shadow-sm bg-green-500 text-white hover:bg-green-600 disabled:opacity-50"
+                                    >
+                                      Set to Complete
+                                    </button>
+                                  )}
+                                  {showIncompleteButton && (
+                                    <button
+                                      disabled={updatingMilestone}
+                                      onClick={() =>
+                                        handleMilestoneToggle(
+                                          milestone._id,
+                                          false
+                                        )
+                                      }
+                                      className="whitespace-nowrap px-2 py-0.5 text-xs rounded-md shadow-sm bg-yellow-500 text-white hover:bg-yellow-600 disabled:opacity-50"
+                                    >
+                                      Set Incomplete
+                                    </button>
+                                  )}
+                                </div>
+                                <div
+                                  className={`relative z-10 flex h-6 w-6 items-center justify-center rounded-full ${
+                                    milestone.completed
+                                      ? "bg-blue-600 text-white"
+                                      : "bg-gray-200 text-gray-600"
+                                  }`}
+                                >
+                                  {milestone.completed ? (
+                                    <CheckCircleIcon className="w-4 h-4" />
+                                  ) : (
+                                    <span className="text-xs font-semibold">
+                                      {index + 1}
+                                    </span>
+                                  )}
+                                </div>
+
+                                <p className="mt-2 text-xs font-semibold text-gray-700 whitespace-nowrap px-2">
+                                  {milestone.title}
+                                </p>
+                              </div>
+                              {!isLastItem && (
+                                <div
+                                  className={`flex-1 h-0.5 ${
+                                    isLineBlue ? "bg-blue-600" : "bg-gray-200"
+                                  }`}
+                                />
+                              )}
+                            </li>
+                          );
+                        })}
+                      </ol>
+                    </div>
+                  ) : (
+                    !creatingMilestone && (
+                      <p className="text-sm text-gray-500">
+                        No milestones have been set for this task.
+                      </p>
+                    )
+                  )}
+                  {creatingMilestone && (
+                    <form onSubmit={handleCreateMilestone}>
+                      <div className="w-full h-auto flex flex-col items-start justify-start border p-2 rounded">
+                        <label className="text-sm font-medium text-gray-700 mb-2">
+                          Add New Milestones
+                        </label>
+                        <div className="w-full flex items-center space-x-2">
+                          <input
+                            type="text"
+                            placeholder="Add a milestone step..."
+                            className="w-full p-2 border rounded text-sm"
+                            value={mileStoneInput}
+                            onChange={(e) => setMileStoneInput(e.target.value)}
+                          />
+                          <Button
+                            type="button"
+                            onClick={handleMilestoneAdd}
+                            disabled={!mileStoneInput?.trim()}
+                            className="bg-gray-600 hover:bg-gray-700 disabled:bg-gray-400"
+                          >
+                            Add
+                          </Button>
+                        </div>
+                        {milestones.length > 0 && (
+                          <div className="w-full max-h-44 overflow-y-scroll mt-2 p-1 border-t border-gray-200">
+                            {milestones.map((milestone, index) => (
+                              <div
+                                key={index}
+                                className="flex items-center justify-between p-2 text-sm bg-gray-50 rounded mb-1"
+                              >
+                                <span className="truncate">
+                                  {milestone.title}
+                                </span>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  type="button"
+                                  onClick={() => handleMilestoneDelete(index)}
+                                  className="text-red-500 hover:bg-red-50 hover:text-red-700 h-6 w-6"
+                                >
+                                  <MdDeleteForever size={16} />
+                                </Button>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                      <Button
+                        variant={"secondary"}
+                        type="submit"
+                        className="mt-4"
+                        disabled={isSavingMilestones || milestones.length === 0}
+                      >
+                        {isSavingMilestones ? "Saving..." : "Save Milestones"}
+                      </Button>
+                    </form>
+                  )}
+                </div>
                 <div className="bg-white shadow rounded-lg p-6">
                   <h2 className="text-lg font-medium text-gray-900 mb-4">
                     Comments
@@ -499,28 +760,29 @@ const TaskDetails = () => {
                   </div>
                 </div>
               </div>
-              {/* Sidebar */}
               <div className="space-y-6">
-                {/* Status & Priority */}
+                {/* --- Team & Details --- */}
                 <div className="bg-white shadow rounded-lg p-6">
+                  {/* --- Team Display --- */}
                   <div className="flex flex-col items-center justify-between mb-4 bg-slate-200 py-3 rounded-md">
                     <h2 className="text-xl text-center font-medium text-blue-600">
                       Team
                     </h2>
                     <p className="font-semibold">
-                      {teamName || (
+                      {taskDetail.team?.name || ( // Use taskDetail
                         <span className="text-md font-normal">
                           Not Assigned
                         </span>
                       )}
                     </p>
                   </div>
+
+                  {/* --- Details Header --- */}
                   <div className="flex items-center justify-between mb-4">
                     <h2 className="text-xl text-center font-medium text-gray-900">
                       Details
                     </h2>
-                    {(user.role.name === "Boss" ||
-                      user.role.name === "Manager") &&
+                    {isManagerOrBoss &&
                       (isUpdatingDetails ? (
                         <Button
                           variant={"destructive"}
@@ -534,8 +796,11 @@ const TaskDetails = () => {
                         </Button>
                       ))}
                   </div>
+
+                  {/* --- Details Form / Display --- */}
                   {isUpdatingDetails ? (
                     <div className="space-y-4">
+                      {/* --- Status Select --- */}
                       <div>
                         <label className="block text-xs font-medium text-gray-500 mb-2">
                           Status
@@ -545,12 +810,13 @@ const TaskDetails = () => {
                           onChange={(e) => setTaskStatus(e.target.value)}
                           className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-blue-500 focus:border-blue-500"
                         >
+                          <option value="Pending">Pending</option>
                           <option value="In Progress">In Progress</option>
                           <option value="Completed">Completed</option>
                           <option value="Overdue">Overdue</option>
-                          <option value="Pending">Pending</option>
                         </select>
                       </div>
+                      {/* --- Priority Select --- */}
                       <div>
                         <label className="block text-xs font-medium text-gray-500 mb-2">
                           Priority
@@ -560,11 +826,12 @@ const TaskDetails = () => {
                           onChange={(e) => setTaskPriority(e.target.value)}
                           className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-blue-500 focus:border-blue-500"
                         >
-                          <option value="High">High</option>
-                          <option value="Medium">Medium</option>
                           <option value="Low">Low</option>
+                          <option value="Medium">Medium</option>
+                          <option value="High">High</option>
                         </select>
                       </div>
+                      {/* --- Deadline Input --- */}
                       <div>
                         <label className="block text-xs font-medium text-gray-500 mb-2">
                           Due Date
@@ -577,21 +844,19 @@ const TaskDetails = () => {
                           className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-blue-500 focus:border-blue-500"
                         />
                       </div>
-                      {isUpdatingDetails && (
-                        <div className="flex items-center justify-center">
-                          <Button
-                            onClick={() =>
-                              handleTaskDetailUpdate(taskDetail._id)
-                            }
-                            className="text-white bg-blue-600 hover:bg-blue-700"
-                          >
-                            {updating ? "Updating..." : "Update"}
-                          </Button>
-                        </div>
-                      )}
+                      <div className="flex items-center justify-center">
+                        <Button
+                          onClick={() => handleTaskDetailUpdate(taskDetail._id)}
+                          disabled={updating}
+                          className="text-white bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400"
+                        >
+                          {updating ? "Updating..." : "Update"}
+                        </Button>
+                      </div>
                     </div>
                   ) : (
                     <div className="space-y-4">
+                      {/* --- Status Display --- */}
                       <div>
                         <h1 className="block text-xs font-medium text-gray-700 mb-2">
                           Status
@@ -604,6 +869,7 @@ const TaskDetails = () => {
                           {taskDetail?.status}
                         </p>
                       </div>
+                      {/* --- Priority Display --- */}
                       <div>
                         <h1 className="block text-xs font-medium text-gray-700 mb-2">
                           Priority
@@ -613,9 +879,10 @@ const TaskDetails = () => {
                             taskDetail?.priority
                           )}`}
                         >
-                          {taskDetail?.priority} Priority
+                          {taskDetail?.priority}
                         </p>
                       </div>
+                      {/* --- Due Date Display --- */}
                       <div>
                         <h1 className="block text-xs font-medium text-gray-700 mb-2">
                           Due Date
@@ -638,7 +905,7 @@ const TaskDetails = () => {
                     </div>
                   )}
                 </div>
-                {/* Assignees */}
+                {/* Activity */}
                 <div className="bg-white shadow rounded-lg p-6">
                   <div className="flex items-center justify-between mb-4">
                     <h2 className="text-sm font-medium text-gray-900">
