@@ -643,7 +643,7 @@ const TaskDetails = () => {
                               </div>
                               {!isLastItem && (
                                 <div
-                                  className={`flex-1 h-0.5 ${
+                                  className={`flex-1 h-0.5 mb-6 ${
                                     isLineBlue ? "bg-blue-600" : "bg-gray-200"
                                   }`}
                                 />
