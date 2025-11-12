@@ -70,7 +70,7 @@ function App() {
             <Route path="/tasks" element={<Tasks />} />
             <Route path="/tasks/:taskId" element={<TaskDetails />} />
             <Route path="/departments" element={<Departments />} />
-            <Route path="/departments/:id" element={<DepartmentDetails />} />
+            <Route path="/department/:id" element={<DepartmentDetails />} />
             <Route path="/employees" element={<Employees />} />
             <Route path="/employees/:id" element={<EmpDetails />} />
             <Route path="/messages" element={<Chat />} />

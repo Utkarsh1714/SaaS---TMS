@@ -93,7 +93,7 @@ const DepartmentSummary = ({ departmentId }) => {
             {department?.name} Department
           </h2>
         </div>
-        <Link to={`/departments/${department._id}`}>
+        <Link to={`/department/${department._id}`}>
           <button className="inline-flex items-center px-3 py-1.5 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
             <PencilIcon className="h-4 w-4 mr-1" />
             Edit
