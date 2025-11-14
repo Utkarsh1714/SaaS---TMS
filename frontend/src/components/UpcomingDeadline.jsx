@@ -10,7 +10,6 @@ const UpcomingDeadline = () => {
         `${import.meta.env.VITE_API_URL}/api/dashboard/overview-data3`,
         { withCredentials: true }
       );
-      console.log(res.data);
       setTask(res.data);
     } catch (error) {
       console.error("Failed to fetch upcoming deadlines:", error);

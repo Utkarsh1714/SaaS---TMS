@@ -1,20 +1,17 @@
 import React, { useState, useEffect, useMemo } from "react";
 import axios from "axios";
 import { UsersIcon, SearchIcon, FilterIcon, Loader } from "lucide-react";
+import { Link } from "react-router-dom";
 
-// --- CONFIGURATION CONSTANTS ---
 const EMPLOYEES_PER_PAGE = 5;
 
 const calculatePercentageChange = (current, previous) => {
-  // Handle division by zero or invalid input
   if (previous === 0 || !previous || !current) return "N/A";
 
   const change = ((current - previous) / previous) * 100;
-  // Format to two decimal places and prepend '+' for positive change
   return `${change > 0 ? "+" : ""}${change.toFixed(2)}%`;
 };
 
-// Calculates the percentage of 'part' out of 'whole'
 const calculatePercentage = (part, whole) => {
   if (whole === 0 || !whole || !part) return "0.00%";
   const percentage = (part / whole) * 100;
@@ -58,7 +55,6 @@ const EmployeeTable = ({ onStatsCalculated }) => {
 
     return employees.filter(
       (employee) =>
-        // Assuming employee objects have 'username', 'email', 'role', and a department name nested
         employee.username?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         employee.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         employee.role?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -68,17 +64,13 @@ const EmployeeTable = ({ onStatsCalculated }) => {
     );
   }, [employees, searchTerm]);
 
-  // 3. PAGINATION CALCULATIONS
   const totalPages = Math.ceil(filteredEmployees.length / EMPLOYEES_PER_PAGE);
 
-  // Calculate the slice boundaries
   const startIndex = (currentPage - 1) * EMPLOYEES_PER_PAGE;
   const endIndex = startIndex + EMPLOYEES_PER_PAGE;
 
-  // Slice the array to get only the employees for the current page
   const employeesToDisplay = filteredEmployees.slice(startIndex, endIndex);
 
-  // --- Helper for Tailwind classes based on status ---
   const getStatusClass = (status) => {
     switch (status) {
       case "Active":
@@ -92,7 +84,6 @@ const EmployeeTable = ({ onStatsCalculated }) => {
     }
   };
 
-  // --- Handlers for Pagination Buttons ---
   const goToPreviousPage = () => {
     setCurrentPage((prev) => Math.max(1, prev - 1));
   };
@@ -101,9 +92,7 @@ const EmployeeTable = ({ onStatsCalculated }) => {
     setCurrentPage((prev) => Math.min(totalPages, prev + 1));
   };
 
-  // --- Render States (Loading/Error/Data) ---
   if (loading) {
-    // ... (loading state unchanged)
     return (
       <div className="bg-white shadow rounded-lg p-6 flex items-center justify-center h-96">
         <Loader className="h-8 w-8 animate-spin text-blue-500" />
@@ -113,7 +102,6 @@ const EmployeeTable = ({ onStatsCalculated }) => {
   }
 
   if (error) {
-    // ... (error state unchanged)
     return (
       <div className="bg-red-50 border border-red-200 text-red-700 shadow rounded-lg p-6 h-96 flex items-center justify-center">
         <p>{error}</p>
@@ -233,9 +221,9 @@ const EmployeeTable = ({ onStatsCalculated }) => {
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                    <a href="#" className="text-blue-600 hover:text-blue-900">
+                    <Link to={`/employees/${employee._id}`} className="text-blue-600 hover:text-blue-900">
                       View
-                    </a>
+                    </Link>
                   </td>
                 </tr>
               ))

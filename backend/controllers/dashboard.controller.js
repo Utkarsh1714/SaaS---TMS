@@ -47,8 +47,7 @@ export const getDashboardAnalytics = async (req, res) => {
       // 3. Overdue task count
       Task.countDocuments({
         organizationId: orgId,
-        status: { $ne: "Completed" },
-        deadline: { $lt: now },
+        status: "Overdue",
       }),
 
       // 4. Avg task completion (days)

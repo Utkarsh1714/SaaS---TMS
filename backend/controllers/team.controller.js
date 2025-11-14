@@ -34,6 +34,31 @@ export const createTeam = async (req, res) => {
   }
 };
 
+export const deleteTeam = async (req, res) => {
+  try {
+    const { teamId } = req.params;
+    const organizationId = req.user.organizationId;
+
+    const team = await Team.findOneAndDelete({
+      _id: teamId,
+      organizationId,
+    });
+
+    if (!team) {
+      return res.status(404).json({ message: "Team not found." });
+    }
+
+    await Department.findOneAndUpdate(
+      { _id: team.departmentId, organizationId },
+      { $pull: { teams: teamId } }
+    );
+    res.status(200).json({ message: "Team deleted successfully." });
+  } catch (error) {
+    console.log("Error deleting team:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+}
+
 export const addMemberToTeam = async (req, res) => {
   try {
     const { teamId } = req.params;
