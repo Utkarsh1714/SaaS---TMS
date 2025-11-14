@@ -1,4 +1,5 @@
 import NotificationPanel from "@/components/Dashboard/NotificationPanel";
+import DepartmentEmployeeDistribution from "@/components/Departments/DepartmentEmployeeDistribution";
 import DepartmentList from "@/components/Departments/DepartmentList";
 import DepartmentSummary from "@/components/Departments/DepartmentSummary";
 import Sidebar from "@/components/Layout/Sidebar";
@@ -456,9 +457,9 @@ const Departments = () => {
             </div>
             <div className="lg:col-span-2 space-y-8">
               <DepartmentSummary departmentId={selectedDepartment} />
-              {/* <DepartmentEmployeeDistribution
+              <DepartmentEmployeeDistribution
                 departmentId={selectedDepartment}
-              /> */}
+              />
             </div>
           </div>
         </main>

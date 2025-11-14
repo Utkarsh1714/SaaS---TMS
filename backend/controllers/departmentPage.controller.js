@@ -4,7 +4,6 @@ import Department from "../models/department.model.js";
 
 export const getDeptDetailDashboard = async (req, res) => {
   const { id } = req.params;
-  console.log(id);
   const { organizationId } = req.user;
   try {
     const [
@@ -26,6 +25,7 @@ export const getDeptDetailDashboard = async (req, res) => {
           },
           populate: {
             path: "members",
+            select: "-resetToken -resetTokenExpires -password -otp -otpExpires",
           },
         })
         .populate(

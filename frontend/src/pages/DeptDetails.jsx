@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useParams, useNavigate, useAsyncError } from "react-router-dom";
 import {
   BellIcon,
@@ -17,18 +17,48 @@ import {
 import Sidebar from "@/components/Layout/Sidebar";
 import axios from "axios";
 import { Skeleton } from "@/components/ui/skeleton";
+import AddTeamMemberModal from "@/components/Departments/AddTeamMemberModal";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { useAuth } from "@/context/AuthContext";
 
 const DepartmentDetails = () => {
+  const { user } = useAuth();
   const { id: departmentId } = useParams();
   const navigate = useNavigate();
+
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [deptDetails, setDeptDetails] = useState(null);
   const [deptName, setDeptName] = useState("");
   const [description, setDescription] = useState("");
+  const [teamName, setTeamName] = useState("");
   const [allEmployees, setAllEmployees] = useState([]);
 
   const [loadingDeptDetail, setLoadingDeptDetail] = useState(false);
+  const [open, setOpen] = useState(false);
+  const [creatingTeam, setCreatingTeam] = useState(false);
+  const [deletingTeam, setDeletingTeam] = useState(false);
+  const [isAddMemberModalOpen, setIsAddMemberModalOpen] = useState(false);
 
   const formatter = new Intl.NumberFormat("en-US", {
     notation: "compact",
@@ -44,7 +74,6 @@ const DepartmentDetails = () => {
         }/api/dept-details/${id}/deptdetails-page`,
         { withCredentials: true }
       );
-      console.log(res.data);
       setDeptDetails(res.data);
       setDeptName(res.data.department.name);
       setDescription(res.data.department.description);
@@ -55,6 +84,45 @@ const DepartmentDetails = () => {
       console.error("Error fetching department details:", error);
     } finally {
       setLoadingDeptDetail(false);
+    }
+  };
+
+  const handleCreateTeam = async (e) => {
+    e.preventDefault();
+    setCreatingTeam(true);
+    try {
+      const res = await axios.post(
+        `${import.meta.env.VITE_API_URL}/api/team`,
+        { name: teamName, departmentId: departmentId },
+        {
+          withCredentials: true,
+        }
+      );
+      toast.success("Team created successfully");
+      setOpen(false);
+      setTeamName("")
+    } catch (error) {
+      console.log(error);
+      toast.error("Error creating team");
+    } finally {
+      setCreatingTeam(false);
+      fetchDepartmentDetails(departmentId);
+    }
+  };
+
+  const handleTeamDelete = async (teamId) => {
+    setDeletingTeam(true);
+    try {
+      await axios.delete(
+        `${import.meta.env.VITE_API_URL}/api/team/${teamId}/delete`,
+        { withCredentials: true }
+      );
+      toast.success("Team deleted successfully");
+    } catch (error) {
+      console.error("Error deleting team:", error);
+    } finally {
+      setDeletingTeam(false);
+      fetchDepartmentDetails(departmentId);
     }
   };
 
@@ -470,9 +538,40 @@ const DepartmentDetails = () => {
               <div className="bg-white shadow rounded-lg p-6">
                 <div className="flex items-center justify-between mb-4">
                   <h2 className="text-lg font-medium text-gray-900">Teams</h2>
-                  <button className="text-blue-600 hover:text-blue-700">
-                    <PlusIcon className="h-5 w-5" />
-                  </button>
+
+                  {(user.role?.name === "Boss" || user.role?.name === "Manager") && (
+                    <Dialog open={open} onOpenChange={setOpen}>
+                      <DialogTrigger asChild>
+                        <Button
+                          variant={"secondary"}
+                          className="text-blue-600 hover:text-blue-700"
+                        >
+                          <PlusIcon className="h-5 w-5" />
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent className="sm:max-w-[500px]">
+                        <DialogHeader>
+                          <DialogTitle>Create New Team</DialogTitle>
+                          <DialogDescription>
+                            Fill in the details to add a new team.
+                          </DialogDescription>
+                        </DialogHeader>
+                        <form className="space-y-4" onSubmit={handleCreateTeam}>
+                          <input
+                            type="text"
+                            name="name"
+                            value={teamName}
+                            onChange={(e) => setTeamName(e.target.value)}
+                            placeholder="Name"
+                            className="w-full border px-3 py-2 rounded-md"
+                          />
+                          <Button type="submit" className="w-full">
+                            {creatingTeam ? "Creating..." : "Create Department"}
+                          </Button>
+                        </form>
+                      </DialogContent>
+                    </Dialog>
+                  )}
                 </div>
                 <div className="space-y-3">
                   {deptDetails?.department.teams.map((team) => (
@@ -488,9 +587,36 @@ const DepartmentDetails = () => {
                           {team.members.length} members
                         </p>
                       </div>
-                      <button className="text-gray-400 hover:text-red-600">
-                        <XIcon className="h-4 w-4" />
-                      </button>
+                      <AlertDialog>
+                        <AlertDialogTrigger>
+                          <Button
+                            variant={"ghost"}
+                            className="text-gray-400 hover:text-red-600"
+                          >
+                            <XIcon className="h-4 w-4" />
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>
+                              Are you absolutely sure?
+                            </AlertDialogTitle>
+                            <AlertDialogDescription>
+                              This action cannot be undone. This will
+                              permanently delete the team and remove all its
+                              members from the team.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction
+                              onClick={() => handleTeamDelete(team._id)}
+                            >
+                              {deletingTeam ? "Deleting..." : "Continue"}
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
                     </div>
                   ))}
                 </div>
@@ -501,7 +627,10 @@ const DepartmentDetails = () => {
                   Quick Actions
                 </h2>
                 <div className="space-y-3">
-                  <button className="w-full inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">
+                  <button
+                    onClick={() => setIsAddMemberModalOpen(true)}
+                    className="w-full inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
+                  >
                     <PlusIcon className="h-4 w-4 mr-2" />
                     Add Employee To Team
                   </button>
@@ -619,7 +748,15 @@ const DepartmentDetails = () => {
           </div>
         </main>
       </div>
+      {isAddMemberModalOpen && (
+        <AddTeamMemberModal
+          onClose={() => setIsAddMemberModalOpen(false)}
+          teams={deptDetails?.department.teams || []}
+          employees={allEmployees}
+        />
+      )}
     </div>
   );
 };
+
 export default DepartmentDetails;

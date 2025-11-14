@@ -72,7 +72,6 @@ const Home = () => {
     };
 
     fetchData();
-    console.log(monthlyTaskCompletion);
   }, []);
 
   if (loading) {
