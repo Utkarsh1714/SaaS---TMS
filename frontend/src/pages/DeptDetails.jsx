@@ -19,6 +19,7 @@ import {
   TagIcon,
   ChevronDown,
   Trash2,
+  UserX,
 } from "lucide-react";
 import Sidebar from "@/components/Layout/Sidebar";
 import axios from "axios";
@@ -872,8 +873,11 @@ const DepartmentDetails = () => {
                   {employeesToDisplay.map((employee) => (
                     <div
                       key={employee._id}
-                      className="px-6 py-4 hover:bg-gray-100 cursor-pointer"
-                      onClick={() => navigate(`/employees/${employee.id}`)}
+                      className="group px-6 py-4 hover:bg-gray-100 cursor-pointer"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        navigate(`/employees/${employee._id}`)
+                      }}
                     >
                       <div className="flex items-center justify-between">
                         <div className="flex items-center">
@@ -892,8 +896,8 @@ const DepartmentDetails = () => {
                           </div>
                         </div>
                         <div className="flex items-center space-x-4">
-                          <button className="text-gray-400 hover:text-red-600">
-                            <XIcon className="h-4 w-4" />
+                          <button onClick={(e) => e.stopPropagation()} className="invisible text-gray-500 hover:text-red-600 group-hover:visible">
+                            <UserX className="h-5 w-5" />
                           </button>
                         </div>
                       </div>
@@ -951,7 +955,7 @@ const DepartmentDetails = () => {
                     return (
                       <div
                         key={task._id}
-                        className="px-6 py-4 hover:bg-gray-100 cursor-pointer"
+                        className="group px-6 py-4 hover:bg-gray-100 cursor-pointer"
                         onClick={() => navigate(`/tasks/${task.id}`)}
                       >
                         <div className="flex items-center justify-between gap-4">
@@ -963,7 +967,10 @@ const DepartmentDetails = () => {
                             <div className="flex-1">
                               <h3
                                 className="text-lg font-semibold text-gray-900 cursor-pointer hover:text-blue-600 transition-colors"
-                                onClick={() => navigate(`/tasks/${task._id}`)}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  navigate(`/tasks/${task._id}`);
+                                }}
                               >
                                 {displayTitle}
                               </h3>
@@ -971,9 +978,10 @@ const DepartmentDetails = () => {
                                 {displayDescription}
                                 {isDescriptionLong && (
                                   <span
-                                    onClick={() =>
+                                    onClick={(e) => {
+                                      e.stopPropagation();
                                       navigate(`/tasks/${task._id}`)
-                                    }
+                                    }}
                                     className="text-blue-500 cursor-pointer ml-1 font-normal hover:underline"
                                   >
                                     view
@@ -991,7 +999,7 @@ const DepartmentDetails = () => {
                             </div>
                           </div>
                           <div className="flex items-center space-x-4">
-                            <button className="text-gray-400 hover:text-red-600">
+                            <button onClick={(e) => e.stopPropagation()} className="invisible text-gray-400 hover:text-red-600 group-hover:visible">
                               <XIcon className="h-4 w-4" />
                             </button>
                           </div>
