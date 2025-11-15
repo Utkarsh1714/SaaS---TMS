@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 import Sidebar from "@/components/Layout/Sidebar";
 const EmpDetails = () => {
-  const { employeeId } = useParams();
+  const { id: employeeId } = useParams();
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
