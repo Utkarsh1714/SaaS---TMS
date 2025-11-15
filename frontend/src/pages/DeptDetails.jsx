@@ -657,11 +657,6 @@ const DepartmentDetails = () => {
                   </div>
                 ) : (
                   <div className="flex items-center mb-4">
-                    {/* <img
-                      src={deptDetails?.manager.avatar}
-                      alt={deptDetails?.department.manager.username}
-                      className="h-16 w-16 rounded-full"
-                    /> */}
                     <span
                       className={`inline-flex items-center justify-center w-10 h-10 rounded-lg bg-[#DBEAFE] text-blue-600 font-semibold text-lg`}
                     >
