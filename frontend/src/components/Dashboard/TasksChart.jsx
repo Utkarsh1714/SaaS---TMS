@@ -27,7 +27,7 @@ const TasksChart = ({ monthlyTaskCompletion }) => {
       month: item.month,
       completed: item.Completed,
       active: item.Active,
-      overdue: item.Overdue,
+      pending: item.Pending,
     }));
 
     // Find the current month number
@@ -88,7 +88,7 @@ const TasksChart = ({ monthlyTaskCompletion }) => {
               fill="#4F46E5"
             />
             <Bar dataKey="active" name="Active" stackId="a" fill="#10B981" />
-            <Bar dataKey="overdue" name="Overdue" stackId="a" fill="#EF4444" />
+            <Bar dataKey="pending" name="Pending" stackId="a" fill="#EF4444" />
           </BarChart>
         </ResponsiveContainer>
       </div>

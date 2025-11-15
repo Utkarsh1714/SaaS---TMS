@@ -138,6 +138,7 @@ const TaskDetails = () => {
         `${import.meta.env.VITE_API_URL}/api/task/${taskId}`,
         { withCredentials: true }
       );
+      console.log(res.data);
       setTaskDetail(res.data);
       // Set form states from fetched data
       setTitle(res.data.title);
@@ -346,6 +347,8 @@ const TaskDetails = () => {
       incompleteTargetIndex: incompleteTargetIndex,
     };
   }, [taskDetail?.milestones]);
+
+  const members = taskDetail?.team?.members ?? [];
 
   useEffect(() => {
     fetchTask();
@@ -764,17 +767,17 @@ const TaskDetails = () => {
                 {/* --- Team & Details --- */}
                 <div className="bg-white shadow rounded-lg p-6">
                   {/* --- Team Display --- */}
-                  <div className="flex flex-col items-center justify-between mb-4 bg-slate-200 py-3 rounded-md">
+                  <div className="flex flex-col items-center justify-between mb-4 bg-slate-200 py-3 px-1 rounded-md">
                     <h2 className="text-xl text-center font-medium text-blue-600">
                       Team
                     </h2>
-                    <p className="font-semibold">
+                    <div className="font-semibold flex items-center justify-center text-center">
                       {taskDetail.team?.name || ( // Use taskDetail
-                        <span className="text-md font-normal">
+                        <p className="text-md font-normal text-center">
                           Not Assigned
-                        </span>
+                        </p>
                       )}
-                    </p>
+                    </div>
                   </div>
 
                   {/* --- Details Header --- */}
@@ -916,48 +919,73 @@ const TaskDetails = () => {
                     </button>
                   </div>
                   <div className="space-y-3">
-                    {task.assignees.map((assignee) => (
-                      <div
-                        key={assignee.id}
-                        className="flex items-center justify-between"
-                      >
-                        <div className="flex items-center">
-                          <img
-                            src={assignee.avatar}
-                            alt={assignee.name}
-                            className="h-8 w-8 rounded-full"
-                          />
-                          <span className="ml-3 text-sm text-gray-900">
-                            {assignee.name}
-                          </span>
+                    {members.length > 0 ? (
+                      members.map((assignee) => (
+                        <div
+                          key={assignee._id}
+                          className="flex items-center justify-between"
+                        >
+                          <div className="flex items-center">
+                            {assignee.avatar ? (
+                              <img
+                                src={assignee.avatar}
+                                alt={assignee.username}
+                                className="h-8 w-8 rounded-full"
+                              />
+                            ) : (
+                              <UserIcon className="h-8 w-8 rounded-full p-1 bg-gray-200 text-gray-500" />
+                            )}
+
+                            <span className="ml-3 text-sm text-gray-900">
+                              {assignee.username}
+                            </span>
+                          </div>
+                          <button className="text-gray-400 hover:text-red-600">
+                            <XIcon className="h-4 w-4" />
+                          </button>
                         </div>
-                        <button className="text-gray-400 hover:text-red-600">
-                          <XIcon className="h-4 w-4" />
-                        </button>
-                      </div>
-                    ))}
+                      ))
+                    ) : (
+                      <p className="text-sm text-gray-500">
+                        No team is assigned to task or team don't have any
+                        members.
+                      </p>
+                    )}
                   </div>
                 </div>
-                {/* Tags */}
+                {/* Manager */}
                 <div className="bg-white shadow rounded-lg p-6">
                   <div className="flex items-center justify-between mb-4">
-                    <h2 className="text-sm font-medium text-gray-900">Tags</h2>
+                    <h2 className="text-sm font-medium text-gray-900">
+                      Task Manager
+                    </h2>
                     <button className="text-blue-600 hover:text-blue-700">
                       <PlusIcon className="h-5 w-5" />
                     </button>
                   </div>
-                  <div className="flex flex-wrap gap-2">
-                    {task.tags.map((tag, idx) => (
-                      <span
-                        key={idx}
-                        className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
-                      >
-                        {tag}
-                        <button className="ml-1 text-blue-600 hover:text-blue-800">
-                          <XIcon className="h-3 w-3" />
-                        </button>
-                      </span>
-                    ))}
+                  <div className="flex items-center justify-between py-0.5 rounded-full text-xs font-medium text-blue-800">
+                    <div className="flex items-center">
+                      {taskDetail?.assignedManager.avatar ? (
+                        <img
+                          src={taskDetail?.assignedManager.avatar}
+                          alt={taskDetail?.assignedManager.username}
+                          className="h-8 w-8 rounded-full"
+                        />
+                      ) : (
+                        <UserIcon className="h-8 w-8 rounded-full p-1 bg-gray-200 text-gray-500" />
+                      )}
+                      <div className="flex flex-col items-start">
+                        <h2 className="ml-3 text-sm text-gray-900">
+                          {taskDetail?.assignedManager.username}
+                        </h2>
+                        <p className="ml-3 text-xs text-gray-500">
+                          {taskDetail?.assignedManager.jobTitle}
+                        </p>
+                      </div>
+                    </div>
+                    <button className="text-gray-400 hover:text-red-600">
+                      <XIcon className="h-4 w-4" />
+                    </button>
                   </div>
                 </div>
                 {/* Activity */}

@@ -10,7 +10,7 @@ import {
   ResponsiveContainer,
   Cell,
 } from "recharts";
-import { UsersIcon } from "lucide-react";
+import { Loader, UsersIcon } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import axios from "axios";
 
@@ -28,8 +28,6 @@ const stringToHSLColor = (str) => {
 
   const hue = hash % 360;
 
-  // We use fixed saturation and lightness for nice, readable colors
-  // You can adjust these percentages
   const saturation = "70%";
   const lightness = "45%";
 
@@ -70,12 +68,19 @@ const DepartmentEmployeeDistribution = ({ departmentId }) => {
     fill: stringToHSLColor(team._id || team.name),
   }));
 
-  if (isLoading) {
+  if (!departmentId || !departmentData) {
     return (
-      <div className="bg-white shadow rounded-lg overflow-hidden">
-        <div className="h-96">
-          <ChartLoading />
-        </div>
+      <div className="bg-white shadow rounded-lg p-6 flex items-center justify-center h-48">
+        {departmentId && isLoading ? (
+          <div className="flex items-center justify-center h-screen bg-gray-50">
+            <Loader className="h-10 w-10 animate-spin text-blue-500" />
+            <p className="ml-3 text-lg text-gray-700">
+              <ChartLoading />
+            </p>
+          </div>
+        ) : (
+          "Select a department to view chart data."
+        )}
       </div>
     );
   }
@@ -104,11 +109,6 @@ const DepartmentEmployeeDistribution = ({ departmentId }) => {
               <XAxis
                 dataKey="name"
                 tick={false}
-                // tick={{ fontSize: 12 }}
-                // angle={-45}
-                // textAnchor="end"
-                // interval={0}
-                // height={80}
               />
               <YAxis allowDecimals={false} />
               <Tooltip cursor={{ fill: "transparent" }} />

@@ -1,160 +1,5 @@
-// import axios from "axios";
-// import React, { useEffect, useState } from "react";
-// import { useNavigate, useParams } from "react-router-dom";
-// import socket from "@/utils/socket"; // Make sure this is same as used in Employees.jsx
-// import { useAuth } from "@/context/AuthContext";
-// import { Button } from "@/components/ui/button";
-// import { IoIosArrowBack } from "react-icons/io";
-// import { MdEdit } from "react-icons/md";
-
-// const EmpDetails = () => {
-//   const { id } = useParams();
-//   const { user } = useAuth();
-//   const [employee, setEmployee] = useState(null);
-
-//   const navigate = useNavigate();
-
-//   const isoString = employee?.createdAt;
-//   const date = new Date(isoString);
-
-//   const options = {
-//     timeZone: "Asia/Kolkata",
-//     day: "2-digit",
-//     month: "long",
-//     year: "numeric",
-//   };
-
-//   const formattedDate = date.toLocaleDateString("en-IN", options);
-
-//   const getEmployeeDetails = async () => {
-//     const res = await axios.get(
-//       `${import.meta.env.VITE_API_URL}/api/employee/${id}`,
-//       { withCredentials: true }
-//     );
-
-//     setEmployee(res.data);
-//     console.log(res.data);
-//   };
-
-//   useEffect(() => {
-//     getEmployeeDetails();
-//   }, [id]);
-
-//   useEffect(() => {
-//     if (!user?.organizationId) return;
-
-//     const handleConnect = () => {
-//       socket.emit("joinOrgRoom", user.organizationId);
-//     };
-
-//     const handleStatusUpdate = ({ userId, status }) => {
-//       // Only update status if it's the same employee being viewed
-//       if (userId === id) {
-//         setEmployee((prev) => ({ ...prev, status }));
-//       }
-//     };
-
-//     socket.on("connect", handleConnect);
-//     socket.on("statusUpdate", handleStatusUpdate);
-
-//     if (socket.connected) handleConnect();
-
-//     return () => {
-//       socket.off("connect", handleConnect);
-//       socket.off("statusUpdate", handleStatusUpdate);
-//     };
-//   }, [id, user?.organizationId]);
-
-//   const getStatusColor = (status) => {
-//     switch (status) {
-//       case "Active":
-//         return "text-green-600";
-//       case "On Leave":
-//         return "text-red-500";
-//       case "Inactive":
-//         return "text-gray-500";
-//       default:
-//         return "text-gray-500";
-//     }
-//   };
-
-//   return (
-//     <div className="w-full h-full px-5 py-2">
-//       <div className="w-full">
-//         <div className="w-full flex items-center justify-between">
-//           <Button
-//             variant={"outline"}
-//             onClick={() => navigate(-1)}
-//             className="bg-slate-200 cursor-pointer"
-//           >
-//             <IoIosArrowBack className="mr-1" /> Back
-//           </Button>
-//           <Button
-//             onClick={() => navigate(-1)}
-//             variant="outline"
-//             className={"cursor-pointer"}
-//           >
-//             <MdEdit className="mr-1" /> Edit
-//           </Button>
-//         </div>
-//         <div className="w-full flex flex-col md:flex-row md:items-center md:justify-between pt-4">
-//           <div>
-//             <h1 className="text-2xl sm:text-3xl md:text-4xl font-semibold text-orange-400">
-//               {employee?.username}
-//             </h1>
-//             <div className="mt-2">
-//               <h2 className="font-semibold">
-//                 Department :-{" "}
-//                 <span className="font-normal">
-//                   {employee?.departmentId?.name}
-//                 </span>
-//               </h2>
-//               <h2 className="font-semibold">
-//                 Role :- <span className="font-normal">{employee?.role}</span>
-//               </h2>
-//             </div>
-//           </div>
-//           <div className="md:mt-12">
-//             <p className="font-semibold">
-//               Email :- <span className="font-normal">{employee?.email}</span>
-//             </p>
-//             <p className="font-semibold">
-//               Phone :-{" "}
-//               <span className="font-normal">+91 {employee?.contactNo}</span>
-//             </p>
-//           </div>
-//         </div>
-//         <div className="flex items-start justify-start gap-2">
-//           <h3 className="font-semibold">Status :-</h3>
-//           <span className={`font-medium ${getStatusColor(employee?.status)}`}>
-//             {employee?.status}
-//           </span>
-//         </div>
-//         <p className="text-sm font-semibold">
-//           Created At :- <span className="font-normal">{formattedDate}</span>
-//         </p>
-//       </div>
-//       <div className="w-full flex items-center justify-center">
-//         TODO: Show assigned and completed task
-//         {employee?.role === "Boss" ? (
-//           <div className=" absolute right-0 bottom-0 mb-10 mr-10">
-//             <Button className={"cursor-pointer bg-orange-400"}>
-//               Promote {employee?.username}
-//             </Button>
-//           </div>
-//         ) : (
-//           ""
-//         )}
-//       </div>
-//     </div>
-//   );
-// };
-
-// export default EmpDetails;
-
-
-import React, { useState } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import React, { useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import {
   BellIcon,
   SearchIcon,
@@ -166,27 +11,50 @@ import {
   CalendarIcon,
   BriefcaseIcon,
   SaveIcon,
-} from 'lucide-react'
-import Sidebar from '@/components/Layout/Sidebar'
+} from "lucide-react";
+import Sidebar from "@/components/Layout/Sidebar";
 const EmpDetails = () => {
-  const { employeeId } = useParams()
-  const navigate = useNavigate()
-  const [sidebarOpen, setSidebarOpen] = useState(true)
-  const [isEditing, setIsEditing] = useState(false)
+  const { employeeId } = useParams();
+  const navigate = useNavigate();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+
+  const handleLogout = async () => {
+    setIsLoggingOut(true);
+
+    try {
+      await axios.post(
+        `${import.meta.env.VITE_API_URL}/api/auth/logout`,
+        {},
+        { withCredentials: true }
+      );
+
+      logout();
+      toast("Logged out successfully!");
+      navigate("/login");
+    } catch (error) {
+      console.error("Logout failed:", error);
+      alert("Logout failed");
+    } finally {
+      setIsLoggingOut(false);
+    }
+  };
+
   // Mock employee data
   const [employee, setEmployee] = useState({
     id: employeeId,
-    name: 'Jane Cooper',
-    role: 'Senior Developer',
-    department: 'Engineering',
-    email: 'jane.cooper@example.com',
-    phone: '+1 (555) 123-4567',
-    location: 'San Francisco, CA',
-    joinDate: '2022-03-15',
+    name: "Jane Cooper",
+    role: "Senior Developer",
+    department: "Engineering",
+    email: "jane.cooper@example.com",
+    phone: "+1 (555) 123-4567",
+    location: "San Francisco, CA",
+    joinDate: "2022-03-15",
     avatar:
-      'https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
-    bio: 'Experienced software developer with a passion for creating elegant solutions to complex problems. Specialized in React and Node.js development.',
-    skills: ['React', 'TypeScript', 'Node.js', 'Python', 'AWS'],
+      "https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80",
+    bio: "Experienced software developer with a passion for creating elegant solutions to complex problems. Specialized in React and Node.js development.",
+    skills: ["React", "TypeScript", "Node.js", "Python", "AWS"],
     stats: {
       tasksCompleted: 142,
       activeTasks: 8,
@@ -196,27 +64,32 @@ const EmpDetails = () => {
     recentTasks: [
       {
         id: 1,
-        title: 'Update website homepage design',
-        status: 'in-progress',
-        dueDate: 'Today',
+        title: "Update website homepage design",
+        status: "in-progress",
+        dueDate: "Today",
       },
       {
         id: 2,
-        title: 'Fix authentication bug',
-        status: 'completed',
-        dueDate: 'Yesterday',
+        title: "Fix authentication bug",
+        status: "completed",
+        dueDate: "Yesterday",
       },
       {
         id: 3,
-        title: 'Code review for PR #234',
-        status: 'in-progress',
-        dueDate: 'Tomorrow',
+        title: "Code review for PR #234",
+        status: "in-progress",
+        dueDate: "Tomorrow",
       },
     ],
-  })
+  });
   return (
     <div className="flex h-screen bg-gray-50">
-      <Sidebar isOpen={sidebarOpen} setIsOpen={setSidebarOpen} />
+      <Sidebar
+        isOpen={sidebarOpen}
+        setIsOpen={setSidebarOpen}
+        handleLogout={handleLogout}
+        isLoggingOut={isLoggingOut}
+      />
       <div className="flex-1 flex flex-col overflow-hidden">
         <header className="bg-white shadow-sm z-10">
           <div className="px-4 sm:px-6 lg:px-8">
@@ -241,7 +114,7 @@ const EmpDetails = () => {
                   </svg>
                 </button>
                 <button
-                  onClick={() => navigate('/employees')}
+                  onClick={() => navigate("/employees")}
                   className="ml-4 inline-flex items-center text-sm text-gray-500 hover:text-gray-700"
                 >
                   <ArrowLeftIcon className="h-4 w-4 mr-1" />
@@ -299,7 +172,7 @@ const EmpDetails = () => {
                   onClick={() => setIsEditing(!isEditing)}
                   className="inline-flex items-center px-3 py-1.5 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
                 >
-                  {isEditing ? 'Cancel' : 'Edit Profile'}
+                  {isEditing ? "Cancel" : "Edit Profile"}
                 </button>
               </div>
               {isEditing && (
@@ -589,11 +462,15 @@ const EmpDetails = () => {
                         </p>
                       </div>
                       <span
-                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${task.status === 'completed' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}
+                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                          task.status === "completed"
+                            ? "bg-green-100 text-green-800"
+                            : "bg-yellow-100 text-yellow-800"
+                        }`}
                       >
-                        {task.status === 'completed'
-                          ? 'Completed'
-                          : 'In Progress'}
+                        {task.status === "completed"
+                          ? "Completed"
+                          : "In Progress"}
                       </span>
                     </div>
                   </div>
@@ -604,6 +481,6 @@ const EmpDetails = () => {
         </main>
       </div>
     </div>
-  )
-}
-export default EmpDetails
+  );
+};
+export default EmpDetails;

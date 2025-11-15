@@ -42,9 +42,7 @@ const getPriorityClass = (priority) => {
   }
 };
 
-// --- TaskItem Component (Adapted from the original card structure) ---
 const TaskItem = ({ task, userRole, userId, navigate, handleDeleteTask }) => {
-  // Logic to truncate title and description (from original Tasks.jsx)
   const isDescriptionLong = task.description.length > DESCRIPTION_CHAR_LIMIT;
 
   const displayDescription = isDescriptionLong
@@ -56,7 +54,6 @@ const TaskItem = ({ task, userRole, userId, navigate, handleDeleteTask }) => {
       ? task.title.substring(0, TITLE_CHAR_LIMIT) + "..."
       : task.title;
 
-  // Determine assignee for display
   const assigneeName = task.assignedManager?.username || "Unassigned";
 
   return (
@@ -146,7 +143,6 @@ const TaskItem = ({ task, userRole, userId, navigate, handleDeleteTask }) => {
   );
 };
 
-// --- TaskList Component ---
 const TaskList = ({
   tasks,
   loading,

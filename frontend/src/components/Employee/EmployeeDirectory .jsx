@@ -45,7 +45,6 @@ const getInitials = (username) => {
     .toUpperCase();
 };
 
-// Helper component for the Delete Dialog
 const DeleteDialog = ({ employee, handleDelete }) => (
   <Dialog>
     <DialogTrigger asChild>
@@ -77,7 +76,6 @@ const DeleteDialog = ({ employee, handleDelete }) => (
   </Dialog>
 );
 
-// Helper component for the Grid View
 const EmployeeCard = ({ employee, user, navigate, handleDelete }) => {
   const initials = getInitials(employee.username);
   const statusClasses = getStatusStyles(employee.status);
@@ -134,10 +132,9 @@ const EmployeeCard = ({ employee, user, navigate, handleDelete }) => {
   );
 };
 
-// Main EmployeeDirectory Component
 const EmployeeDirectory = ({
   view,
-  employees, // Full original list
+  employees,
   loading,
   searchTerm,
   filteredEmployees,
@@ -146,7 +143,6 @@ const EmployeeDirectory = ({
   totalPages,
   goToPreviousPage,
   goToNextPage,
-  // ------------------------------------
   handleDelete,
 }) => {
   const navigate = useNavigate();

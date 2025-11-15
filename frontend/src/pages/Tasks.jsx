@@ -14,7 +14,6 @@ import {
   BellDot,
 } from "lucide-react";
 
-// Import your new components (ensure these paths are correct)
 import TaskList from "../components/Task/TaskList";
 import TaskFilters from "../components/Task/TaskFilters";
 import TaskStats from "../components/Task/TaskStats";
@@ -22,7 +21,6 @@ import TaskCreateDialog from "../components/Task/TaskCreateDialog";
 import NotificationPanel from "@/components/Dashboard/NotificationPanel";
 
 const TasksPage = () => {
-  // --- State Management ---
   const { user, logout } = useAuth();
   const [tasks, setTasks] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -33,7 +31,6 @@ const TasksPage = () => {
   const { addNotification, toggleNotificationPanel, notifications } =
     useNotifications();
 
-  // Sidebar State
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const handleLogout = async () => {
@@ -58,7 +55,6 @@ const TasksPage = () => {
     }
   };
 
-  // Task Creation State
   const [open, setOpen] = useState(false);
   const [hasManager, setHasManager] = useState(true);
   const [selectedDepartment, setSelectedDepartment] = useState([]);
@@ -74,9 +70,6 @@ const TasksPage = () => {
     organizationId: "",
   });
 
-  // --- Data Fetching Logic (Wrapped in useCallback) ---
-
-  // Note: 'filter' parameter is the new filter value passed from TaskFilters or a refresh.
   const fetchTasks = useCallback(
     async (filter) => {
       const currentFilter = filter || activeFilter;
@@ -135,12 +128,9 @@ const TasksPage = () => {
     [user, activeFilter]
   );
 
-  // --- Search & Action Logic ---
-
   const handleSearch = () => {
     const term = searchTerm.trim().toLowerCase();
 
-    // If the search term is empty, just restore the original filtered list
     if (!term) {
       setTasks(originalTasks);
       if (originalTasks.length > 0) {
@@ -157,7 +147,6 @@ const TasksPage = () => {
         task.assignedManager?.username.toLowerCase().includes(term)
     );
 
-    // Update the list shown to the user with search results
     setTasks(filteredTasks);
 
     if (filteredTasks.length === 0) {
@@ -175,7 +164,7 @@ const TasksPage = () => {
 
   const clearSearchTerm = () => {
     setSearchTerm("");
-    setTasks(originalTasks); // Revert to the master list based on the active filter
+    setTasks(originalTasks);
     toast.info("Search cleared.");
   };
 
@@ -187,7 +176,7 @@ const TasksPage = () => {
     toast.success("Tasks refreshed successfully!");
   };
 
-  // Create task function
+  // Create task
   const handleCreateTask = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -201,7 +190,6 @@ const TasksPage = () => {
 
       const newTask = res.data.task;
 
-      // Update state with the new task and then re-fetch all tasks with current filter to ensure data consistency
       setTasks((prev) => [newTask, ...prev]);
       setOriginalTasks((prev) => [newTask, ...prev]);
 
@@ -222,7 +210,6 @@ const TasksPage = () => {
     } finally {
       setLoading(false);
       setOpen(false);
-      // Reset creation state
       setTaskData({
         title: "",
         description: "",
@@ -277,24 +264,19 @@ const TasksPage = () => {
     ) {
       return `No tasks found when filtered by '${activeFilter}'.`;
     }
-    return "No tasks available for this filter."; // Fallback message
+    return "No tasks available for this filter.";
   };
 
-  // --- useEffect Hook for initial load and filter change ---
   useEffect(() => {
     if (!user) {
       navigate("/login");
       return;
     }
-    // Fetch tasks on initial load or when user changes roles/auth status
     fetchTasks(activeFilter);
   }, [user, navigate]);
-  // We only call fetchTasks here. The filter changes are handled by TaskFilters calling fetchTasks directly.
 
-  // --- Render JSX ---
   return (
     <div className="flex h-screen bg-gray-50">
-      {/* Sidebar */}
       <Sidebar
         isOpen={sidebarOpen}
         setIsOpen={setSidebarOpen}
@@ -325,7 +307,6 @@ const TasksPage = () => {
                   </svg>
                 </button>
                 <div className="ml-4 flex items-center lg:ml-0">
-                  {/* Search Bar */}
                   <div className="relative sm:w-64 flex items-center border border-gray-300 rounded-md bg-gray-50 focus-within:ring-1 focus-within:ring-blue-500 focus-within:border-blue-500">
                     <div className="absolute inset-y-0 left-0 pl-3 items-center pointer-events-none hidden sm:flex">
                       <SearchIcon className="h-5 w-5 text-gray-400" />
@@ -413,19 +394,16 @@ const TasksPage = () => {
               />
             )}
           </div>
-          {/* Task Stats (uses originalTasks for accurate counts based on the current filter) */}
           <TaskStats tasks={originalTasks} />
           <div className="mt-8 grid grid-cols-1 gap-8 lg:grid-cols-4">
             <div className="lg:col-span-1">
-              {/* Task Filters */}
               <TaskFilters
                 activeFilter={activeFilter}
-                setActiveFilter={fetchTasks} // Calls fetchTasks, which handles both filter setting and data retrieval
+                setActiveFilter={fetchTasks}
                 handleRefresh={handleRefresh}
               />
             </div>
             <div className="lg:col-span-3">
-              {/* Task List (renders 'tasks' which is updated by filters OR search) */}
               <TaskList
                 tasks={tasks}
                 loading={loading}

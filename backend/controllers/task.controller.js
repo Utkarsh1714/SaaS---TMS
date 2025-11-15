@@ -642,7 +642,8 @@ export const getTaskById = async (req, res) => {
       .populate({
         path: "team",
         populate: {
-          path: "tasks",
+          path: "members tasks",
+          select: "-otp -otpExpires -password -resetToken -resetTokenExpires",
         },
       });
     res.status(200).json(task);
