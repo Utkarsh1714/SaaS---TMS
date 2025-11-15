@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 import Department from "../models/department.model.js";
 import User from "../models/user.model.js";
+import Role from "../models/Role.model.js";
 
 export const createDepartment = async (req, res) => {
   try {
@@ -43,6 +44,60 @@ export const getDepartment = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
+
+export const changeDepartmentManager = async (req, res) => {
+  try {
+    const { departmentId, newManagerId } = req.body;
+
+    if (!departmentId || !newManagerId) {
+      return res.status(400).json({ message: "Department ID and Manager ID are required" });
+    }
+
+    const department = await Department.findById(departmentId);
+    if (!department) {
+      return res.status(404).json({ message: "Department not found" });
+    }
+
+    console.log(department.organizationId, req.user.organizationId);
+
+    if (department.organizationId.toString() !== req.user.organizationId.toString()) {
+      return res.status(403).json({ message: "Unauthorized: Department does not belong to your organization"});
+    }
+
+    const newManager = await User.findById(newManagerId);
+    if (!newManager) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const managerRole = await Role.findOne({ name: "Manager" });
+    const employeeRole = await Role.findOne({ name: "Employee" });
+
+    if (!managerRole || !employeeRole) {
+      return res.status(500).json({ message: "Required roles not found in the system" });
+    }
+
+    if (department.manager) {
+      const oldManager = await User.findById(department.manager);
+      if (oldManager) {
+        oldManager.role = employeeRole._id;
+        await oldManager.save();
+      }
+    }
+
+    newManager.role = managerRole._id;
+    await newManager.save();
+
+    department.manager = newManager._id;
+    await department.save();
+
+    await department.populate("manager", "username email jobTitle role _id");
+
+    res.status(200).json({ message: "Department manager changed successfully", department });
+  } catch (error) {
+    console.error("Change Department Manager Error:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+}
 
 export const getDepartmentWithDetails = async (req, res) => {
   try {

@@ -5,6 +5,7 @@ import verifyToken from "../middlewares/verifyToken.js";
 import authorizeRole from "../middlewares/authorizeRole.js";
 import { authorizePermission } from "../middlewares/authorizePermission.js";
 import {
+  changeDepartmentManager,
   createDepartment,
   deleteDepartment,
   getDepartment,
@@ -27,5 +28,11 @@ router.delete(
   authorizeRole("can_delete_department"),
   deleteDepartment
 );
+router.put(
+  "/manager/change",
+  verifyToken,
+  authorizePermission("can_update_department"),
+  changeDepartmentManager
+)
 
 export default router;

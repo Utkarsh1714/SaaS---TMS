@@ -22,6 +22,15 @@ const DepartmentSummary = ({ departmentId }) => {
     maximumFractionDigits: 1,
   });
 
+  const getInitials = (username) => {
+  if (!username) return "";
+  return username
+    .split(" ")
+    .map((word) => word[0])
+    .join("")
+    .toUpperCase();
+};
+
   const formatDate = (isoDateString) => {
     if (!isoDateString) return "N/A";
 
@@ -107,15 +116,10 @@ const DepartmentSummary = ({ departmentId }) => {
         </p>
         <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
           <div className="flex items-center mb-4 md:mb-0 gap-4">
-            {/* <img
-              src={department.manager.avatar}
-              alt={department.manager.name}
-              className="h-12 w-12 rounded-full mr-4"
-            /> */}
             <span
               className={`inline-flex items-center justify-center w-10 h-10 rounded-full bg-[#DBEAFE] text-blue-600 font-semibold text-lg`}
             >
-              {department.manager?.username.charAt(0) || <User />}
+              {getInitials(department.manager?.username) || <User />}
             </span>
             <div>
               <div className="flex items-center justify-center gap-1">

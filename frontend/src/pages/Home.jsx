@@ -60,7 +60,7 @@ const Home = () => {
           `${import.meta.env.VITE_API_URL}/api/dashboard/overview-data1`,
           { withCredentials: true }
         );
-
+        console.log(res.data)
         setOverviewData(res.data);
         setDepartmentCount(res.data.departmentEmployeeCounts);
         setMonthlyTaskCompletion(res.data.monthlyTaskCompletion);

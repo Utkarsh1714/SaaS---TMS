@@ -32,7 +32,12 @@ export const getDeptDetailDashboard = async (req, res) => {
           "manager",
           "-resetToken -resetTokenExpires -password -otp -otpExpires"
         )
-        .populate("task"),
+        .populate({
+          path: "task",
+          populate: {
+            path: "department"
+          }
+        }),
       User.find({ departmentId: id, organizationId: organizationId })
         .select("-resetToken -resetTokenExpires -password -otp -otpExpires")
         .populate("role", "-__v -permissions"),

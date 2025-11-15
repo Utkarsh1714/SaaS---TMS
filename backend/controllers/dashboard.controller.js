@@ -76,7 +76,7 @@ export const getDashboardAnalytics = async (req, res) => {
         {
           $match: {
             organizationId: orgId,
-            createdAt: { $gte: startOfYear, $lte: endOfYear },
+            createdAt: { $gte: startOfYear, $lte: endOfYear }
           },
         },
         {
