@@ -17,29 +17,7 @@ const EmpDetails = () => {
   const { id: employeeId } = useParams();
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
-
-  const handleLogout = async () => {
-    setIsLoggingOut(true);
-
-    try {
-      await axios.post(
-        `${import.meta.env.VITE_API_URL}/api/auth/logout`,
-        {},
-        { withCredentials: true }
-      );
-
-      logout();
-      toast("Logged out successfully!");
-      navigate("/login");
-    } catch (error) {
-      console.error("Logout failed:", error);
-      alert("Logout failed");
-    } finally {
-      setIsLoggingOut(false);
-    }
-  };
 
   // Mock employee data
   const [employee, setEmployee] = useState({
@@ -84,12 +62,7 @@ const EmpDetails = () => {
   });
   return (
     <div className="flex h-screen bg-gray-50">
-      <Sidebar
-        isOpen={sidebarOpen}
-        setIsOpen={setSidebarOpen}
-        handleLogout={handleLogout}
-        isLoggingOut={isLoggingOut}
-      />
+      <Sidebar isOpen={sidebarOpen} setIsOpen={setSidebarOpen} />
       <div className="flex-1 flex flex-col overflow-hidden">
         <header className="bg-white shadow-sm z-10">
           <div className="px-4 sm:px-6 lg:px-8">

@@ -1,5 +1,5 @@
-import React from "react";
-import { Link, useLocation } from "react-router-dom";
+import React, { useState } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   LayoutDashboardIcon,
   UsersIcon,
@@ -13,9 +13,36 @@ import {
   LogOutIcon,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
-const Sidebar = ({ isOpen, setIsOpen, handleLogout, isLoggingOut }) => {
-  const { user } = useAuth();
+import { toast } from "sonner";
+import axios from "axios";
+const Sidebar = ({ isOpen, setIsOpen }) => {
+  const { user, logout } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
+  const isActive = (path) => location.pathname.startsWith(path);
+
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+
+  const handleLogout = async () => {
+      setIsLoggingOut(true);
+  
+      try {
+        await axios.post(
+          `${import.meta.env.VITE_API_URL}/api/auth/logout`,
+          {},
+          { withCredentials: true }
+        );
+  
+        logout();
+        toast("Logged out successfully!");
+        navigate("/login");
+      } catch (error) {
+        console.error("Logout failed:", error);
+        toast.error("Logout failed");
+      } finally {
+        setIsLoggingOut(false);
+      }
+    };
 
   const handleLinkClick = () => {
     if (isOpen) {
@@ -73,48 +100,48 @@ const Sidebar = ({ isOpen, setIsOpen, handleLogout, isLoggingOut }) => {
               active={
                 location.pathname === "/dashboard" || location.pathname === "/"
               }
-              onClick={() => handleLinkClick}
+              onClick={handleLinkClick}
             />
             <SidebarLink
               to="/tasks"
               icon={<ClipboardCheckIcon size={20} />}
               text="Tasks"
-              active={location.pathname === "/tasks"}
-              onClick={() => handleLinkClick}
+              active={isActive("/tasks")}
+              onClick={handleLinkClick}
             />
             <SidebarLink
               to="/employees"
               icon={<UsersIcon size={20} />}
               text="Employees"
-              active={location.pathname === "/employees"}
-              onClick={() => handleLinkClick}
+              active={isActive("/employees")}
+              onClick={handleLinkClick}
             />
             <SidebarLink
               to="/departments"
               icon={<BuildingIcon size={20} />}
               text="Departments"
-              active={location.pathname === "/departments"}
+              active={isActive("/departments")}
               onClick={handleLinkClick}
             />
             <SidebarLink
               to="/meetings"
               icon={<CalendarIcon size={20} />}
               text="Meetings"
-              active={location.pathname === "/meetings"}
+              active={isActive("/meetings")}
               onClick={handleLinkClick}
             />
             <SidebarLink
               to="/messages"
               icon={<MessageSquareIcon size={20} />}
               text="Messages"
-              active={location.pathname === "/messages"}
+              active={isActive("/messages")}
               onClick={handleLinkClick}
             />
             <SidebarLink
               to="/reports"
               icon={<BarChartIcon size={20} />}
               text="Reports"
-              active={location.pathname === "/reports"}
+              active={isActive("/reports")}
               onClick={handleLinkClick}
             />
             <div className="border-t border-gray-200 my-4"></div>
@@ -122,18 +149,18 @@ const Sidebar = ({ isOpen, setIsOpen, handleLogout, isLoggingOut }) => {
               to="/settings"
               icon={<SettingsIcon size={20} />}
               text="Settings"
-              active={location.pathname === "/settings"}
+              active={isActive("/settings")}
               onClick={handleLinkClick}
             />
             <SidebarLink
               to="/help"
               icon={<HelpCircleIcon size={20} />}
               text="Help & Support"
-              active={location.pathname === "/help"}
+              active={isActive("/help")}
               onClick={handleLinkClick}
             />
             <LogoutButton
-              onClick={handleLogout}
+              onClick={() => handleLogout()}
               icon={<LogOutIcon size={20} />}
               text={isLoggingOut ? "Signing Out..." : "Sign Out"}
               disabled={isLoggingOut}
@@ -162,10 +189,11 @@ const Sidebar = ({ isOpen, setIsOpen, handleLogout, isLoggingOut }) => {
     </>
   );
 };
-const SidebarLink = ({ to, icon, text, active = false }) => {
+const SidebarLink = ({ to, icon, text, active = false, onClick }) => {
   return (
     <Link
       to={to}
+      onClick={onClick}
       className={`
         flex items-center px-3 py-2 text-sm font-medium rounded-md group
         ${

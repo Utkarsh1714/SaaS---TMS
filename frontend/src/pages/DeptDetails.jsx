@@ -68,7 +68,6 @@ const DepartmentDetails = () => {
 
   const [loadingDeptDetail, setLoadingDeptDetail] = useState(false);
   const [open, setOpen] = useState(false);
-  const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [creatingTeam, setCreatingTeam] = useState(false);
   const [deletingTeam, setDeletingTeam] = useState(false);
   const [isAddMemberModalOpen, setIsAddMemberModalOpen] = useState(false);
@@ -108,27 +107,6 @@ const DepartmentDetails = () => {
       return <AlertCircleIcon className="h-5 w-5 text-red-600" />;
     }
     return <ClockIcon className="h-5 w-5 text-gray-600" />;
-  };
-
-  const handleLogout = async () => {
-    setIsLoggingOut(true);
-
-    try {
-      await axios.post(
-        `${import.meta.env.VITE_API_URL}/api/auth/logout`,
-        {},
-        { withCredentials: true }
-      );
-
-      logout();
-      toast("Logged out successfully!");
-      navigate("/login");
-    } catch (error) {
-      console.error("Logout failed:", error);
-      alert("Logout failed");
-    } finally {
-      setIsLoggingOut(false);
-    }
   };
 
   const fetchDepartmentDetails = async (id) => {
@@ -356,12 +334,7 @@ const DepartmentDetails = () => {
 
   return (
     <div className="flex h-screen bg-gray-50">
-      <Sidebar
-        isOpen={sidebarOpen}
-        setIsOpen={setSidebarOpen}
-        handleLogout={handleLogout}
-        isLoggingOut={isLoggingOut}
-      />
+      <Sidebar isOpen={sidebarOpen} setIsOpen={setSidebarOpen} />
       <div className="flex-1 flex flex-col overflow-hidden">
         <header className="bg-white shadow-sm z-10">
           <div className="px-4 sm:px-6 lg:px-8">
@@ -795,7 +768,7 @@ const DepartmentDetails = () => {
                               </AlertDialogFooter>
                             </AlertDialogContent>
                           </AlertDialog>
-                          <ChevronDown size={18}/>
+                          <ChevronDown size={18} />
                         </div>
                       </div>
                       {expandedTeamId === team._id && (
@@ -874,8 +847,8 @@ const DepartmentDetails = () => {
                       key={employee._id}
                       className="group px-6 py-4 hover:bg-gray-100 cursor-pointer"
                       onClick={(e) => {
-                        e.stopPropagation()
-                        navigate(`/employees/${employee._id}`)
+                        e.stopPropagation();
+                        navigate(`/employees/${employee._id}`);
                       }}
                     >
                       <div className="flex items-center justify-between">
@@ -979,7 +952,7 @@ const DepartmentDetails = () => {
                                   <span
                                     onClick={(e) => {
                                       e.stopPropagation();
-                                      navigate(`/tasks/${task._id}`)
+                                      navigate(`/tasks/${task._id}`);
                                     }}
                                     className="text-blue-500 cursor-pointer ml-1 font-normal hover:underline"
                                   >
@@ -998,7 +971,10 @@ const DepartmentDetails = () => {
                             </div>
                           </div>
                           <div className="flex items-center space-x-4">
-                            <button onClick={(e) => e.stopPropagation()} className="invisible text-gray-400 hover:text-red-600 group-hover:visible">
+                            <button
+                              onClick={(e) => e.stopPropagation()}
+                              className="invisible text-gray-400 hover:text-red-600 group-hover:visible"
+                            >
                               <XIcon className="h-4 w-4" />
                             </button>
                           </div>
