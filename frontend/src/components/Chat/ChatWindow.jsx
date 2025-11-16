@@ -111,7 +111,6 @@ const ChatWindow = ({ chat, onBack }) => {
       {/* Chat Header */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200">
         <div className="flex items-center">
-          {/* NEW: Back Button (Mobile Only) */}
           <button
             onClick={onBack}
             className="mr-2 text-gray-600 hover:text-gray-800 md:hidden"
@@ -119,12 +118,10 @@ const ChatWindow = ({ chat, onBack }) => {
             <ArrowLeftIcon className="h-6 w-6" />
           </button>
 
-          {/* Avatar */}
           <div className="h-10 w-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-600">
             <UserIcon className="h-5 w-5" />
           </div>
 
-          {/* User Info */}
           <div className="ml-3">
             <p className="text-sm font-medium text-gray-900">
               {otherUser?.username || "Chat"}
