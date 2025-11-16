@@ -9,6 +9,7 @@ import crypto from "crypto";
 import dotenv from "dotenv";
 import Payment from "../models/paymentModel.js";
 import Role from "../models/Role.model.js";
+import ActivityLog from "../models/activityLog.model.js";
 dotenv.config();
 
 export const registerOrg = async (req, res) => {
