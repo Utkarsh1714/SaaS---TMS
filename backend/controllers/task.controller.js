@@ -392,6 +392,12 @@ export const assignTaskToTeam = async (req, res) => {
       );
     }
 
+    const managerIdString = task.assignedManager.toString();
+    const employeesToAssign = team.members.filter(
+      (memberId) => memberId.toString() !== managerIdString
+    )
+
+    task.assignedEmployees = employeesToAssign;
     task.team = teamId;
     await task.save();
 
@@ -643,6 +649,13 @@ export const getTaskById = async (req, res) => {
         path: "team",
         populate: {
           path: "members tasks",
+          select: "-otp -otpExpires -password -resetToken -resetTokenExpires",
+        },
+      })
+      .populate({
+        path: "comments",
+        populate: {
+          path: "author",
           select: "-otp -otpExpires -password -resetToken -resetTokenExpires",
         },
       });

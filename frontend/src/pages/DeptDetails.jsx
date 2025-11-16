@@ -766,7 +766,6 @@ const DepartmentDetails = () => {
                             <AlertDialogTrigger>
                               <Button
                                 variant={"ghost"}
-                                onClick={(e) => e.stopPropagation()}
                                 className="invisible text-gray-400 hover:text-red-600 group-hover:visible"
                               >
                                 <Trash2 className="h-4 w-4" />
@@ -896,7 +895,7 @@ const DepartmentDetails = () => {
                           </div>
                         </div>
                         <div className="flex items-center space-x-4">
-                          <button onClick={(e) => e.stopPropagation()} className="invisible text-gray-500 hover:text-red-600 group-hover:visible">
+                          <button className="invisible text-gray-500 hover:text-red-600 group-hover:visible">
                             <UserX className="h-5 w-5" />
                           </button>
                         </div>

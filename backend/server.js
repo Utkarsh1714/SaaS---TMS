@@ -17,6 +17,7 @@ import departmentRoute from "./routes/department.route.js";
 import departmentDetailRoute from "./routes/department.page.route.js";
 import teamRouter from "./routes/team.route.js";
 import taskRouter from "./routes/task.route.js";
+import commentRoute from "./routes/Comment.route.js";
 import chatRoute from "./routes/chat.route.js";
 import messageRoutes from "./routes/message.route.js";
 import dashboard from "./routes/dashboard.route.js";
@@ -60,12 +61,13 @@ app.use("/api", limiter);
 // Import routes
 app.use("/api/auth", authRoutes);
 app.use("/api/dashboard", dashboard);
-app.use("/api/employeePage", employeePageRoute);
-app.use("/api/employee", employeeRoute);
+app.use("/api/task", taskRouter);
+app.use("/api/comment", commentRoute);
 app.use("/api/department", departmentRoute);
 app.use("/api/dept-details", departmentDetailRoute);
+app.use("/api/employeePage", employeePageRoute);
+app.use("/api/employee", employeeRoute);
 app.use("/api/team", teamRouter);
-app.use("/api/task", taskRouter);
 app.use("/api/chat", chatRoute);
 app.use("/api/message", messageRoutes);
 

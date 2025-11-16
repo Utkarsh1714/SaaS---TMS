@@ -4,6 +4,7 @@ import { useAuth } from "@/context/AuthContext";
 import { useNotifications } from "@/context/NotificationContext";
 import axios from "axios";
 import { toast } from "sonner";
+import { formatDistanceToNow } from "date-fns";
 import { MdDeleteForever } from "react-icons/md";
 import Sidebar from "@/components/Layout/Sidebar";
 import NotificationPanel from "@/components/Dashboard/NotificationPanel";
@@ -46,6 +47,7 @@ const TaskDetails = () => {
   const [updating, setUpdating] = useState(false);
   const [updatingMilestone, setUpdatingMilestone] = useState(false);
   const [creatingMilestone, setCreatingMilestone] = useState(false);
+  const [addingComment, setAddingComment] = useState(false);
 
   const [taskDetail, setTaskDetail] = useState(null);
   const [departmentTeams, setDepartmentTeams] = useState([]);
@@ -55,6 +57,7 @@ const TaskDetails = () => {
   const [deadline, setDeadline] = useState("");
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
+  const [comment, setComment] = useState("");
   const [task, setTask] = useState({
     id: taskId,
     title: "Update website homepage design",
@@ -108,6 +111,15 @@ const TaskDetails = () => {
   const mm = String(today.getMonth() + 1).padStart(2, "0");
   const dd = String(today.getDate()).padStart(2, "0");
   const minDate = `${yyyy}-${mm}-${dd}`;
+
+  const getInitials = (username) => {
+    if (!username) return "";
+    return username
+      .split(" ")
+      .map((word) => word[0])
+      .join("")
+      .toUpperCase();
+  };
 
   const handleLogout = async () => {
     setIsLoggingOut(true); // Start loading state
@@ -283,6 +295,25 @@ const TaskDetails = () => {
     }
   };
 
+  const handleAddComment = async (taskId) => {
+    setAddingComment(true);
+    try {
+      const res = await axios.post(
+        `${import.meta.env.VITE_API_URL}/api/comment/${taskId}`,
+        { author: user._id, content: comment },
+        { withCredentials: true }
+      );
+      toast.success("Comment added successfully!");
+      setComment("");
+      await fetchTask();
+    } catch (error) {
+      console.log(error);
+      toast.error("Failed to add comment.");
+    } finally {
+      setAddingComment(false);
+    }
+  };
+
   const getStatusIcon = (status) => {
     switch (status) {
       case "Completed":
@@ -348,7 +379,7 @@ const TaskDetails = () => {
     };
   }, [taskDetail?.milestones]);
 
-  const members = taskDetail?.team?.members ?? [];
+  const members = taskDetail?.assignedEmployees ?? [];
 
   useEffect(() => {
     fetchTask();
@@ -726,38 +757,51 @@ const TaskDetails = () => {
                     Comments
                   </h2>
                   <div className="space-y-4">
-                    {task.comments.map((comment) => (
-                      <div key={comment.id} className="flex space-x-3">
-                        <img
-                          src={comment.avatar}
-                          alt={comment.author}
-                          className="h-10 w-10 rounded-full"
-                        />
-                        <div className="flex-1">
-                          <div className="bg-gray-50 rounded-lg p-3">
-                            <div className="flex items-center justify-between mb-1">
-                              <h3 className="text-sm font-medium text-gray-900">
-                                {comment.author}
-                              </h3>
-                              <span className="text-xs text-gray-500">
-                                {comment.timestamp}
-                              </span>
+                    {taskDetail?.comments.length === 0 ||
+                    taskDetail?.comments === null ? (
+                      <p className="text-sm text-gray-500">
+                        No comments yet. Be the first to comment!
+                      </p>
+                    ) : (
+                      taskDetail?.comments.map((comment) => (
+                        <div key={comment._id} className="flex space-x-3">
+                          <div className="h-10 w-10 rounded-full mb-4 bg-blue-100 text-blue-800 flex items-center justify-center font-bold">
+                            {getInitials(comment.author?.username)}
+                          </div>
+                          <div className="flex-1">
+                            <div className="bg-gray-50 rounded-lg p-3">
+                              <div className="flex items-center justify-between mb-1">
+                                <h3 className="text-sm font-medium text-gray-900">
+                                  {comment.author?.username}
+                                </h3>
+                                <span className="text-xs text-gray-500">
+                                  {formatDistanceToNow(
+                                    new Date(comment.createdAt),
+                                    { addSuffix: true }
+                                  )}
+                                </span>
+                              </div>
+                              <p className="text-sm text-gray-700">
+                                {comment.content}
+                              </p>
                             </div>
-                            <p className="text-sm text-gray-700">
-                              {comment.content}
-                            </p>
                           </div>
                         </div>
-                      </div>
-                    ))}
+                      ))
+                    )}
                   </div>
                   <div className="mt-4">
                     <textarea
+                      value={comment}
+                      onChange={(e) => setComment(e.target.value)}
                       placeholder="Add a comment..."
                       rows={3}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
                     />
-                    <button className="mt-2 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700">
+                    <button
+                      onClick={() => handleAddComment(taskDetail._id)}
+                      className="mt-2 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700"
+                    >
                       Post Comment
                     </button>
                   </div>
@@ -933,7 +977,11 @@ const TaskDetails = () => {
                                 className="h-8 w-8 rounded-full"
                               />
                             ) : (
-                              <UserIcon className="h-8 w-8 rounded-full p-1 bg-gray-200 text-gray-500" />
+                              <div className="h-10 w-10 rounded-full bg-blue-100 text-blue-800 flex items-center justify-center font-bold">
+                                {getInitials(
+                                  assignee.username
+                                )}
+                              </div>
                             )}
 
                             <span className="ml-3 text-sm text-gray-900">
@@ -972,7 +1020,9 @@ const TaskDetails = () => {
                           className="h-8 w-8 rounded-full"
                         />
                       ) : (
-                        <UserIcon className="h-8 w-8 rounded-full p-1 bg-gray-200 text-gray-500" />
+                        <div className="h-10 w-10 rounded-full bg-blue-100 text-blue-800 flex items-center justify-center font-bold">
+                          {getInitials(taskDetail?.assignedManager.username)}
+                        </div>
                       )}
                       <div className="flex flex-col items-start">
                         <h2 className="ml-3 text-sm text-gray-900">

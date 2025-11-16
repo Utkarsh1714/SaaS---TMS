@@ -227,7 +227,6 @@ const TasksPage = () => {
 
   // Delete task funtion
   const handleDeleteTask = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this task?")) return;
     setLoading(true);
     try {
       await axios.delete(`${import.meta.env.VITE_API_URL}/api/task/${id}`, {
