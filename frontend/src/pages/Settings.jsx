@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import { BellIcon, SearchIcon, UserIcon, SaveIcon } from 'lucide-react'
 import Sidebar from '@/components/Layout/Sidebar'
 const Settings = () => {
-  const [sidebarOpen, setSidebarOpen] = useState(true)
+  const [sidebarOpen, setSidebarOpen] = useState(false)
   const [activeTab, setActiveTab] = useState('general')
   return (
     <div className="flex h-screen bg-gray-50">

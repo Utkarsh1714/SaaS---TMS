@@ -24,34 +24,11 @@ const Home = () => {
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   // State for Overview Data
   const [overviewData, setOverviewData] = useState({});
   const [departmentCount, setDepartmentCount] = useState([]);
   const [monthlyTaskCompletion, setMonthlyTaskCompletion] = useState([]);
-
-  const handleLogout = async () => {
-    setIsLoggingOut(true); // Start loading state
-
-    try {
-      await axios.post(
-        `${import.meta.env.VITE_API_URL}/api/auth/logout`,
-        {},
-        { withCredentials: true }
-      );
-
-      logout();
-      toast("Logged out successfully!");
-      navigate("/login");
-    } catch (error) {
-      console.error("Logout failed:", error);
-      // alert or toast error message
-      alert("Logout failed");
-    } finally {
-      setIsLoggingOut(false); // Stop loading state (should ideally not run if navigate works)
-    }
-  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -60,7 +37,7 @@ const Home = () => {
           `${import.meta.env.VITE_API_URL}/api/dashboard/overview-data1`,
           { withCredentials: true }
         );
-        console.log(res.data)
+        console.log(res.data);
         setOverviewData(res.data);
         setDepartmentCount(res.data.departmentEmployeeCounts);
         setMonthlyTaskCompletion(res.data.monthlyTaskCompletion);
@@ -85,12 +62,7 @@ const Home = () => {
 
   return (
     <div className="flex h-screen bg-gray-50">
-      <Sidebar
-        isOpen={sidebarOpen}
-        setIsOpen={setSidebarOpen}
-        handleLogout={handleLogout}
-        isLoggingOut={isLoggingOut}
-      />
+      <Sidebar isOpen={sidebarOpen} setIsOpen={setSidebarOpen} />
 
       <div className="flex-1 flex flex-col overflow-hidden">
         <header className="bg-white shadow-sm z-10">

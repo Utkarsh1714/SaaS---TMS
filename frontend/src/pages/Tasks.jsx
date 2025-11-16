@@ -32,28 +32,6 @@ const TasksPage = () => {
     useNotifications();
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [isLoggingOut, setIsLoggingOut] = useState(false);
-  const handleLogout = async () => {
-    setIsLoggingOut(true); // Start loading state
-
-    try {
-      await axios.post(
-        `${import.meta.env.VITE_API_URL}/api/auth/logout`,
-        {},
-        { withCredentials: true }
-      );
-
-      logout();
-      toast("Logged out successfully!");
-      navigate("/login");
-    } catch (error) {
-      console.error("Logout failed:", error);
-      // alert or toast error message
-      alert("Logout failed");
-    } finally {
-      setIsLoggingOut(false); // Stop loading state (should ideally not run if navigate works)
-    }
-  };
 
   const [open, setOpen] = useState(false);
   const [hasManager, setHasManager] = useState(true);
@@ -276,12 +254,7 @@ const TasksPage = () => {
 
   return (
     <div className="flex h-screen bg-gray-50">
-      <Sidebar
-        isOpen={sidebarOpen}
-        setIsOpen={setSidebarOpen}
-        handleLogout={handleLogout}
-        isLoggingOut={isLoggingOut}
-      />
+      <Sidebar isOpen={sidebarOpen} setIsOpen={setSidebarOpen} />
       <div className="flex-1 flex flex-col overflow-hidden">
         <header className="bg-white shadow-sm z-10">
           <div className="px-4 sm:px-6 lg:px-8">

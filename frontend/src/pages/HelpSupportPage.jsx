@@ -11,7 +11,7 @@ import {
 } from 'lucide-react'
 import Sidebar from '@/components/Layout/Sidebar'
 const HelpSupportPage = () => {
-  const [sidebarOpen, setSidebarOpen] = useState(true)
+  const [sidebarOpen, setSidebarOpen] = useState(false)
   return (
     <div className="flex h-screen bg-gray-50">
       <Sidebar isOpen={sidebarOpen} setIsOpen={setSidebarOpen} />
