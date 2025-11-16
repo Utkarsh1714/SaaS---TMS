@@ -152,6 +152,12 @@ export const login = async (req, res) => {
   user.status = "Active";
   await user.save();
 
+  await ActivityLog.create({
+    userId: user._id,
+    organizationId: user.organizationId._id,
+    loginTime: new Date(),
+  });
+
   const io = req.app.get("io");
   if (user.organizationId && user.organizationId._id) {
     const orgRoomId = user.organizationId._id.toString();
@@ -166,7 +172,7 @@ export const login = async (req, res) => {
 
   res
     .cookie("token", token, {
-      httpOnly: false,
+      httpOnly: true,
       secure: process.env.NODE_ENV === "production", // 🔑 Must be true for production
       sameSite: process.env.NODE_ENV === "production" ? "none" : "lax", // 🔑 Required with `secure: true` for cross-site cookies
     })
@@ -175,9 +181,26 @@ export const login = async (req, res) => {
 
 export const logout = async (req, res) => {
   try {
-    if (req.user?._id) {
+    const userId = req.user?._id;
+
+    const lastLog = await ActivityLog.findOne({
+      userId: userId,
+      logoutTime: null,
+    }).sort({ loginTime: -1 });
+
+    if (lastLog) {
+      const logoutTime = new Date();
+      const loginTime = lastLog.loginTime;
+      const durationInSeconds = (logoutTime - loginTime) / 1000;
+
+      lastLog.logoutTime = logoutTime;
+      lastLog.durationInSeconds = durationInSeconds;
+      await lastLog.save();
+    }
+
+    if (userId) {
       const user = await User.findByIdAndUpdate(
-        req.user._id,
+        userId,
         { status: "Inactive" },
         { new: true }
       );
@@ -191,8 +214,8 @@ export const logout = async (req, res) => {
 
     res.clearCookie("token", {
       httpOnly: true,
-      secure: true,
-      sameSite: "None", // important for cross-origin cookies
+      secure: process.env.NODE_ENV === "production",
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
     });
     return res.status(200).json({ message: "Logged out successfully" });
   } catch (error) {
