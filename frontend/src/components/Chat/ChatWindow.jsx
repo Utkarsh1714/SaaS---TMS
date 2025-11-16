@@ -129,7 +129,7 @@ const ChatWindow = ({ chat, onBack }) => {
             <p className="text-sm font-medium text-gray-900">
               {otherUser?.username || "Chat"}
             </p>
-            <p className="text-xs text-gray-500">Online</p>
+            <p className="text-xs text-gray-500">{otherUser?.status}</p>
           </div>
         </div>
         <div className="flex space-x-2">
