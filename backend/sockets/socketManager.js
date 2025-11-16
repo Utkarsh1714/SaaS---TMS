@@ -1,5 +1,6 @@
 import jwt from "jsonwebtoken";
 import Message from "../models/MessageModel.js";
+import Channel from "../models/channelModel.js";
 
 const initializeSocket = (io) => {
   // 🔑 This is our powerful authentication middleware
@@ -45,28 +46,47 @@ const initializeSocket = (io) => {
   });
 
   io.on("connection", (socket) => {
+    console.log(`✅ User connected: ${socket.user.id}`);
     socket.join(socket.user.organizationId); // 1. Logic for joining a specific chat room // The frontend will emit this event when user click on chat.
+    console.log(
+      `🏠 User ${socket.user.id} auto-joined org room: ${socket.user.organizationId}`
+    );
+    // socket.on("joinOrgRoom", (organizationId) => {
+    //   // We log to ensure the client is communicating properly
+    //   console.log(
+    //     `🏠 Client ${socket.user.id} explicitly joined status room: ${organizationId}`
+    //   );
 
-    socket.on("joinOrgRoom", (organizationId) => {
-      // We log to ensure the client is communicating properly
-      console.log(
-        `🏠 Client ${socket.user.id} explicitly joined status room: ${organizationId}`
-      );
+    //   // Safety: Ensure the client is joining the correct room ID (which should match the JWT one)
+    //   socket.join(organizationId);
+    // });
 
-      // Safety: Ensure the client is joining the correct room ID (which should match the JWT one)
-      socket.join(organizationId);
-    });
+    socket.on("joinChat", async (channelId) => {
+      try {
+        // <-- CHANGED: ADDED SECURITY CHECK
+        // Verify the user is actually a participant in this channel
+        const channel = await Channel.findOne({
+          _id: channelId,
+          participants: { $elemMatch: { $eq: socket.user.id } },
+          organizationId: socket.user.organizationId, // Double-check it's in their org
+        });
 
-    socket.on("joinChat", (channelId) => {
-      socket.join(channelId);
-      console.log(`User ${socket.user.id} joined channel: ${channelId}`);
+        if (!channel) {
+          console.warn(
+            `SECURITY: User ${socket.user.id} denied from joining channel ${channelId}`
+          );
+          return; // Stop execution
+        }
+        // <-- END SECURITY CHECK
+
+        socket.join(channelId);
+        console.log(`User ${socket.user.id} joined channel: ${channelId}`);
+      } catch (error) {
+        console.error(`Error joining channel ${channelId}:`, error.message);
+      }
     }); // 2. Logic for sending and broadcasting the message.
 
     socket.on("sendMessage", async (data) => {
-      // 🐛 Log event reception and data
-      console.log(`📩 Received 'sendMessage' event.`);
-      console.log("Message data:", data);
-
       const { channelId, content } = data;
 
       if (!channelId || !content) {
@@ -74,19 +94,36 @@ const initializeSocket = (io) => {
         return;
       }
 
-      const newMessageData = {
-        sender: socket.user.id,
-        content: content,
-        channel: channelId,
-        organizationId: socket.user.organizationId,
-      };
-
       try {
+        // Verify the user is a participant before letting them send a message
+        const channel = await Channel.findOne({
+          _id: channelId,
+          participants: { $elemMatch: { $eq: socket.user.id } },
+        });
+
+        if (!channel) {
+          console.warn(
+            `SECURITY: User ${socket.user.id} tried to send to un-joined channel ${channelId}`
+          );
+          return; // Stop execution
+        }
+        // <-- END SECURITY CHECK
+
+        // User is authorized, now create the message
+        const newMessageData = {
+          sender: socket.user.id,
+          content: content,
+          channel: channelId,
+          organizationId: socket.user.organizationId,
+        };
+
         // Step A: Save the message to the database
-        let message = await Message.create(newMessageData); // Step B: Populate the sender's info before broadcasting
-
-        message = await message.populate("sender", "username email"); // Step C: Broadcast the new message to everyone in the channel's room
-
+        let message = await Message.create(newMessageData);
+        
+        // Step B: Populate the sender's info
+        message = await message.populate("sender", "username email contactNo");
+        
+        // Step C: Broadcast the new message to everyone in the channel's room
         io.to(channelId).emit("newMessage", message);
         console.log("✅ Message sent successfully to channel:", channelId);
       } catch (error) {
