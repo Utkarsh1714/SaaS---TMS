@@ -6,6 +6,7 @@ import {
   DownloadIcon,
   CalendarIcon,
   FilterIcon,
+  BellDot,
 } from 'lucide-react'
 import {
   BarChart,
@@ -23,7 +24,11 @@ import {
   ResponsiveContainer,
 } from 'recharts'
 import Sidebar from '@/components/Layout/Sidebar'
+import { useNotifications } from '@/context/NotificationContext'
+import NotificationPanel from '@/components/Dashboard/NotificationPanel'
 const Reports = () => {
+  const { toggleNotificationPanel, notifications } = useNotifications();
+
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [selectedPeriod, setSelectedPeriod] = useState('month')
   const taskCompletionData = [
@@ -162,9 +167,16 @@ const Reports = () => {
                 </div>
               </div>
               <div className="flex items-center">
-                <button className="flex-shrink-0 p-1 mr-4 text-gray-400 rounded-full hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                <button
+                  onClick={toggleNotificationPanel}
+                  className="flex-shrink-0 p-1 text-gray-400 rounded-full hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                >
                   <span className="sr-only">View notifications</span>
-                  <BellIcon className="h-6 w-6" />
+                  {notifications && notifications.length > 0 ? (
+                    <BellDot className="text-green-500" />
+                  ) : (
+                    <BellIcon className="text-gray-400" />
+                  )}
                 </button>
                 <div className="ml-3 relative">
                   <div>
@@ -520,6 +532,7 @@ const Reports = () => {
           </div>
         </main>
       </div>
+      <NotificationPanel />
     </div>
   )
 }

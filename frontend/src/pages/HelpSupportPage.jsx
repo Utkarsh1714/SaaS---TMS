@@ -8,9 +8,13 @@ import {
   VideoIcon,
   MailIcon,
   PhoneIcon,
+  BellDot,
 } from 'lucide-react'
 import Sidebar from '@/components/Layout/Sidebar'
+import NotificationPanel from '@/components/Dashboard/NotificationPanel'
+import { useNotifications } from '@/context/NotificationContext'
 const HelpSupportPage = () => {
+  const { toggleNotificationPanel, notifications } = useNotifications();
   const [sidebarOpen, setSidebarOpen] = useState(false)
   return (
     <div className="flex h-screen bg-gray-50">
@@ -45,9 +49,16 @@ const HelpSupportPage = () => {
                 </div>
               </div>
               <div className="flex items-center">
-                <button className="flex-shrink-0 p-1 mr-4 text-gray-400 rounded-full hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                <button
+                  onClick={toggleNotificationPanel}
+                  className="flex-shrink-0 p-1 text-gray-400 rounded-full hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                >
                   <span className="sr-only">View notifications</span>
-                  <BellIcon className="h-6 w-6" />
+                  {notifications && notifications.length > 0 ? (
+                    <BellDot className="text-green-500" />
+                  ) : (
+                    <BellIcon className="text-gray-400" />
+                  )}
                 </button>
                 <div className="ml-3 relative">
                   <div>
@@ -284,6 +295,7 @@ const HelpSupportPage = () => {
           </div>
         </main>
       </div>
+      <NotificationPanel />
     </div>
   )
 }

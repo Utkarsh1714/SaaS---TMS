@@ -11,16 +11,11 @@ import MeetingsCard from "../components/Dashboard/MeetingsCard";
 import ActivityFeed from "../components/Dashboard/ActivityFeed";
 import DepartmentsChart from "../components/Dashboard/DepartmentsChart";
 import UpcomingDeadline from "@/components/UpcomingDeadline";
-import { useAuth } from "@/context/AuthContext";
-import { useNavigate } from "react-router-dom";
-import { toast } from "sonner";
 import NotificationPanel from "../components/Dashboard/NotificationPanel";
 import { useNotifications } from "@/context/NotificationContext";
 
 const Home = () => {
-  const { logout } = useAuth();
   const { toggleNotificationPanel, notifications } = useNotifications();
-  const navigate = useNavigate();
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [loading, setLoading] = useState(true);
