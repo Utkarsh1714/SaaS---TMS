@@ -44,6 +44,7 @@ const taskSchema = new mongoose.Schema(
       default: "Pending",
       index: true,
     },
+    comments: [{ type: mongoose.Schema.Types.ObjectId, ref: "Comment" }],
     deadline: { type: Date, index: true },
     milestones: [mileStoneSchema],
     dependencies: [{ type: mongoose.Schema.Types.ObjectId, ref: "Task" }],

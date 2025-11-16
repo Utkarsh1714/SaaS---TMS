@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import AddEmpToTaskBtn from "@/components/AddEmpToTaskBtn";
 import { Button } from "@/components/ui/button";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "../ui/alert-dialog";
 
 const DESCRIPTION_CHAR_LIMIT = 15;
 const TITLE_CHAR_LIMIT = 10;
@@ -110,15 +111,15 @@ const TaskItem = ({ task, userRole, userId, navigate, handleDeleteTask }) => {
           </p>
 
           <div className="mt-3 flex space-x-2">
-            {userRole === "Manager" && task.assignedManager?._id === userId && (
+            {/* {userRole === "Manager" && task.assignedManager?._id === userId || userRole === "Boss" && (
               <AddEmpToTaskBtn
                 taskId={task._id}
                 taskData={[]}
                 className="text-xs p-1"
               />
-            )}
+            )} */}
 
-            <Button
+            {/* <Button
               variant="outline"
               size="icon"
               className="h-8 w-8 text-red-500 hover:bg-red-50 hover:text-red-700 transition-colors"
@@ -126,7 +127,37 @@ const TaskItem = ({ task, userRole, userId, navigate, handleDeleteTask }) => {
               disabled={userRole !== "Boss"} // Assuming only Boss can delete
             >
               <Trash2 className="h-4 w-4" />
-            </Button>
+            </Button> */}
+            <AlertDialog>
+              <AlertDialogTrigger>
+                <Button
+                  variant={"ghost"}
+                  className="h-8 w-8 text-red-500 hover:bg-red-50 hover:text-red-700 transition-colors"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This action cannot be undone. This will permanently delete
+                    the task and remove it from the system.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDeleteTask(task._id)
+                    }}
+                  >
+                    {"Continue"}
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
 
             <Button
               variant="outline"
