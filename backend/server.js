@@ -19,7 +19,6 @@ import teamRouter from "./routes/team.route.js";
 import taskRouter from "./routes/task.route.js";
 import commentRoute from "./routes/Comment.route.js";
 import chatRoute from "./routes/chat.route.js";
-import messageRoutes from "./routes/message.route.js";
 import dashboard from "./routes/dashboard.route.js";
 import initializeSocket from "./sockets/socketManager.js";
 
@@ -69,7 +68,6 @@ app.use("/api/employeePage", employeePageRoute);
 app.use("/api/employee", employeeRoute);
 app.use("/api/team", teamRouter);
 app.use("/api/chat", chatRoute);
-app.use("/api/message", messageRoutes);
 
 // Global error handler
 app.use((err, req, res, next) => {
