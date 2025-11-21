@@ -75,12 +75,18 @@ export const deleteComment = async (req, res) => {
       return res.status(404).json({ message: "Comment not found." });
     }
 
-    if (comment.author.toString() !== req.user._id) {
+    const isAuthor = comment.author.toString() === req.user._id.toString();
+    const isBoss = req.user.role?.name === "Boss";
+
+    if (!isAuthor && !isBoss) {
       return res.status(403).json({ message: "Unauthorized action." });
     }
 
-    comment.remove();
+    await Comment.findByIdAndDelete(commentId);
 
     res.status(200).json({ message: "Comment deleted" });
-  } catch (error) {}
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: "Server error", error: error.message })
+  }
 };

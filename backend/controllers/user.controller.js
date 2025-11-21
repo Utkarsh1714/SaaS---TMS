@@ -4,6 +4,7 @@ import crypto from "crypto";
 import bcrypt from "bcryptjs";
 import Department from "../models/department.model.js";
 import Role from "../models/Role.model.js";
+import ActivityLog from "../models/activityLog.model.js";
 
 export const getAllEmployeesAndStats = async (req, res) => {
   // 1. Calculate the date one year ago
@@ -80,7 +81,9 @@ export const getSingleEmployee = async (req, res) => {
       .select("-password -resetToken -resetTokenExpires -__v -otp -otpExpires")
       .populate("departmentId");
 
-    res.status(200).json(user);
+      const activityLog = await ActivityLog.findOne({ userId: id });
+
+    res.status(200).json({user, activityLog});
   } catch (error) {
     console.error("Error fetching user:", error);
     res.status(500).json({ message: "Internal server error" });
