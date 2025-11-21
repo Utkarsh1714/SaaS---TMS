@@ -77,8 +77,8 @@ export const getSingleEmployee = async (req, res) => {
   const { id } = req.params;
   try {
     const user = await User.findById(id)
-      .select("-password -resetToken -resetTokenExpires -__v")
-      .populate("departmentId", "name");
+      .select("-password -resetToken -resetTokenExpires -__v -otp -otpExpires")
+      .populate("departmentId");
 
     res.status(200).json(user);
   } catch (error) {

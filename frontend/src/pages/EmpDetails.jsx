@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
   BellIcon,
@@ -13,11 +13,27 @@ import {
   SaveIcon,
 } from "lucide-react";
 import Sidebar from "@/components/Layout/Sidebar";
+import axios from "axios";
 const EmpDetails = () => {
   const { id: employeeId } = useParams();
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [employeeData, setEmployeeData] = useState(null);
+
   const [isEditing, setIsEditing] = useState(false);
+
+  const getEmployee = async (id) => {
+    const res = await axios.get(
+      `${import.meta.env.VITE_API_URL}/api/employee/${id}`,
+      { withCredentials: true }
+    );
+    setEmployeeData(res.data);
+    console.log(res.data);
+  };
+
+  useEffect(() => {
+    getEmployee(employeeId);
+  }, [employeeId]);
 
   // Mock employee data
   const [employee, setEmployee] = useState({
