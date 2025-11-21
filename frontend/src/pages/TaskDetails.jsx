@@ -120,7 +120,9 @@ const TaskDetails = () => {
   const [isSavingMilestones, setIsSavingMilestones] = useState(false);
   const [editingCommentId, setEditingCommentId] = useState(null);
   const [updatedComment, setUpdatedComment] = useState("");
-  const [isUpdatingCommentLoading, setIsUpdatingCommentLoading] = useState(false);
+  const [isUpdatingCommentLoading, setIsUpdatingCommentLoading] =
+    useState(false);
+  const [deletingComment, setDeletingComment] = useState(false);
 
   const today = new Date();
   const yyyy = today.getFullYear();
@@ -309,13 +311,14 @@ const TaskDetails = () => {
   };
 
   const handleUpdateComment = async (commentId, content) => {
-    if(!content?.trim) {
+    if (!content?.trim) {
       toast.error("Comment cannot be empty.");
       return;
     }
     setIsUpdatingCommentLoading(true);
     try {
-      await axios.put(`${import.meta.env.VITE_API_URL}/api/comment/${commentId}`,
+      await axios.put(
+        `${import.meta.env.VITE_API_URL}/api/comment/${commentId}`,
         { content },
         { withCredentials: true }
       );
@@ -329,7 +332,26 @@ const TaskDetails = () => {
     } finally {
       setIsUpdatingCommentLoading(false);
     }
-  }
+  };
+
+  const handleDeleteComment = async (commentId) => {
+    setDeletingComment(true);
+    try {
+      await axios.delete(
+        `${import.meta.env.VITE_API_URL}/api/comment/${commentId}`,
+        { withCredentials: true }
+      );
+
+      toast.success("Comment deleted successfully!");
+      setDeletingComment(false);
+      await fetchTask();
+    } catch (error) {
+      console.log(error);
+      toast.error("Failed to delete task!");
+    } finally {
+      setDeletingComment(false);
+    }
+  };
 
   const getStatusIcon = (status) => {
     switch (status) {
@@ -820,20 +842,27 @@ const TaskDetails = () => {
                                       </DropdownMenuGroup>
                                       <DropdownMenuSeparator />
                                       <DropdownMenuGroup>
-                                      {editingCommentId === comment._id ? (
-                                        <DropdownMenuItem variant="desctructive" onClick={() => {
-                                          setEditingCommentId(null);
-                                          setUpdatedComment("");
-                                        }}>
-                                          <Ban />
-                                          Cancel Editing
-                                        </DropdownMenuItem>
-                                      ) : (
+                                        {editingCommentId === comment._id ? (
+                                          <DropdownMenuItem
+                                            variant="desctructive"
+                                            onClick={() => {
+                                              setEditingCommentId(null);
+                                              setUpdatedComment("");
+                                            }}
+                                          >
+                                            <Ban />
+                                            Cancel Editing
+                                          </DropdownMenuItem>
+                                        ) : (
                                           comment.author?._id === user._id && (
                                             <DropdownMenuItem
                                               onClick={() => {
-                                                setEditingCommentId(comment._id);
-                                                setUpdatedComment(comment.content);
+                                                setEditingCommentId(
+                                                  comment._id
+                                                );
+                                                setUpdatedComment(
+                                                  comment.content
+                                                );
                                               }}
                                             >
                                               <Pencil />
@@ -844,7 +873,7 @@ const TaskDetails = () => {
 
                                         {(comment.author?._id === user._id ||
                                           user?.role?.name === "Boss") && (
-                                          <DropdownMenuItem variant="destructive">
+                                          <DropdownMenuItem variant="destructive" onClick={() => handleDeleteComment(comment._id)}>
                                             <Trash2 />
                                             Delete
                                           </DropdownMenuItem>
@@ -859,7 +888,10 @@ const TaskDetails = () => {
                                 <form
                                   onSubmit={(e) => {
                                     e.preventDefault();
-                                    handleUpdateComment(comment._id, updatedComment)
+                                    handleUpdateComment(
+                                      comment._id,
+                                      updatedComment
+                                    );
                                   }}
                                 >
                                   <textarea
@@ -871,10 +903,10 @@ const TaskDetails = () => {
                                   />
                                   <div className="flex items-center justify-end mt-2 space-x-2">
                                     <Button
-                                      variant={'destructive'}
+                                      variant={"destructive"}
                                       onClick={() => {
                                         setEditingCommentId(null);
-                                        setUpdatedComment("")
+                                        setUpdatedComment("");
                                       }}
                                     >
                                       Cancel
@@ -883,7 +915,9 @@ const TaskDetails = () => {
                                       type="submit"
                                       disabled={isUpdatingCommentLoading}
                                     >
-                                      {isUpdatingCommentLoading ? "Saving..." : "Save"}
+                                      {isUpdatingCommentLoading
+                                        ? "Saving..."
+                                        : "Save"}
                                     </Button>
                                   </div>
                                 </form>
