@@ -4,7 +4,7 @@ import { useAuth } from "@/context/AuthContext";
 import { useNotifications } from "@/context/NotificationContext";
 import axios from "axios";
 import { toast } from "sonner";
-import { formatDistanceToNow } from "date-fns";
+import { formatDistanceToNow, set } from "date-fns";
 import { MdDeleteForever } from "react-icons/md";
 import Sidebar from "@/components/Layout/Sidebar";
 import NotificationPanel from "@/components/Dashboard/NotificationPanel";
@@ -19,16 +19,30 @@ import {
 import {
   AlertCircleIcon,
   ArrowLeftIcon,
+  Ban,
   BellDot,
   BellIcon,
   CheckCircleIcon,
   ClockIcon,
+  Ellipsis,
+  EllipsisVertical,
+  Pencil,
   Plus,
   PlusIcon,
+  Reply,
   SaveIcon,
+  Trash2,
   UserIcon,
   XIcon,
 } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const TaskDetails = () => {
   const { user, logout } = useAuth();
@@ -104,6 +118,9 @@ const TaskDetails = () => {
   const [milestones, setMilestones] = useState([]);
   const [mileStoneInput, setMileStoneInput] = useState("");
   const [isSavingMilestones, setIsSavingMilestones] = useState(false);
+  const [editingCommentId, setEditingCommentId] = useState(null);
+  const [updatedComment, setUpdatedComment] = useState("");
+  const [isUpdatingCommentLoading, setIsUpdatingCommentLoading] = useState(false);
 
   const today = new Date();
   const yyyy = today.getFullYear();
@@ -291,6 +308,29 @@ const TaskDetails = () => {
     }
   };
 
+  const handleUpdateComment = async (commentId, content) => {
+    if(!content?.trim) {
+      toast.error("Comment cannot be empty.");
+      return;
+    }
+    setIsUpdatingCommentLoading(true);
+    try {
+      await axios.put(`${import.meta.env.VITE_API_URL}/api/comment/${commentId}`,
+        { content },
+        { withCredentials: true }
+      );
+      toast.success("Comment updated successfully!");
+      setUpdatedComment("");
+      setEditingCommentId(null);
+      await fetchTask();
+    } catch (error) {
+      console.log(error);
+      toast.error("Failed to update comment.");
+    } finally {
+      setIsUpdatingCommentLoading(false);
+    }
+  }
+
   const getStatusIcon = (status) => {
     switch (status) {
       case "Completed":
@@ -440,6 +480,7 @@ const TaskDetails = () => {
           <div className="max-w-6xl mx-auto">
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
               <div className="lg:col-span-2 space-y-6">
+                {/* --- Title & Description --- */}
                 <div className="bg-white shadow rounded-lg p-6">
                   <div className="flex flex-col sm:flex-row space-y-4 items-start justify-between mb-4">
                     <div className="flex items-center">
@@ -552,6 +593,7 @@ const TaskDetails = () => {
                     <p className="text-gray-700">{taskDetail?.description}</p>
                   )}
                 </div>
+                {/* Milestone Section */}
                 <div className="bg-white shadow rounded-lg p-6">
                   <div className="flex items-center justify-between">
                     <h2 className="text-lg font-medium text-gray-900 mb-6">
@@ -724,6 +766,7 @@ const TaskDetails = () => {
                     </form>
                   )}
                 </div>
+                {/* Comment Section */}
                 <div className="bg-white shadow rounded-lg p-6">
                   <h2 className="text-lg font-medium text-gray-900 mb-4">
                     Comments
@@ -742,20 +785,113 @@ const TaskDetails = () => {
                           </div>
                           <div className="flex-1">
                             <div className="bg-gray-50 rounded-lg p-3">
-                              <div className="flex items-center justify-between mb-1">
-                                <h3 className="text-sm font-medium text-gray-900">
-                                  {comment.author?.username}
-                                </h3>
-                                <span className="text-xs text-gray-500">
-                                  {formatDistanceToNow(
-                                    new Date(comment.createdAt),
-                                    { addSuffix: true }
-                                  )}
-                                </span>
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center justify-start mb-1 gap-2">
+                                  <h3 className="text-sm font-medium text-gray-900">
+                                    {comment.author?.username}
+                                  </h3>
+                                  <span className="text-xs text-gray-500">
+                                    {formatDistanceToNow(
+                                      new Date(comment.createdAt),
+                                      { addSuffix: true }
+                                    )}
+                                  </span>
+                                </div>
+                                <div>
+                                  <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                      <Button
+                                        variant={"ghost"}
+                                        size={"icon"}
+                                        aria-label="More Options"
+                                      >
+                                        <EllipsisVertical />
+                                      </Button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent
+                                      align="end"
+                                      className={"w-52"}
+                                    >
+                                      <DropdownMenuGroup>
+                                        <DropdownMenuItem>
+                                          <Reply />
+                                          Reply
+                                        </DropdownMenuItem>
+                                      </DropdownMenuGroup>
+                                      <DropdownMenuSeparator />
+                                      <DropdownMenuGroup>
+                                      {editingCommentId === comment._id ? (
+                                        <DropdownMenuItem variant="desctructive" onClick={() => {
+                                          setEditingCommentId(null);
+                                          setUpdatedComment("");
+                                        }}>
+                                          <Ban />
+                                          Cancel Editing
+                                        </DropdownMenuItem>
+                                      ) : (
+                                          comment.author?._id === user._id && (
+                                            <DropdownMenuItem
+                                              onClick={() => {
+                                                setEditingCommentId(comment._id);
+                                                setUpdatedComment(comment.content);
+                                              }}
+                                            >
+                                              <Pencil />
+                                              Edit
+                                            </DropdownMenuItem>
+                                          )
+                                        )}
+
+                                        {(comment.author?._id === user._id ||
+                                          user?.role?.name === "Boss") && (
+                                          <DropdownMenuItem variant="destructive">
+                                            <Trash2 />
+                                            Delete
+                                          </DropdownMenuItem>
+                                        )}
+                                      </DropdownMenuGroup>
+                                    </DropdownMenuContent>
+                                  </DropdownMenu>
+                                </div>
                               </div>
-                              <p className="text-sm text-gray-700">
-                                {comment.content}
-                              </p>
+
+                              {editingCommentId === comment._id ? (
+                                <form
+                                  onSubmit={(e) => {
+                                    e.preventDefault();
+                                    handleUpdateComment(comment._id, updatedComment)
+                                  }}
+                                >
+                                  <textarea
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                                    value={updatedComment}
+                                    onChange={(e) => {
+                                      setUpdatedComment(e.target.value);
+                                    }}
+                                  />
+                                  <div className="flex items-center justify-end mt-2 space-x-2">
+                                    <Button
+                                      variant={'destructive'}
+                                      onClick={() => {
+                                        setEditingCommentId(null);
+                                        setUpdatedComment("")
+                                      }}
+                                    >
+                                      Cancel
+                                    </Button>
+                                    <Button
+                                      type="submit"
+                                      disabled={isUpdatingCommentLoading}
+                                    >
+                                      {isUpdatingCommentLoading ? "Saving..." : "Save"}
+                                    </Button>
+                                  </div>
+                                </form>
+                              ) : (
+                                <p className="text-sm text-gray-700">
+                                  {comment.content}
+                                </p>
+                              )}
                             </div>
                           </div>
                         </div>
