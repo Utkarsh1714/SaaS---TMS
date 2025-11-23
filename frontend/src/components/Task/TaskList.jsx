@@ -12,8 +12,8 @@ import AddEmpToTaskBtn from "@/components/AddEmpToTaskBtn";
 import { Button } from "@/components/ui/button";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "../ui/alert-dialog";
 
-const DESCRIPTION_CHAR_LIMIT = 15;
-const TITLE_CHAR_LIMIT = 10;
+const DESCRIPTION_CHAR_LIMIT = 20;
+const TITLE_CHAR_LIMIT = 40;
 
 // Helper to get status icon based on the full status string
 const getStatusIcon = (status) => {

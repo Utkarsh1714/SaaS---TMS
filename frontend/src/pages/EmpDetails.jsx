@@ -11,14 +11,25 @@ import {
   CalendarIcon,
   BriefcaseIcon,
   SaveIcon,
+  BellDot,
 } from "lucide-react";
 import Sidebar from "@/components/Layout/Sidebar";
 import axios from "axios";
+import { useNotifications } from "@/context/NotificationContext";
+import NotificationPanel from "@/components/Dashboard/NotificationPanel";
+import { useAuth } from "@/context/AuthContext";
+import { format, parseISO } from "date-fns";
+
 const EmpDetails = () => {
+  const { user } = useAuth();
+  const { toggleNotificationPanel, notifications } = useNotifications();
   const { id: employeeId } = useParams();
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [employeeData, setEmployeeData] = useState(null);
+  const [activityLog, setActivityLog] = useState(null);
+  const [taskDetails, setTaskDetails] = useState(null);
+  const [taskList, setTaskList] = useState(null);
 
   const [isEditing, setIsEditing] = useState(false);
 
@@ -27,13 +38,42 @@ const EmpDetails = () => {
       `${import.meta.env.VITE_API_URL}/api/employee/${id}`,
       { withCredentials: true }
     );
-    setEmployeeData(res.data);
+    setEmployeeData(res.data.user);
+    setActivityLog(res.data.activityLog);
+    setTaskDetails(res.data.taskDetails);
+    setTaskList(res.data.taskList);
     console.log(res.data);
   };
 
   useEffect(() => {
     getEmployee(employeeId);
   }, [employeeId]);
+
+  const formatLoginTimeFns = (isoDateString) => {
+    if (!isoDateString) {
+      return "N/A";
+    }
+
+    try {
+      return format(parseISO(isoDateString), "MMM dd, yyyy, h:mm a");
+    } catch (e) {
+      return isoDateString;
+    }
+  };
+
+  const formatHoursOnly = (totalSeconds) => {
+    if (
+      totalSeconds === null ||
+      totalSeconds === undefined ||
+      isNaN(totalSeconds)
+    ) {
+      return "0.00 hours";
+    }
+
+    const hours = totalSeconds / 3600;
+
+    return `${hours.toFixed(2)}`;
+  };
 
   // Mock employee data
   const [employee, setEmployee] = useState({
@@ -111,9 +151,16 @@ const EmpDetails = () => {
                 </button>
               </div>
               <div className="flex items-center">
-                <button className="flex-shrink-0 p-1 mr-4 text-gray-400 rounded-full hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                <button
+                  onClick={toggleNotificationPanel}
+                  className="flex-shrink-0 p-1 text-gray-400 rounded-full hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                >
                   <span className="sr-only">View notifications</span>
-                  <BellIcon className="h-6 w-6" />
+                  {notifications && notifications.length > 0 ? (
+                    <BellDot className="h-6 w-6 text-green-500" />
+                  ) : (
+                    <BellIcon className="h-6 w-6 text-gray-400" />
+                  )}
                 </button>
                 <div className="ml-3 relative">
                   <div>
@@ -140,19 +187,35 @@ const EmpDetails = () => {
                   />
                   <div className="ml-6">
                     <h1 className="text-2xl font-semibold text-gray-900">
-                      {employee.name}
+                      {employeeData?.username}
                     </h1>
                     <p className="text-sm text-gray-500 mt-1">
-                      {employee.role} • {employee.department}
+                      {employeeData?.role.name === "Boss" ? (
+                        <>{employeeData?.jobTitle}</>
+                      ) : (
+                        <>
+                          {employeeData?.jobTitle} •{" "}
+                          {employeeData?.department?.name}
+                        </>
+                      )}
                     </p>
                     <div className="mt-2 flex items-center space-x-4 text-sm text-gray-500">
                       <div className="flex items-center">
                         <MapPinIcon className="h-4 w-4 mr-1" />
-                        {employee.location}
+                        {employeeData?.state}, {employeeData?.country}
                       </div>
                       <div className="flex items-center">
                         <CalendarIcon className="h-4 w-4 mr-1" />
-                        Joined {employee.joinDate}
+                        Joined{" "}
+                        {employeeData?.createdAt
+                          ? new Date(
+                              employeeData?.createdAt
+                            ).toLocaleDateString("en-US", {
+                              year: "numeric",
+                              month: "short",
+                              day: "numeric",
+                            })
+                          : "Not set"}
                       </div>
                     </div>
                   </div>
@@ -172,11 +235,11 @@ const EmpDetails = () => {
                     </label>
                     <input
                       type="text"
-                      value={employee.name}
+                      value={employeeData.username}
                       onChange={(e) =>
-                        setEmployee({
-                          ...employee,
-                          name: e.target.value,
+                        setEmployeeData({
+                          ...employeeData,
+                          username: e.target.value,
                         })
                       }
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
@@ -188,11 +251,11 @@ const EmpDetails = () => {
                     </label>
                     <input
                       type="text"
-                      value={employee.role}
+                      value={employeeData.jobTitle}
                       onChange={(e) =>
-                        setEmployee({
-                          ...employee,
-                          role: e.target.value,
+                        setEmployeeData({
+                          ...employeeData,
+                          jobTitle: e.target.value,
                         })
                       }
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
@@ -204,10 +267,10 @@ const EmpDetails = () => {
                     </label>
                     <input
                       type="email"
-                      value={employee.email}
+                      value={employeeData.email}
                       onChange={(e) =>
-                        setEmployee({
-                          ...employee,
+                        setEmployeeData({
+                          ...employeeData,
                           email: e.target.value,
                         })
                       }
@@ -220,11 +283,11 @@ const EmpDetails = () => {
                     </label>
                     <input
                       type="tel"
-                      value={employee.phone}
+                      value={employeeData.contactNo}
                       onChange={(e) =>
-                        setEmployee({
-                          ...employee,
-                          phone: e.target.value,
+                        setEmployeeData({
+                          ...employeeData,
+                          contactNo: e.target.value,
                         })
                       }
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
@@ -235,10 +298,10 @@ const EmpDetails = () => {
                       Bio
                     </label>
                     <textarea
-                      value={employee.bio}
+                      value={employeeData.bio}
                       onChange={(e) =>
-                        setEmployee({
-                          ...employee,
+                        setEmployeeData({
+                          ...employeeData,
                           bio: e.target.value,
                         })
                       }
@@ -284,7 +347,7 @@ const EmpDetails = () => {
                           Tasks Completed
                         </dt>
                         <dd className="text-lg font-medium text-gray-900">
-                          {employee.stats.tasksCompleted}
+                          {taskDetails?.completedTaskCount}
                         </dd>
                       </dl>
                     </div>
@@ -311,11 +374,18 @@ const EmpDetails = () => {
                     </div>
                     <div className="ml-5 w-0 flex-1">
                       <dl>
-                        <dt className="text-sm font-medium text-gray-500 truncate">
-                          Active Tasks
-                        </dt>
+                        {user.role?.name === "Boss" ? (
+                          <dt className="text-sm font-medium text-gray-500 truncate">
+                            Tasks Created
+                          </dt>
+                        ) : (
+                          <dt className="text-sm font-medium text-gray-500 truncate">
+                            Total Tasks
+                          </dt>
+                        )}
+
                         <dd className="text-lg font-medium text-gray-900">
-                          {employee.stats.activeTasks}
+                          {taskDetails?.totalAssignedTasks}
                         </dd>
                       </dl>
                     </div>
@@ -331,10 +401,10 @@ const EmpDetails = () => {
                     <div className="ml-5 w-0 flex-1">
                       <dl>
                         <dt className="text-sm font-medium text-gray-500 truncate">
-                          Projects Completed
+                          Last Active
                         </dt>
-                        <dd className="text-lg font-medium text-gray-900">
-                          {employee.stats.projectsCompleted}
+                        <dd className="text-md font-medium text-gray-900">
+                          {formatLoginTimeFns(activityLog?.loginTime)}
                         </dd>
                       </dl>
                     </div>
@@ -365,7 +435,7 @@ const EmpDetails = () => {
                           Hours Logged
                         </dt>
                         <dd className="text-lg font-medium text-gray-900">
-                          {employee.stats.hoursLogged}
+                          {formatHoursOnly(activityLog?.durationInSeconds)}
                         </dd>
                       </dl>
                     </div>
@@ -382,15 +452,19 @@ const EmpDetails = () => {
                 <div className="space-y-3">
                   <div className="flex items-center text-sm">
                     <MailIcon className="h-5 w-5 mr-3 text-gray-400" />
-                    <span className="text-gray-700">{employee.email}</span>
+                    <span className="text-gray-700">{employeeData?.email}</span>
                   </div>
                   <div className="flex items-center text-sm">
                     <PhoneIcon className="h-5 w-5 mr-3 text-gray-400" />
-                    <span className="text-gray-700">{employee.phone}</span>
+                    <span className="text-gray-700">
+                      {employeeData?.contactNo}
+                    </span>
                   </div>
                   <div className="flex items-center text-sm">
                     <MapPinIcon className="h-5 w-5 mr-3 text-gray-400" />
-                    <span className="text-gray-700">{employee.location}</span>
+                    <span className="text-gray-700">
+                      {employeeData?.state}, {employeeData?.country}
+                    </span>
                   </div>
                 </div>
                 <div className="mt-6 space-y-2">
@@ -408,21 +482,35 @@ const EmpDetails = () => {
                   <h2 className="text-lg font-medium text-gray-900 mb-4">
                     About
                   </h2>
-                  <p className="text-sm text-gray-700">{employee.bio}</p>
+                  <p className="text-sm text-gray-700">
+                    {employeeData?.bio === null
+                      ? "No Bio🙂"
+                      : employeeData?.bio}
+                  </p>
                 </div>
                 <div className="bg-white shadow rounded-lg p-6">
                   <h2 className="text-lg font-medium text-gray-900 mb-4">
                     Skills
                   </h2>
                   <div className="flex flex-wrap gap-2">
-                    {employee.skills.map((skill, idx) => (
+                    {employeeData?.skills.length === 0
+                      ? "No Skills Added"
+                      : employeeData?.skills.map((skill, idx) => (
+                          <span
+                            key={idx}
+                            className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800"
+                          >
+                            {skill}
+                          </span>
+                        ))}
+                    {/* {employee.skills.map((skill, idx) => (
                       <span
                         key={idx}
                         className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800"
                       >
                         {skill}
                       </span>
-                    ))}
+                    ))} */}
                   </div>
                 </div>
               </div>
@@ -435,40 +523,45 @@ const EmpDetails = () => {
                 </h2>
               </div>
               <div className="divide-y divide-gray-200">
-                {employee.recentTasks.map((task) => (
-                  <div
-                    key={task.id}
-                    className="px-6 py-4 hover:bg-gray-50 cursor-pointer"
-                    onClick={() => navigate(`/tasks/${task.id}`)}
-                  >
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h3 className="text-sm font-medium text-gray-900">
-                          {task.title}
-                        </h3>
-                        <p className="text-sm text-gray-500 mt-1">
-                          Due: {task.dueDate}
-                        </p>
-                      </div>
-                      <span
-                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                          task.status === "completed"
-                            ? "bg-green-100 text-green-800"
-                            : "bg-yellow-100 text-yellow-800"
-                        }`}
+                {taskList?.length === 0
+                  ? <p className="py-4 px-6 text-gray-700">No task present</p>
+                  : taskList?.map((task) => (
+                      <div
+                        key={task._id}
+                        className="px-6 py-4 hover:bg-gray-50 cursor-pointer"
+                        onClick={() => navigate(`/tasks/${task._id}`)}
                       >
-                        {task.status === "completed"
-                          ? "Completed"
-                          : "In Progress"}
-                      </span>
-                    </div>
-                  </div>
-                ))}
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <h3 className="text-sm font-medium text-gray-900">
+                              {task.title}
+                            </h3>
+                            <p className="text-sm text-gray-500 mt-1">
+                              Deadline: {formatLoginTimeFns(task.deadline)}
+                            </p>
+                          </div>
+                          <span
+                            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                              task.status === "Completed"
+                                ? "bg-green-100 text-green-800"
+                                : task.status === "In Progress"
+                                ? "bg-blue-100 text-blue-800"
+                                : task.status === "Pending"
+                                ? "bg-yellow-100 text-yellow-800"
+                                : "bg-red-100 text-red-800"
+                            }`}
+                          >
+                            {task.status}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
               </div>
             </div>
           </div>
         </main>
       </div>
+      <NotificationPanel />
     </div>
   );
 };

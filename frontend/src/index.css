@@ -146,3 +146,19 @@
 .hide-scroll::-webkit-scrollbar {
   display: none;
 }
+
+/* Add to your index.css */
+@layer utilities {
+  .perspective-2000 {
+    perspective: 2000px;
+  }
+  .transform-style-3d {
+    transform-style: preserve-3d;
+  }
+  .rotate-x-20 {
+    transform: rotateX(20deg) scale(0.9);
+  }
+  .hover\:rotate-x-0:hover {
+    transform: rotateX(0deg) scale(1);
+  }
+}

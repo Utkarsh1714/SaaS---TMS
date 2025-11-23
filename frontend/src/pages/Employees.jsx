@@ -117,21 +117,10 @@ const EmployeesPage = () => {
         employeeList,
       } = res.data;
 
-      // const newHires = employees.filter((employee) => {
-      //   const createdDate = new Date(employee.createdAt);
-      //   return createdDate > sevenDaysAgo;
-      // });
-
       setEmployee(employeeList);
       setEmployeeCount(totalEmployeeCount);
       setNewHiresCount(newHiresThisMonth);
       setActiveEmployeeCount(activeEmployeeCount);
-
-      // const yoyPercentage = calculatePercentageChange(
-      //   stats.currentCount,
-      //   stats.lastYearCount
-      // );
-      // setYoYGrowthPercentage(yoyPercentage);
     } catch (error) {
       console.error("Error fetching employee", error);
       toast.error("Failed to fetch employee data.");

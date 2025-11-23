@@ -14,6 +14,8 @@ dotenv.config();
 
 export const registerOrg = async (req, res) => {
   try {
+    const profileImageUrl = req.file ? req.file.path : undefined;
+
     const {
       username,
       email,
@@ -74,20 +76,13 @@ export const registerOrg = async (req, res) => {
       jobTitle: "Boss",
       organizationId: newOrg._id,
       departmentId: null,
+      profileImage: profileImageUrl,
     });
 
     await newUser.save();
 
     newOrg.createdBy = newUser._id;
     await newOrg.save();
-
-    if (departments && departments.length > 0) {
-      const departmentsDocs = departments.map((dept) => ({
-        name: dept,
-        organizationId: newOrg._id,
-      }));
-      await Department.insertMany(departmentsDocs);
-    }
 
     const token = jwt.sign(
       { id: newUser._id, role: newUser.role, orgId: newOrg._id },
@@ -101,22 +96,15 @@ export const registerOrg = async (req, res) => {
       sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax",
     });
 
+    const finalUser = await User.findById(newUser._id)
+      .select("-password -otp -otpExpires -resetToken -resetTokenExpires")
+      .populate("role", "_id name")
+      .populate("organizationId")
+      .populate("departmentId");
+
     res.status(201).json({
       message: "Organization registered successfully",
-      user: {
-        id: newUser._id,
-        name: newUser.username,
-        email: newUser.email,
-        contactNo: newUser.contactNo,
-        status: newUser.status,
-        jobTitle: newUser.jobTitle,
-        role: {
-          _id: bossRole._id,
-          name: bossRole.name,
-        },
-        organizationId: newOrg._id,
-        organizationName: newOrg.name,
-      },
+      user: finalUser,
       token,
     });
   } catch (error) {
@@ -127,10 +115,9 @@ export const registerOrg = async (req, res) => {
 
 export const login = async (req, res) => {
   const { email, password } = req.body;
-  const user = await User.findOne({ email }).populate(
-    "organizationId role",
-    "name country logoUrl"
-  );
+  const user = await User.findOne({ email })
+    .populate("organizationId", "name country logoUrl")
+    .populate("role", "_id name");
 
   if (!user) {
     return res.status(400).json({ message: "Invalid credentials" });

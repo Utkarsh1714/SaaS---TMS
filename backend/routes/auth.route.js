@@ -13,8 +13,25 @@ import {
 } from "../controllers/auth.controller.js";
 import verifyToken from "../middlewares/verifyToken.js";
 import User from "../models/user.model.js";
+import { upload } from "../config/cloudinary.js";
 
-router.post("/register-org", registerOrg);
+router.post(
+  "/register-org",
+  (req, res, next) => {
+    upload.single("profileImage")(req, res, (err) => {
+      if (err) {
+        // This will print the REAL error causing the 500
+        console.error("❌ MULTER/CLOUDINARY ERROR:", err);
+        return res.status(500).json({
+          message: "Image Upload Failed",
+          error: err.message,
+        });
+      }
+      next(); // If no error, proceed to registerOrg controller
+    });
+  },
+  registerOrg
+);
 router.post("/login", login);
 router.post("/logout", verifyToken, logout);
 router.post("/forgot-password", sendOTP);

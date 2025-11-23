@@ -23,6 +23,15 @@ import ResetPassword from "./pages/ResetPassword";
 import Meeting from "./pages/Meeting";
 import HelpSupportPage from "./pages/HelpSupportPage";
 import Settings from "./pages/Settings";
+import About from "./pages/About";
+import Product from "./pages/Product";
+import Solutions from "./pages/Solutions";
+import { Privacy, Security, Terms } from "./pages/Legal";
+import Changelog from "./pages/Changelog";
+import Integrations from "./pages/Integrations";
+import Contact from "./pages/Contact";
+import Status from "./pages/Status";
+import Careers from "./pages/Careers";
 
 // Lazy load the pages... (keep all your lazy imports here)
 const Home = lazy(() => import("./pages/Home"));
@@ -66,6 +75,18 @@ function App() {
             }
           />
           <Route path="/plans" element={<Pricing />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/product" element={<Product />} />
+          <Route path="/solutions" element={<Solutions />} />
+          <Route path="/privacy" element={<Privacy />} />
+          <Route path="/terms" element={<Terms />} />
+          <Route path="/security" element={<Security />} />
+          <Route path="/changelog" element={<Changelog />} />
+          <Route path="/integrations" element={<Integrations />} />
+          <Route path="/contact" element={<Contact />} />
+          <Route path="/status" element={<Status />} />
+          <Route path="/careers" element={<Careers />} />
+
           <Route path="/reset-password" element={<ResetPassword />} />
 
           <Route element={<ProtectedRoute />}>
