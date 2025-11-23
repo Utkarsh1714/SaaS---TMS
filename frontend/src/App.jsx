@@ -32,6 +32,7 @@ import Integrations from "./pages/Integrations";
 import Contact from "./pages/Contact";
 import Status from "./pages/Status";
 import Careers from "./pages/Careers";
+import PageLoader from "./components/ui/PageLoader";
 
 // Lazy load the pages... (keep all your lazy imports here)
 const Home = lazy(() => import("./pages/Home"));
@@ -41,27 +42,14 @@ const TaskDetails = lazy(() => import("./pages/TaskDetails"));
 function App() {
   const { loading } = useAuth();
 
-  if (loading)
-    return (
-      <div className="flex items-center justify-center h-screen bg-gray-50">
-        <Loader className="h-10 w-10 animate-spin text-blue-500" />
-        <p className="ml-3 text-lg text-gray-700">Loading...</p>
-      </div>
-    );
+  if (loading) return <PageLoader />;
 
   return (
     <>
       {/* These toasts should be outside the smooth-wrapper to prevent fixed/absolute positioning issues */}
       <Toaster richColors position="top-right" />
       <HotToast position="top-right" />
-      <Suspense
-        fallback={
-          <div className="flex items-center justify-center h-screen bg-gray-50">
-            <Loader className="h-10 w-10 animate-spin text-blue-500" />
-            <p className="ml-3 text-lg text-gray-700">Loading app...</p>
-          </div>
-        }
-      >
+      <Suspense fallback={<PageLoader />}>
         <Routes>
           {/* All your routes remain the same */}
           <Route path="/" element={<LandingPage />} />
