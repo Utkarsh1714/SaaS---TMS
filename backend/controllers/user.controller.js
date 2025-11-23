@@ -5,6 +5,8 @@ import bcrypt from "bcryptjs";
 import Department from "../models/department.model.js";
 import Role from "../models/Role.model.js";
 import ActivityLog from "../models/activityLog.model.js";
+import Task from "../models/task.model.js";
+import mongoose from "mongoose";
 
 export const getAllEmployeesAndStats = async (req, res) => {
   // 1. Calculate the date one year ago
@@ -76,14 +78,71 @@ export const getAllEmployees = async (req, res) => {
 
 export const getSingleEmployee = async (req, res) => {
   const { id } = req.params;
+
+  const userId = new mongoose.Types.ObjectId(id);
   try {
     const user = await User.findById(id)
       .select("-password -resetToken -resetTokenExpires -__v -otp -otpExpires")
-      .populate("departmentId");
+      .populate("departmentId")
+      .populate("role", "_id name");
 
-      const activityLog = await ActivityLog.findOne({ userId: id });
+    if (!user) return res.status(404).json({ message: "User not found" });
 
-    res.status(200).json({user, activityLog});
+    const activityLog = await ActivityLog.findOne({ userId: id });
+
+    const userRoleName = user.role?.name;
+
+    let taskFilter = {};
+
+    if (userRoleName === "Boss") {
+      taskFilter = { createdBy: userId };
+    } else if (userRoleName === "Manager") {
+      taskFilter = { assignedManager: userId };
+    } else if (userRoleName === "Employee") {
+      taskFilter = { assignedEmployees: userId };
+    }
+
+    let taskDetails = {
+      totalAssignedTasks: 0,
+      completedTaskCount: 0,
+    };
+
+    let taskList = [];
+
+    if (Object.keys(taskFilter).length > 0) {
+      const taskCount = await Task.aggregate([
+        { $match: taskFilter },
+        {
+          $group: {
+            _id: null,
+            totalAssignedTasks: { $sum: 1 },
+            completedTaskCount: {
+              $sum: {
+                $cond: [{ $eq: ["$status", "Completed"] }, 1, 0],
+              },
+            },
+          },
+        },
+        {
+          $project: {
+            _id: 0,
+            totalAssignedTasks: 1,
+            completedTaskCount: 1,
+          },
+        },
+      ]);
+
+      taskDetails = taskCount.length > 0 ? taskCount[0] : taskDetails;
+
+      taskList = await Task.find(taskFilter)
+        .populate("assignedManager", "username email")
+        .populate("createdBy", "username email")
+        .populate("assignedEmployees", "username email")
+        .sort({ deadline: 1, priority: -1 })
+        .lean();
+    }
+
+    res.status(200).json({ user, activityLog, taskDetails, taskList });
   } catch (error) {
     console.error("Error fetching user:", error);
     res.status(500).json({ message: "Internal server error" });

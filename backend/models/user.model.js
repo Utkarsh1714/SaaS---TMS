@@ -19,6 +19,18 @@ const UserSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    city: {
+      type: String,
+      default: "Mumbai",
+    },
+    state: {
+      type: String,
+      default: "Maharashtra",
+    },
+    country: {
+      type: String,
+      default: "India",
+    },
     role: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Role",
@@ -43,6 +55,15 @@ const UserSchema = new mongoose.Schema(
       enum: ["Active", "Inactive", "On Leave"],
       default: "Inactive",
     },
+    bio: {
+      type: String,
+      default: null,
+    },
+    profileImage: {
+      type: String, 
+      default: "https://icon-library.com/images/anonymous-avatar-icon/anonymous-avatar-icon-25.jpg" 
+    },
+    skills: [{ type: String, default: null }],
     otp: {
       type: String,
       default: null,

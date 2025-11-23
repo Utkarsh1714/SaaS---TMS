@@ -35,6 +35,8 @@ export const AuthProvider = ({ children }) => {
   const logout = async () => {
     setUser(null);
     localStorage.removeItem("user");
+    localStorage.removeItem("token");
+    localStorage.removeItem("userNotifications")
     // Recommended: Also tell the backend to invalidate the session/cookie
     await axios.post(
       `${import.meta.env.VITE_API_URL}/api/auth/logout`,
