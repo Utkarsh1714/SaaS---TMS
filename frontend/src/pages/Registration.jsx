@@ -495,6 +495,7 @@ import {
   Rocket,
   Hexagon,
   Layers,
+  Loader,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { motion } from "framer-motion";
@@ -502,28 +503,19 @@ import Prism from "@/components/Prism";
 import LightRays from "@/components/LightRays";
 import FloatingLines from "@/components/FloatingLines";
 
-const COUNTRY_CODES = [
-  { code: "+91", name: "India", flag: "🇮🇳" },
-  { code: "+1", name: "USA", flag: "🇺🇸" },
-  { code: "+44", name: "UK", flag: "🇬🇧" },
-  { code: "+61", name: "Australia", flag: "🇦🇺" },
-  { code: "+971", name: "UAE", flag: "🇦🇪" },
-  { code: "+1", name: "Canada", flag: "🇨🇦" },
-  { code: "+49", name: "Germany", flag: "🇩🇪" },
-  { code: "+33", name: "France", flag: "🇫🇷" },
-  { code: "+81", name: "Japan", flag: "🇯🇵" },
-];
-
 const Registration = () => {
   const [searchParams] = useSearchParams();
   const planValue = searchParams.get("plan");
+  const paymentIdFromUrl = searchParams.get("payment_id");
+  const billingFromUrl = searchParams.get("billing");
 
-  const [password, setPassword] = useState("");
+  const [isRegistering, setIsRegistering] = useState(false);
+  const [isCountriesLoading, setIsCountriesLoading] = useState(true);
   const [isVisible, setIsVisible] = useState(false);
+  const [password, setPassword] = useState("");
   const [logoUrl, setLogoUrl] = useState("");
   const [countryCode, setCountryCode] = useState("+91");
   const [countries, setCountries] = useState([]);
-  const [isCountriesLoading, setIsCountriesLoading] = useState(true);
   const [profileImage, setProfileImage] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
 
@@ -604,6 +596,7 @@ const Registration = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setIsRegistering(true);
     const formData = new FormData();
 
     Object.keys(formFields).forEach((key) => {
@@ -616,6 +609,16 @@ const Registration = () => {
 
     formData.append("password", password);
     formData.append("logoUrl", logoUrl);
+
+    if (paymentIdFromUrl) {
+      formData.append("razorpayPaymentId", paymentIdFromUrl);
+    }
+
+    if (billingFromUrl) {
+      formData.append("planType", billingFromUrl);
+    } else {
+      formData.append("planType", "monthly");
+    }
 
     if (profileImage instanceof File) {
       formData.append("profileImage", profileImage);
@@ -637,6 +640,8 @@ const Registration = () => {
     } catch (error) {
       console.error("Error registering organization:", error);
       toast.error(error?.response?.data?.message || "Registration failed");
+    } finally {
+      setIsRegistering(false);
     }
   };
 
@@ -1173,7 +1178,13 @@ const Registration = () => {
                     : "bg-slate-200 text-slate-400 cursor-not-allowed"
                 }`}
               >
-                Register Organization <ArrowRight size={20} />
+                {isRegistering ? (
+                  <Loader size={20} className="animate-spin"/>
+                ) : (
+                  <>
+                    Register Organization <ArrowRight size={20} />
+                  </>
+                )}
               </button>
               <p className="text-center text-xs text-slate-400 mt-4">
                 By clicking Register, you agree to our Terms of Service and
