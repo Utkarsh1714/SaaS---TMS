@@ -386,19 +386,17 @@
 
 // export default Pricing;
 
-
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { toast } from "sonner";
-import { 
-  CheckCircle2, 
-  XCircle, 
-  HelpCircle, 
-  Zap, 
-  Check, 
-  Minus 
+import {
+  CheckCircle2,
+  XCircle,
+  HelpCircle,
+  Zap,
+  Check,
+  Minus,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -422,9 +420,13 @@ const Pricing = () => {
 
   // --- Payment Logic (Kept exactly as provided) ---
   const handlePayment = async (plan) => {
+    const billingCycle = isYearly ? "yearly" : "monthly";
+
     if (plan.id === "free") {
-      toast.success("Starting your free plan!");
-      navigate(`/registration?payment_success=true&plan=${plan.id}`);
+      // Pass billing=monthly (or whatever default) for free
+      navigate(
+        `/registration?payment_success=true&plan=${plan.id}&billing=monthly`
+      );
       return;
     }
 
@@ -462,8 +464,11 @@ const Pricing = () => {
 
             if (verificationResponse.data.success) {
               toast.success("Payment Successful! Redirecting...");
+
+              const billingCycle = isYearly ? "yearly" : "monthly";
+              
               navigate(
-                `/registration?payment_success=true&plan=${plan.id}&payment_id=${response.razorpay_payment_id}`
+                `/registration?payment_success=true&plan=${plan.id}&payment_id=${response.razorpay_payment_id}&billing=${billingCycle}`
               );
             } else {
               toast.error("Payment verification failed.");
@@ -511,7 +516,11 @@ const Pricing = () => {
 
             {/* Custom Toggle */}
             <div className="flex justify-center items-center gap-4 mb-16">
-              <span className={`text-sm font-semibold ${!isYearly ? "text-slate-900" : "text-slate-500"}`}>
+              <span
+                className={`text-sm font-semibold ${
+                  !isYearly ? "text-slate-900" : "text-slate-500"
+                }`}
+              >
                 Monthly
               </span>
               <button
@@ -524,8 +533,15 @@ const Pricing = () => {
                   transition={{ type: "spring", stiffness: 500, damping: 30 }}
                 />
               </button>
-              <span className={`text-sm font-semibold ${isYearly ? "text-slate-900" : "text-slate-500"}`}>
-                Yearly <span className="text-blue-600 text-xs bg-blue-50 px-2 py-0.5 rounded-full ml-1">-20%</span>
+              <span
+                className={`text-sm font-semibold ${
+                  isYearly ? "text-slate-900" : "text-slate-500"
+                }`}
+              >
+                Yearly{" "}
+                <span className="text-blue-600 text-xs bg-blue-50 px-2 py-0.5 rounded-full ml-1">
+                  -20%
+                </span>
               </span>
             </div>
           </AnimatedContent>
@@ -592,7 +608,9 @@ const Pricing = () => {
                             )}
                             <span
                               className={`text-sm ${
-                                feature.included ? "text-slate-700" : "text-slate-400 line-through"
+                                feature.included
+                                  ? "text-slate-700"
+                                  : "text-slate-400 line-through"
                               }`}
                             >
                               {feature.text}
@@ -613,7 +631,9 @@ const Pricing = () => {
       <section className="py-24 bg-white border-y border-slate-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <h2 className="text-3xl font-bold text-slate-900">Compare features</h2>
+            <h2 className="text-3xl font-bold text-slate-900">
+              Compare features
+            </h2>
             <p className="text-slate-600 mt-4">
               Detailed breakdown of what's included in each plan.
             </p>
@@ -623,10 +643,18 @@ const Pricing = () => {
             <table className="w-full border-collapse">
               <thead>
                 <tr>
-                  <th className="p-4 text-left text-sm font-semibold text-slate-500 w-1/4">Feature</th>
+                  <th className="p-4 text-left text-sm font-semibold text-slate-500 w-1/4">
+                    Feature
+                  </th>
                   {plans.map((plan) => (
                     <th key={plan.id} className="p-4 text-center w-1/4">
-                      <span className={`text-lg font-bold ${plan.id === popularPlan ? "text-blue-600" : "text-slate-900"}`}>
+                      <span
+                        className={`text-lg font-bold ${
+                          plan.id === popularPlan
+                            ? "text-blue-600"
+                            : "text-slate-900"
+                        }`}
+                      >
                         {plan.name}
                       </span>
                     </th>
@@ -638,7 +666,10 @@ const Pricing = () => {
                   <tr key={idx} className="hover:bg-slate-50 transition-colors">
                     <td className="p-4 text-sm font-medium text-slate-700 flex items-center gap-2">
                       {feature.name}
-                      <HelpCircle size={14} className="text-slate-400 cursor-help" />
+                      <HelpCircle
+                        size={14}
+                        className="text-slate-400 cursor-help"
+                      />
                     </td>
                     <TableCell included={feature.free} />
                     <TableCell included={feature.premium} />
@@ -682,8 +713,8 @@ const Pricing = () => {
       <section className="py-24 px-4 bg-slate-900 relative overflow-hidden">
         {/* Abstract Background */}
         <div className="absolute top-0 left-0 w-full h-full overflow-hidden z-0">
-           <div className="absolute top-[-10%] right-[-5%] w-96 h-96 bg-blue-600 rounded-full blur-[120px] opacity-20"></div>
-           <div className="absolute bottom-[-10%] left-[-5%] w-96 h-96 bg-indigo-600 rounded-full blur-[120px] opacity-20"></div>
+          <div className="absolute top-[-10%] right-[-5%] w-96 h-96 bg-blue-600 rounded-full blur-[120px] opacity-20"></div>
+          <div className="absolute bottom-[-10%] left-[-5%] w-96 h-96 bg-indigo-600 rounded-full blur-[120px] opacity-20"></div>
         </div>
 
         <div className="max-w-4xl mx-auto text-center relative z-10">
@@ -695,8 +726,8 @@ const Pricing = () => {
           </p>
           <div className="flex flex-col sm:flex-row justify-center gap-4">
             <button
-               onClick={() => handlePayment(plans[0])} 
-               className="bg-white text-slate-900 hover:bg-blue-50 font-bold px-8 py-4 rounded-xl shadow-lg transition-all hover:scale-105"
+              onClick={() => handlePayment(plans[0])}
+              className="bg-white text-slate-900 hover:bg-blue-50 font-bold px-8 py-4 rounded-xl shadow-lg transition-all hover:scale-105"
             >
               Start Free Trial
             </button>
@@ -716,10 +747,14 @@ const Pricing = () => {
 
 const getPlanDescription = (planId) => {
   switch (planId) {
-    case "free": return "Perfect for individuals just starting out.";
-    case "premium": return "For growing teams that need power.";
-    case "enterprise": return "Custom solutions for large organizations.";
-    default: return "Choose your plan.";
+    case "free":
+      return "Perfect for individuals just starting out.";
+    case "premium":
+      return "For growing teams that need power.";
+    case "enterprise":
+      return "Custom solutions for large organizations.";
+    default:
+      return "Choose your plan.";
   }
 };
 

@@ -49,6 +49,15 @@ const OrganizationSchema = new mongoose.Schema(
       enum: ["free", "premium", "enterprise"],
       default: "free",
     },
+    planType: {
+      type: String,
+      enum: ["monthly", "yearly"],
+      default: "monthly",
+    },
+    subscriptionExpiresAt: {
+      type: Date,
+      default: null, // Null for free plan, or set a logic for it
+    },
   },
   {
     timestamps: true,

@@ -3,13 +3,13 @@ import Organization from "../models/organization.model.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import Razorpay from "razorpay";
-import Department from "../models/department.model.js";
 import { sendOTPByEmail, sendPasswordResetEmail } from "../utils/send.mail.js";
 import crypto from "crypto";
 import dotenv from "dotenv";
-import Payment from "../models/paymentModel.js";
 import Role from "../models/Role.model.js";
 import ActivityLog from "../models/activityLog.model.js";
+import Subscription from "../models/subscription.js";
+import Transaction from "../models/transaction.js";
 dotenv.config();
 
 export const registerOrg = async (req, res) => {
@@ -30,40 +30,70 @@ export const registerOrg = async (req, res) => {
       country,
       logoUrl,
       websiteUrl,
-      departments,
       plan,
+      planType,
+      razorpayPaymentId,
     } = req.body;
 
+    let transactionRecord = null;
+
+    // --- 1. Validate Payment (For Paid Plans Only) ---
+    if (plan !== "free") {
+      if (!razorpayPaymentId) {
+        return res.status(400).json({ message: "Payment ID is required for paid plans" });
+      }
+
+      console.log("Searching for Transaction ID:", razorpayPaymentId)
+
+      // Find the transaction created by your verify-payment endpoint
+      transactionRecord = await Transaction.findOne({
+        razorpayPaymentId: razorpayPaymentId, // Ensure this matches your Transaction schema field name
+      });
+
+      if (!transactionRecord) {
+        console.log("❌ Transaction not found in DB.");
+        return res.status(400).json({ message: "Transaction record not found." });
+      }
+
+      // Optional: Check if already linked to an org (prevents reuse)
+      if (transactionRecord.organizationId) {
+         return res.status(400).json({ message: "This payment is already registered to an organization." });
+      }
+    }
+
+    // --- 2. Standard User/Org Validation ---
     const existing = await User.findOne({ email });
     if (existing) {
-      return res
-        .status(400)
-        .json({ message: "User with this email already exists" });
+      return res.status(400).json({ message: "User with this email already exists" });
     }
 
     const bossRole = await Role.findOne({ name: "Boss" });
-    console.log(bossRole);
     if (!bossRole) {
-      // This is a critical error, means the seed script wasn't run
-      return res.status(500).json({
-        message: "Default 'Boss' role not found. Server setup error.",
-      });
+      return res.status(500).json({ message: "Default 'Boss' role not found." });
     }
 
+    // --- 3. Calculate Subscription Expiry ---
+    const now = new Date();
+    let expiryDate = null;
+    
+    // Logic: Free plans might have no expiry, or set to null
+    if (plan !== "free") {
+      if (planType === "yearly") now.setFullYear(now.getFullYear() + 1);
+      else now.setMonth(now.getMonth() + 1);
+      expiryDate = now;
+    }
+
+    // --- 4. Create Organization ---
     const newOrg = new Organization({
       name: companyName,
-      gstin,
-      address,
-      city,
-      state,
-      pincode,
-      country,
-      logoUrl,
-      websiteUrl,
-      createdBy: null,
+      gstin, address, city, state, pincode, country, logoUrl, websiteUrl,
+      createdBy: null, // Updated later
       plan: plan,
+      planType: planType || "monthly",
+      subscriptionExpiresAt: expiryDate,
     });
 
+    // --- 5. Create User ---
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const newUser = new User({
@@ -80,10 +110,33 @@ export const registerOrg = async (req, res) => {
     });
 
     await newUser.save();
-
     newOrg.createdBy = newUser._id;
     await newOrg.save();
 
+    // --- 6. ✅ CREATE SUBSCRIPTION (The Scalable Part) ---
+    // Every Organization gets a subscription document. 
+    // This allows fast access checks without querying heavy transaction logs.
+    const newSubscription = new Subscription({
+        organizationId: newOrg._id,
+        planId: plan,          // 'free', 'premium', 'enterprise'
+        status: "active",      // active
+        billingCycle: planType, // monthly/yearly
+        startDate: new Date(),
+        currentPeriodEnd: expiryDate // Null for free, Date for paid
+    });
+    
+    await newSubscription.save();
+
+    // --- 7. ✅ LINK TRANSACTION (Paid Only) ---
+    // If they paid, we update the orphaned transaction record with the new Org ID.
+    if (transactionRecord) {
+        transactionRecord.organizationId = newOrg._id;
+        // If your Transaction schema has a userId field:
+        // transactionRecord.userId = newUser._id; 
+        await transactionRecord.save();
+    }
+
+    // --- 8. Response ---
     const token = jwt.sign(
       { id: newUser._id, role: newUser.role, orgId: newOrg._id },
       process.env.JWT_SECRET,
@@ -97,19 +150,19 @@ export const registerOrg = async (req, res) => {
     });
 
     const finalUser = await User.findById(newUser._id)
-      .select("-password -otp -otpExpires -resetToken -resetTokenExpires")
+      .select("-password")
       .populate("role", "_id name")
-      .populate("organizationId")
-      .populate("departmentId");
+      .populate("organizationId");
 
     res.status(201).json({
       message: "Organization registered successfully",
       user: finalUser,
       token,
     });
+
   } catch (error) {
     console.error("Error in registerOrg:", error);
-    res.status(500).json({ message: "Internal server error" });
+    res.status(500).json({ message: "Internal server error", error: error.message });
   }
 };
 
@@ -282,32 +335,42 @@ export const paymentVerification = async (req, res) => {
       razorpay_order_id,
       razorpay_payment_id,
       razorpay_signature,
-      plan_id,
       amount,
     } = req.body;
 
-    // Generate new signature using secret key and received data
+    // Verify Signature
+    const body = razorpay_order_id + "|" + razorpay_payment_id;
     const generatedSignature = crypto
       .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
-      .update(razorpay_order_id + "|" + razorpay_payment_id)
+      .update(body.toString())
       .digest("hex");
 
-    if (generatedSignature === razorpay_signature) {
-      // Signature is valid, payment is successful
-      const newPayment = new Payment({
-        razorpay_order_id,
-        razorpay_payment_id,
-        razorpay_signature,
-        plan_id,
-        amount,
+    const isSignatureValid = generatedSignature === razorpay_signature;
+
+    if (isSignatureValid) {
+      // ✅ Save to 'Transaction' Collection
+      // Note: organizationId is missing here. registerOrg will find this record
+      // by razorpay_payment_id and update it with the Org ID later.
+      const newTransaction = new Transaction({
+        razorpayPaymentId: razorpay_payment_id, // Ensure field name matches Schema
+        amount: amount,
+        currency: "INR",
+        status: "success",
+        // We can store order_id in a metadata field if your schema has it, otherwise ignore
       });
 
-      await newPayment.save();
-    }
+      await newTransaction.save();
 
-    res
-      .status(200)
-      .json({ success: true, message: "Payment verified successfully." });
+      return res.status(200).json({
+        success: true,
+        message: "Payment verified and Transaction recorded.",
+      });
+    } else {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid signature.",
+      });
+    }
   } catch (error) {
     console.error("Payment verification error:", error);
     res.status(500).json({
