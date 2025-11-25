@@ -83,9 +83,18 @@ const EmployeeCard = ({ employee, user, navigate, handleDelete }) => {
   return (
     <div className="bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-lg transition-shadow">
       <div className="p-4 flex flex-col items-center">
-        <div className="h-24 w-24 rounded-full mb-4 bg-blue-100 text-blue-800 flex items-center justify-center text-3xl font-bold">
-          {initials}
-        </div>
+        {employee?.profileImage ? (
+          <img
+            className="h-24 w-24 rounded-full mb-4 object-cover"
+            src={employee.profileImage}
+            alt={employee.username}
+          />
+        ) : (
+          <div className="h-24 w-24 rounded-full mb-4 bg-blue-100 text-blue-800 flex items-center justify-center text-3xl font-bold">
+            {initials}
+          </div>
+        )}
+
         <h3 className="text-lg font-medium text-gray-900">
           {employee.username}
         </h3>
@@ -267,9 +276,19 @@ const EmployeeDirectory = ({
                   >
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
-                        <div className="flex-shrink-0 h-10 w-10 bg-gray-200 rounded-full flex items-center justify-center text-sm font-medium text-gray-800">
-                          {getInitials(employee.username)}
-                        </div>
+                        {employee?.profileImage ? (
+                          <div className="flex-shrink-0 h-10 w-10">
+                            <img
+                              className="h-10 w-10 rounded-full object-cover"
+                              src={employee.profileImage}
+                              alt={employee.username}
+                            />
+                          </div>
+                        ) : (
+                          <div className="flex-shrink-0 h-10 w-10 bg-gray-200 rounded-full flex items-center justify-center text-sm font-medium text-gray-800">
+                            {getInitials(employee.username)}
+                          </div>
+                        )}
                         <div className="ml-4">
                           <div className="text-sm font-medium text-gray-900">
                             {employee.username}
