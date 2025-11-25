@@ -1112,9 +1112,9 @@ const TaskDetails = () => {
                           className="flex items-center justify-between"
                         >
                           <div className="flex items-center">
-                            {assignee.avatar ? (
+                            {assignee.profileImage ? (
                               <img
-                                src={assignee.avatar}
+                                src={assignee.profileImage}
                                 alt={assignee.username}
                                 className="h-8 w-8 rounded-full"
                               />
@@ -1153,9 +1153,9 @@ const TaskDetails = () => {
                   </div>
                   <div className="flex items-center justify-between py-0.5 rounded-full text-xs font-medium text-blue-800">
                     <div className="flex items-center">
-                      {taskDetail?.assignedManager.avatar ? (
+                      {taskDetail?.assignedManager.profileImage ? (
                         <img
-                          src={taskDetail?.assignedManager.avatar}
+                          src={taskDetail?.assignedManager.profileImage}
                           alt={taskDetail?.assignedManager.username}
                           className="h-8 w-8 rounded-full"
                         />

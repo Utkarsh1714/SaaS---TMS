@@ -60,8 +60,7 @@ const UserSchema = new mongoose.Schema(
       default: null,
     },
     profileImage: {
-      type: String, 
-      default: "https://icon-library.com/images/anonymous-avatar-icon/anonymous-avatar-icon-25.jpg" 
+      type: String,
     },
     skills: [{ type: String, default: null }],
     otp: {

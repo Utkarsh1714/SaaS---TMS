@@ -75,6 +75,15 @@ const EmpDetails = () => {
     return `${hours.toFixed(2)}`;
   };
 
+  const getInitials = (username) => {
+    if (!username) return "";
+    return username
+      .split(" ")
+      .map((word) => word[0])
+      .join("")
+      .toUpperCase();
+  };
+
   // Mock employee data
   const [employee, setEmployee] = useState({
     id: employeeId,
@@ -180,11 +189,18 @@ const EmpDetails = () => {
             <div className="bg-white shadow rounded-lg p-6 mb-6">
               <div className="flex items-start justify-between">
                 <div className="flex items-center">
-                  <img
-                    src={employee.avatar}
-                    alt={employee.name}
-                    className="h-20 w-20 rounded-full"
-                  />
+                  {employeeData?.profileImage ? (
+                    <img
+                      src={employeeData?.profileImage}
+                      alt={employeeData?.username}
+                      className="h-20 w-20 rounded-full object-cover"
+                    />
+                  ) : (
+                    <div className="flex-shrink-0 h-20 w-20 bg-blue-100 rounded-full flex items-center justify-center text-2xl font-medium text-blue-800">
+                      {getInitials(employeeData?.username)}
+                    </div>
+                  )}
+
                   <div className="ml-6">
                     <h1 className="text-2xl font-semibold text-gray-900">
                       {employeeData?.username}
@@ -523,39 +539,41 @@ const EmpDetails = () => {
                 </h2>
               </div>
               <div className="divide-y divide-gray-200">
-                {taskList?.length === 0
-                  ? <p className="py-4 px-6 text-gray-700">No task present</p>
-                  : taskList?.map((task) => (
-                      <div
-                        key={task._id}
-                        className="px-6 py-4 hover:bg-gray-50 cursor-pointer"
-                        onClick={() => navigate(`/tasks/${task._id}`)}
-                      >
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <h3 className="text-sm font-medium text-gray-900">
-                              {task.title}
-                            </h3>
-                            <p className="text-sm text-gray-500 mt-1">
-                              Deadline: {formatLoginTimeFns(task.deadline)}
-                            </p>
-                          </div>
-                          <span
-                            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                              task.status === "Completed"
-                                ? "bg-green-100 text-green-800"
-                                : task.status === "In Progress"
-                                ? "bg-blue-100 text-blue-800"
-                                : task.status === "Pending"
-                                ? "bg-yellow-100 text-yellow-800"
-                                : "bg-red-100 text-red-800"
-                            }`}
-                          >
-                            {task.status}
-                          </span>
+                {taskList?.length === 0 ? (
+                  <p className="py-4 px-6 text-gray-700">No task present</p>
+                ) : (
+                  taskList?.map((task) => (
+                    <div
+                      key={task._id}
+                      className="px-6 py-4 hover:bg-gray-50 cursor-pointer"
+                      onClick={() => navigate(`/tasks/${task._id}`)}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <h3 className="text-sm font-medium text-gray-900">
+                            {task.title}
+                          </h3>
+                          <p className="text-sm text-gray-500 mt-1">
+                            Deadline: {formatLoginTimeFns(task.deadline)}
+                          </p>
                         </div>
+                        <span
+                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                            task.status === "Completed"
+                              ? "bg-green-100 text-green-800"
+                              : task.status === "In Progress"
+                              ? "bg-blue-100 text-blue-800"
+                              : task.status === "Pending"
+                              ? "bg-yellow-100 text-yellow-800"
+                              : "bg-red-100 text-red-800"
+                          }`}
+                        >
+                          {task.status}
+                        </span>
                       </div>
-                    ))}
+                    </div>
+                  ))
+                )}
               </div>
             </div>
           </div>

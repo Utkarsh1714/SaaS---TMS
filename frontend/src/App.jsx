@@ -1,4 +1,4 @@
-import { lazy, Suspense } from "react"; // 👈 Import hooks
+import { lazy, Suspense, useEffect } from "react"; // 👈 Import hooks
 import { Route, Routes } from "react-router-dom"; // 👈 Import useLocation
 import ProtectedRoute from "./routes/ProtectedRoutes";
 import { useAuth } from "./context/AuthContext";
