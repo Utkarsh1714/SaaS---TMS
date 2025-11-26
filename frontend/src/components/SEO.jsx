@@ -21,8 +21,8 @@ const SEO = ({ title, description, keywords, type = 'website' }) => {
       <meta property="og:title" content={fullTitle} />
       <meta property="og:description" content={description || defaultDescription} />
       <meta property="og:site_name" content={siteName} />
+      <meta property="og:image" content="https://res.cloudinary.com/dmindwanm/image/upload/v1764148649/2_fphvpg.png" />
       {/* Add an image URL here if you have a social preview card */}
-      {/* <meta property="og:image" content="https://taskify.com/social-preview.jpg" /> */}
 
       {/* Twitter Card */}
       <meta name="twitter:card" content="summary_large_image" />
