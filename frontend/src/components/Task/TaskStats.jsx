@@ -1,71 +1,129 @@
-import React from 'react'
-import {
-  CheckCircleIcon,
-  ClockIcon,
-  AlertCircleIcon,
-  ListIcon,
-} from 'lucide-react'
+// import React from 'react'
+// import {
+//   CheckCircleIcon,
+//   ClockIcon,
+//   AlertCircleIcon,
+//   ListIcon,
+// } from 'lucide-react'
 
-// Helper component for stat cards - keep as provided in the new structure
-const StatCard = ({ title, value, change, trend, icon, bgColor }) => {
-    // Simplified StatCard to just show data, removed the change/trend logic for simplicity as it relies on external data.
-    return (
-        <div className="bg-white overflow-hidden shadow rounded-lg">
-        <div className="p-5">
-            <div className="flex items-center">
-            <div className={`flex-shrink-0 p-3 rounded-md ${bgColor}`}>
-                {icon}
-            </div>
-            <div className="ml-5 w-0 flex-1">
-                <dl>
-                <dt className="text-sm font-medium text-gray-500 truncate">
-                    {title}
-                </dt>
-                <dd>
-                    <div className="text-2xl font-semibold text-gray-900">{value}</div>
-                </dd>
-                </dl>
-            </div>
-            </div>
-        </div>
-        </div>
-    )
-}
+// // Helper component for stat cards - keep as provided in the new structure
+// const StatCard = ({ title, value, change, trend, icon, bgColor }) => {
+//     // Simplified StatCard to just show data, removed the change/trend logic for simplicity as it relies on external data.
+//     return (
+//         <div className="bg-white overflow-hidden shadow rounded-lg">
+//         <div className="p-5">
+//             <div className="flex items-center">
+//             <div className={`flex-shrink-0 p-3 rounded-md ${bgColor}`}>
+//                 {icon}
+//             </div>
+//             <div className="ml-5 w-0 flex-1">
+//                 <dl>
+//                 <dt className="text-sm font-medium text-gray-500 truncate">
+//                     {title}
+//                 </dt>
+//                 <dd>
+//                     <div className="text-2xl font-semibold text-gray-900">{value}</div>
+//                 </dd>
+//                 </dl>
+//             </div>
+//             </div>
+//         </div>
+//         </div>
+//     )
+// }
+
+// const TaskStats = ({ tasks }) => {
+//     // Calculating basic stats from the tasks array (Assuming a simple structure for now)
+//     const totalTasks = tasks.length;
+//     const inProgress = tasks.filter(t => t.status === 'In Progress').length;
+//     const completed = tasks.filter(t => t.status === 'Completed').length;
+//     const overdue = tasks.filter(t => t.status === 'Overdue').length;
+
+//   return (
+//     <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+//       <StatCard
+//         title="Total Tasks"
+//         value={totalTasks}
+//         icon={<ListIcon className="h-6 w-6 text-blue-600" />}
+//         bgColor="bg-blue-50"
+//       />
+//       <StatCard
+//         title="In Progress"
+//         value={inProgress}
+//         icon={<ClockIcon className="h-6 w-6 text-yellow-600" />}
+//         bgColor="bg-yellow-50"
+//       />
+//       <StatCard
+//         title="Completed"
+//         value={completed}
+//         icon={<CheckCircleIcon className="h-6 w-6 text-green-600" />}
+//         bgColor="bg-green-50"
+//       />
+//       <StatCard
+//         title="Overdue"
+//         value={overdue}
+//         icon={<AlertCircleIcon className="h-6 w-6 text-red-600" />}
+//         bgColor="bg-red-50"
+//       />
+//     </div>
+//   )
+// }
+// export default TaskStats
+
+import React from 'react';
+import {
+  CheckCircle2,
+  Clock,
+  AlertCircle,
+  LayoutList,
+} from 'lucide-react';
 
 const TaskStats = ({ tasks }) => {
-    // Calculating basic stats from the tasks array (Assuming a simple structure for now)
-    const totalTasks = tasks.length;
-    const inProgress = tasks.filter(t => t.status === 'In Progress').length;
-    const completed = tasks.filter(t => t.status === 'Completed').length;
-    const overdue = tasks.filter(t => t.status === 'Overdue').length;
+  const totalTasks = tasks.length;
+  const inProgress = tasks.filter(t => t.status === 'In Progress').length;
+  const completed = tasks.filter(t => t.status === 'Completed').length;
+  const overdue = tasks.filter(t => t.status === 'Overdue').length;
 
   return (
-    <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
       <StatCard
         title="Total Tasks"
         value={totalTasks}
-        icon={<ListIcon className="h-6 w-6 text-blue-600" />}
-        bgColor="bg-blue-50"
+        icon={<LayoutList size={20} />}
+        color="bg-blue-50 text-blue-600 border-blue-100"
       />
       <StatCard
         title="In Progress"
         value={inProgress}
-        icon={<ClockIcon className="h-6 w-6 text-yellow-600" />}
-        bgColor="bg-yellow-50"
+        icon={<Clock size={20} />}
+        color="bg-amber-50 text-amber-600 border-amber-100"
       />
       <StatCard
         title="Completed"
         value={completed}
-        icon={<CheckCircleIcon className="h-6 w-6 text-green-600" />}
-        bgColor="bg-green-50"
+        icon={<CheckCircle2 size={20} />}
+        color="bg-emerald-50 text-emerald-600 border-emerald-100"
       />
       <StatCard
         title="Overdue"
         value={overdue}
-        icon={<AlertCircleIcon className="h-6 w-6 text-red-600" />}
-        bgColor="bg-red-50"
+        icon={<AlertCircle size={20} />}
+        color="bg-rose-50 text-rose-600 border-rose-100"
       />
     </div>
-  )
-}
-export default TaskStats
+  );
+};
+
+const StatCard = ({ title, value, icon, color }) => (
+  <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between hover:shadow-md transition-shadow">
+    <div>
+      <p className="text-slate-500 text-xs font-bold uppercase tracking-wider mb-1">{title}</p>
+      <h3 className="text-2xl font-extrabold text-slate-900">{value}</h3>
+    </div>
+    <div className={`p-3 rounded-lg border ${color}`}>
+      {icon}
+    </div>
+  </div>
+);
+
+export default TaskStats;

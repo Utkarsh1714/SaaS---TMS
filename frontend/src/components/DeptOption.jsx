@@ -35,7 +35,6 @@ export default function DeptOption({ selectedDept, setSelectedDept }) {
 
   return (
     <label className="block text-left w-full">
-      <span className="text-gray-700">Department</span>
       <Select
         isDisabled={loading}
         options={options}
