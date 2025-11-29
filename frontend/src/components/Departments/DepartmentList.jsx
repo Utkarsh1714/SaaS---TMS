@@ -1,76 +1,53 @@
 import React from "react";
-import {
-  BuildingIcon,
-  ChevronRightIcon,
-  UserIcon,
-  MoreHorizontalIcon,
-  Loader2,
-} from "lucide-react";
-const DepartmentList = ({
-  loading,
-  selectedDepartment,
-  setSelectedDepartment,
-  departments,
-}) => {
+import { ChevronRight, Loader2, Users } from "lucide-react";
+
+const DepartmentList = ({ loading, departments, selectedId, onSelect }) => {
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center h-64 text-slate-400">
+        <Loader2 className="h-8 w-8 animate-spin text-blue-600 mb-2" />
+        <p className="text-sm">Loading...</p>
+      </div>
+    );
+  }
+
+  if (departments.length === 0) {
+    return (
+       <div className="p-8 text-center text-slate-500 text-sm">No departments found.</div>
+    );
+  }
+
   return (
-    <div className="bg-white shadow rounded-lg overflow-hidden">
-      <div className="px-6 py-4 border-b border-gray-200">
-        <h2 className="text-lg font-medium text-gray-900 flex items-center">
-          <BuildingIcon className="h-5 w-5 mr-2 text-gray-500" />
-          All Departments
-        </h2>
-      </div>
-      <ul className="divide-y divide-gray-200">
-        {loading ? (
-          <div className="flex items-center justify-center h-64">
-            <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
-            <p className="ml-3 text-lg text-gray-600">Loading departments...</p>
-          </div>
-        ) : (
-          departments.map((department, i) => (
-            <li key={i}>
-              <button
-                onClick={() => setSelectedDepartment(department._id)}
-                className={`w-full text-left px-6 py-4 hover:bg-gray-50 flex items-center justify-between ${
-                  selectedDepartment === department._id ? "bg-blue-50" : ""
-                }`}
-              >
-                <div className="flex items-center">
-                  <span
-                    className={`inline-flex items-center justify-center w-10 h-10 rounded-lg bg-[#DBEAFE] text-blue-600 font-semibold text-lg`}
-                  >
-                    {department.name.charAt(0)}
-                  </span>
-                  <div className="ml-3">
-                    <p className="text-sm font-medium text-gray-900">
-                      {department.name}
-                    </p>
-                    <div className="flex items-center mt-1">
-                      <UserIcon className="h-4 w-4 text-gray-400 mr-1" />
-                      <p className="text-xs text-gray-500">
-                        {department.totalEmployees} employees
-                      </p>
-                    </div>
-                  </div>
-                </div>
-                <div className="flex items-center">
-                  {selectedDepartment === department.id ? (
-                    <ChevronRightIcon className="h-5 w-5 text-blue-600" />
-                  ) : (
-                    <ChevronRightIcon className="h-5 w-5 text-gray-400" />
-                  )}
-                </div>
-              </button>
-            </li>
-          ))
-        )}
-      </ul>
-      <div className="px-6 py-4 bg-gray-50 border-t border-gray-200">
-        <button className="w-full text-sm text-blue-600 hover:text-blue-500 font-medium">
-          View Department Structure
-        </button>
-      </div>
-    </div>
+    <ul className="divide-y divide-slate-100">
+      {departments.map((dept) => (
+        <li key={dept._id}>
+          <button
+            onClick={() => onSelect(dept._id)}
+            className={`w-full text-left px-5 py-4 flex items-center justify-between transition-all duration-200 group
+              ${selectedId === dept._id ? "bg-blue-50 border-l-4 border-blue-600 pl-4" : "hover:bg-slate-50 border-l-4 border-transparent"}
+            `}
+          >
+            <div className="flex items-center gap-3 overflow-hidden">
+              <div className={`w-10 h-10 rounded-lg flex items-center justify-center text-lg font-bold shrink-0 transition-colors
+                 ${selectedId === dept._id ? "bg-blue-600 text-white shadow-md" : "bg-slate-100 text-slate-600 group-hover:bg-white group-hover:shadow-sm border border-transparent group-hover:border-slate-200"}
+              `}>
+                 {dept.name.charAt(0).toUpperCase()}
+              </div>
+              <div className="min-w-0">
+                 <p className={`text-sm font-semibold truncate ${selectedId === dept._id ? "text-blue-900" : "text-slate-900"}`}>
+                    {dept.name}
+                 </p>
+                 <p className="text-xs text-slate-500 flex items-center gap-1 mt-0.5">
+                    <Users size={12} /> {dept.totalEmployees || 0} Members
+                 </p>
+              </div>
+            </div>
+            <ChevronRight size={16} className={`transition-transform ${selectedId === dept._id ? "text-blue-600 translate-x-1" : "text-slate-300 group-hover:text-slate-400"}`} />
+          </button>
+        </li>
+      ))}
+    </ul>
   );
 };
+
 export default DepartmentList;

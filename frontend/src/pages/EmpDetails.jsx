@@ -1,17 +1,23 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
-  BellIcon,
-  SearchIcon,
-  UserIcon,
-  ArrowLeftIcon,
-  MailIcon,
-  PhoneIcon,
-  MapPinIcon,
-  CalendarIcon,
-  BriefcaseIcon,
-  SaveIcon,
-  BellDot,
+  ArrowLeft,
+  Mail,
+  Phone,
+  MapPin,
+  Calendar,
+  Briefcase,
+  Save,
+  Bell,
+  Menu,
+  PenSquare,
+  CheckCircle2,
+  Clock,
+  MoreHorizontal,
+  Shield,
+  Hash,
+  MessageSquare,
+  Building
 } from "lucide-react";
 import Sidebar from "@/components/Layout/Sidebar";
 import axios from "axios";
@@ -19,563 +25,335 @@ import { useNotifications } from "@/context/NotificationContext";
 import NotificationPanel from "@/components/Dashboard/NotificationPanel";
 import { useAuth } from "@/context/AuthContext";
 import { format, parseISO } from "date-fns";
+import AnimatedContent from "@/components/ui/AnimatedContent";
 
 const EmpDetails = () => {
   const { user } = useAuth();
   const { toggleNotificationPanel, notifications } = useNotifications();
   const { id: employeeId } = useParams();
   const navigate = useNavigate();
+  
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [employeeData, setEmployeeData] = useState(null);
   const [activityLog, setActivityLog] = useState(null);
   const [taskDetails, setTaskDetails] = useState(null);
-  const [taskList, setTaskList] = useState(null);
-
+  const [taskList, setTaskList] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
 
+  // Fetch Data
   const getEmployee = async (id) => {
-    const res = await axios.get(
-      `${import.meta.env.VITE_API_URL}/api/employee/${id}`,
-      { withCredentials: true }
-    );
-    setEmployeeData(res.data.user);
-    setActivityLog(res.data.activityLog);
-    setTaskDetails(res.data.taskDetails);
-    setTaskList(res.data.taskList);
-    console.log(res.data);
+    try {
+      const res = await axios.get(
+        `${import.meta.env.VITE_API_URL}/api/employee/${id}`,
+        { withCredentials: true }
+      );
+      setEmployeeData(res.data.user);
+      setActivityLog(res.data.activityLog);
+      setTaskDetails(res.data.taskDetails);
+      setTaskList(res.data.taskList || []);
+    } catch (error) {
+      console.error("Error fetching employee:", error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
     getEmployee(employeeId);
   }, [employeeId]);
 
-  const formatLoginTimeFns = (isoDateString) => {
-    if (!isoDateString) {
-      return "N/A";
-    }
+  // Helpers
+  const getInitials = (name) => name ? name.split(" ").map((n) => n[0]).join("").toUpperCase().substring(0, 2) : "??";
+  
+  const formatHours = (seconds) => {
+    if (!seconds) return "0.0";
+    return `${(seconds / 3600).toFixed(1)}`;
+  };
 
-    try {
-      return format(parseISO(isoDateString), "MMM dd, yyyy, h:mm a");
-    } catch (e) {
-      return isoDateString;
+  const getStatusStyle = (status) => {
+    switch (status) {
+      case "Completed": return "bg-emerald-100 text-emerald-700 border-emerald-200";
+      case "In Progress": return "bg-blue-100 text-blue-700 border-blue-200";
+      case "Pending": return "bg-amber-100 text-amber-700 border-amber-200";
+      case "Overdue": return "bg-rose-100 text-rose-700 border-rose-200";
+      default: return "bg-slate-100 text-slate-600 border-slate-200";
     }
   };
 
-  const formatHoursOnly = (totalSeconds) => {
-    if (
-      totalSeconds === null ||
-      totalSeconds === undefined ||
-      isNaN(totalSeconds)
-    ) {
-      return "0.00 hours";
-    }
+  if (loading) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-slate-50">
+        <div className="flex flex-col items-center gap-3">
+           <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600"></div>
+           <p className="text-slate-500 font-medium animate-pulse">Loading Profile...</p>
+        </div>
+      </div>
+    );
+  }
 
-    const hours = totalSeconds / 3600;
-
-    return `${hours.toFixed(2)}`;
-  };
-
-  const getInitials = (username) => {
-    if (!username) return "";
-    return username
-      .split(" ")
-      .map((word) => word[0])
-      .join("")
-      .toUpperCase();
-  };
-
-  // Mock employee data
-  const [employee, setEmployee] = useState({
-    id: employeeId,
-    name: "Jane Cooper",
-    role: "Senior Developer",
-    department: "Engineering",
-    email: "jane.cooper@example.com",
-    phone: "+1 (555) 123-4567",
-    location: "San Francisco, CA",
-    joinDate: "2022-03-15",
-    avatar:
-      "https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80",
-    bio: "Experienced software developer with a passion for creating elegant solutions to complex problems. Specialized in React and Node.js development.",
-    skills: ["React", "TypeScript", "Node.js", "Python", "AWS"],
-    stats: {
-      tasksCompleted: 142,
-      activeTasks: 8,
-      projectsCompleted: 12,
-      hoursLogged: 1240,
-    },
-    recentTasks: [
-      {
-        id: 1,
-        title: "Update website homepage design",
-        status: "in-progress",
-        dueDate: "Today",
-      },
-      {
-        id: 2,
-        title: "Fix authentication bug",
-        status: "completed",
-        dueDate: "Yesterday",
-      },
-      {
-        id: 3,
-        title: "Code review for PR #234",
-        status: "in-progress",
-        dueDate: "Tomorrow",
-      },
-    ],
-  });
   return (
-    <div className="flex h-screen bg-gray-50">
+    <div className="flex h-screen bg-slate-50 font-sans text-slate-900">
       <Sidebar isOpen={sidebarOpen} setIsOpen={setSidebarOpen} />
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <header className="bg-white shadow-sm z-10">
-          <div className="px-4 sm:px-6 lg:px-8">
-            <div className="flex items-center justify-between h-16">
-              <div className="flex items-center">
-                <button
-                  onClick={() => setSidebarOpen(!sidebarOpen)}
-                  className="text-gray-500 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 lg:hidden"
-                >
-                  <svg
-                    className="h-6 w-6"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M4 6h16M4 12h16M4 18h7"
-                    />
-                  </svg>
-                </button>
-                <button
-                  onClick={() => navigate("/employees")}
-                  className="ml-4 inline-flex items-center text-sm text-gray-500 hover:text-gray-700"
-                >
-                  <ArrowLeftIcon className="h-4 w-4 mr-1" />
-                  Back to Employees
-                </button>
-              </div>
-              <div className="flex items-center">
-                <button
-                  onClick={toggleNotificationPanel}
-                  className="flex-shrink-0 p-1 text-gray-400 rounded-full hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                >
-                  <span className="sr-only">View notifications</span>
-                  {notifications && notifications.length > 0 ? (
-                    <BellDot className="h-6 w-6 text-green-500" />
-                  ) : (
-                    <BellIcon className="h-6 w-6 text-gray-400" />
-                  )}
-                </button>
-                <div className="ml-3 relative">
-                  <div>
-                    <button className="flex items-center max-w-xs bg-gray-100 p-1 rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                      <span className="sr-only">Open user menu</span>
-                      <UserIcon className="h-8 w-8 rounded-full p-1" />
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
+
+      <div className="flex-1 flex flex-col overflow-hidden relative">
+        {/* Header */}
+        <header className="bg-white border-b border-slate-200 h-16 flex items-center justify-between px-4 sm:px-6 lg:px-8 shrink-0 z-20">
+          <div className="flex items-center gap-4">
+            <button onClick={() => setSidebarOpen(!sidebarOpen)} className="lg:hidden p-2 text-slate-500 hover:bg-slate-100 rounded-lg">
+              <Menu size={24} />
+            </button>
+            <button onClick={() => navigate("/employees")} className="flex items-center gap-2 text-sm font-medium text-slate-500 hover:text-slate-900 transition-colors group">
+              <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" /> Back to Team
+            </button>
+          </div>
+          <div className="flex items-center gap-4">
+            <button onClick={toggleNotificationPanel} className="relative p-2 text-slate-500 hover:bg-slate-100 rounded-full transition-colors">
+              <Bell size={22} />
+              {notifications?.length > 0 && <span className="absolute top-1.5 right-2 h-2.5 w-2.5 bg-rose-500 rounded-full ring-2 ring-white animate-pulse"></span>}
+            </button>
           </div>
         </header>
-        <main className="flex-1 overflow-auto p-4 sm:p-6 lg:p-8">
-          <div className="max-w-7xl mx-auto">
-            {/* Employee Header */}
-            <div className="bg-white shadow rounded-lg p-6 mb-6">
-              <div className="flex items-start justify-between">
-                <div className="flex items-center">
-                  {employeeData?.profileImage ? (
-                    <img
-                      src={employeeData?.profileImage}
-                      alt={employeeData?.username}
-                      className="h-20 w-20 rounded-full object-cover"
-                    />
-                  ) : (
-                    <div className="flex-shrink-0 h-20 w-20 bg-blue-100 rounded-full flex items-center justify-center text-2xl font-medium text-blue-800">
-                      {getInitials(employeeData?.username)}
-                    </div>
-                  )}
 
-                  <div className="ml-6">
-                    <h1 className="text-2xl font-semibold text-gray-900">
-                      {employeeData?.username}
-                    </h1>
-                    <p className="text-sm text-gray-500 mt-1">
-                      {employeeData?.role.name === "Boss" ? (
-                        <>{employeeData?.jobTitle}</>
-                      ) : (
-                        <>
-                          {employeeData?.jobTitle} •{" "}
-                          {employeeData?.department?.name}
-                        </>
-                      )}
-                    </p>
-                    <div className="mt-2 flex items-center space-x-4 text-sm text-gray-500">
-                      <div className="flex items-center">
-                        <MapPinIcon className="h-4 w-4 mr-1" />
-                        {employeeData?.state}, {employeeData?.country}
-                      </div>
-                      <div className="flex items-center">
-                        <CalendarIcon className="h-4 w-4 mr-1" />
-                        Joined{" "}
-                        {employeeData?.createdAt
-                          ? new Date(
-                              employeeData?.createdAt
-                            ).toLocaleDateString("en-US", {
-                              year: "numeric",
-                              month: "short",
-                              day: "numeric",
-                            })
-                          : "Not set"}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <button
-                  onClick={() => setIsEditing(!isEditing)}
-                  className="inline-flex items-center px-3 py-1.5 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
-                >
-                  {isEditing ? "Cancel" : "Edit Profile"}
-                </button>
-              </div>
-              {isEditing && (
-                <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Name
-                    </label>
-                    <input
-                      type="text"
-                      value={employeeData.username}
-                      onChange={(e) =>
-                        setEmployeeData({
-                          ...employeeData,
-                          username: e.target.value,
-                        })
-                      }
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Role
-                    </label>
-                    <input
-                      type="text"
-                      value={employeeData.jobTitle}
-                      onChange={(e) =>
-                        setEmployeeData({
-                          ...employeeData,
-                          jobTitle: e.target.value,
-                        })
-                      }
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Email
-                    </label>
-                    <input
-                      type="email"
-                      value={employeeData.email}
-                      onChange={(e) =>
-                        setEmployeeData({
-                          ...employeeData,
-                          email: e.target.value,
-                        })
-                      }
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Phone
-                    </label>
-                    <input
-                      type="tel"
-                      value={employeeData.contactNo}
-                      onChange={(e) =>
-                        setEmployeeData({
-                          ...employeeData,
-                          contactNo: e.target.value,
-                        })
-                      }
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                    />
-                  </div>
-                  <div className="sm:col-span-2">
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Bio
-                    </label>
-                    <textarea
-                      value={employeeData.bio}
-                      onChange={(e) =>
-                        setEmployeeData({
-                          ...employeeData,
-                          bio: e.target.value,
-                        })
-                      }
-                      rows={3}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                    />
-                  </div>
-                  <div className="sm:col-span-2">
-                    <button
-                      onClick={() => setIsEditing(false)}
-                      className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700"
-                    >
-                      <SaveIcon className="h-4 w-4 mr-2" />
-                      Save Changes
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-            {/* Stats Grid */}
-            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4 mb-6">
-              <div className="bg-white overflow-hidden shadow rounded-lg">
-                <div className="p-5">
-                  <div className="flex items-center">
-                    <div className="flex-shrink-0 bg-green-100 rounded-md p-3">
-                      <svg
-                        className="h-6 w-6 text-green-600"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
+        {/* Content */}
+        <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 scroll-smooth">
+          <div className="max-w-6xl mx-auto space-y-6">
+            
+            {/* 1. UNIFIED PROFILE CARD */}
+            <AnimatedContent direction="vertical" distance={20}>
+              <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden group">
+                
+                {/* Banner - Now with a subtle pattern */}
+                <div className="h-48 bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 relative">
+                   <div className="absolute inset-0 bg-[linear-gradient(45deg,transparent_25%,rgba(255,255,255,0.1)_50%,transparent_75%,transparent_100%)] bg-[length:20px_20px] opacity-20"></div>
+                   
+                   {/* Edit Button on Banner */}
+                   <div className="absolute top-4 right-4 flex gap-2">
+                      <button 
+                        onClick={() => setIsEditing(!isEditing)}
+                        className="flex items-center gap-2 px-3 py-1.5 bg-white/20 hover:bg-white/30 backdrop-blur-md text-white rounded-lg text-sm font-medium transition-all"
                       >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                        />
-                      </svg>
-                    </div>
-                    <div className="ml-5 w-0 flex-1">
-                      <dl>
-                        <dt className="text-sm font-medium text-gray-500 truncate">
-                          Tasks Completed
-                        </dt>
-                        <dd className="text-lg font-medium text-gray-900">
-                          {taskDetails?.completedTaskCount}
-                        </dd>
-                      </dl>
-                    </div>
-                  </div>
+                         <PenSquare size={16} /> {isEditing ? "Cancel Editing" : "Edit Profile"}
+                      </button>
+                   </div>
                 </div>
-              </div>
-              <div className="bg-white overflow-hidden shadow rounded-lg">
-                <div className="p-5">
-                  <div className="flex items-center">
-                    <div className="flex-shrink-0 bg-yellow-100 rounded-md p-3">
-                      <svg
-                        className="h-6 w-6 text-yellow-600"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                        />
-                      </svg>
-                    </div>
-                    <div className="ml-5 w-0 flex-1">
-                      <dl>
-                        {user.role?.name === "Boss" ? (
-                          <dt className="text-sm font-medium text-gray-500 truncate">
-                            Tasks Created
-                          </dt>
-                        ) : (
-                          <dt className="text-sm font-medium text-gray-500 truncate">
-                            Total Tasks
-                          </dt>
-                        )}
+                
+                <div className="px-8 pb-8">
+                   <div className="flex flex-col lg:flex-row gap-6 relative">
+                      
+                      {/* Avatar - Fixed overlap using negative margin and ring */}
+                      <div className="-mt-16 shrink-0 flex flex-col items-center lg:items-start relative z-10">
+                         <div className="h-32 w-32 rounded-full p-1 bg-white shadow-xl ring-4 ring-white relative">
+                            {employeeData?.profileImage ? (
+                               <img src={employeeData.profileImage} alt="Profile" className="h-full w-full rounded-full object-cover" />
+                            ) : (
+                               <div className="h-full w-full rounded-full bg-slate-100 flex items-center justify-center text-3xl font-bold text-slate-400">
+                                  {getInitials(employeeData?.firstName)}
+                               </div>
+                            )}
+                            {/* Status Indicator */}
+                            <span className="absolute bottom-2 right-2 h-5 w-5 bg-emerald-500 border-4 border-white rounded-full" title="Active"></span>
+                         </div>
+                      </div>
 
-                        <dd className="text-lg font-medium text-gray-900">
-                          {taskDetails?.totalAssignedTasks}
-                        </dd>
-                      </dl>
-                    </div>
-                  </div>
+                      {/* Name & Info */}
+                      <div className="flex-1 pt-4 text-center lg:text-left">
+                         <div className="flex flex-col lg:flex-row lg:justify-between lg:items-start gap-4">
+                            <div>
+                               <h1 className="text-3xl font-bold text-slate-900 tracking-tight">{employeeData?.firstName}{" "}{employeeData?.lastName}</h1>
+                               <div className="flex flex-wrap items-center justify-center lg:justify-start gap-3 mt-2 text-slate-600 font-medium text-sm">
+                                  <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-blue-50 text-blue-700 border border-blue-100">
+                                    <Briefcase size={14} /> {employeeData?.jobTitle}
+                                  </span>
+                                  <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-slate-50 text-slate-600 border border-slate-200">
+                                    <Building size={14} /> {employeeData?.departmentId?.name || "No Dept"}
+                                  </span>
+                                  <span className="flex items-center gap-1.5 text-slate-500">
+                                    <MapPin size={14} /> {employeeData?.city || "Remote"}, {employeeData?.country}
+                                  </span>
+                               </div>
+                            </div>
+                            
+                            {/* Primary Action Button */}
+                            <div className="flex items-center gap-3">
+                               <button className="flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white rounded-xl text-sm font-bold hover:bg-blue-700 shadow-lg shadow-blue-600/20 transition-all active:scale-95">
+                                  <MessageSquare size={18} /> Message
+                               </button>
+                            </div>
+                         </div>
+                      </div>
+                   </div>
+
+                   {/* Stats Grid - Enhanced with colored backgrounds for icons */}
+                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8 pt-8 border-t border-slate-100">
+                      <ProfileStat 
+                        label="Tasks Done" 
+                        value={taskDetails?.completedTaskCount || 0} 
+                        icon={<CheckCircle2 size={20} className="text-emerald-600"/>} 
+                        bgColor="bg-emerald-50"
+                      />
+                      <ProfileStat 
+                        label="Active Tasks" 
+                        value={taskDetails?.totalAssignedTasks || 0} 
+                        icon={<Hash size={20} className="text-blue-600"/>} 
+                        bgColor="bg-blue-50"
+                      />
+                      <ProfileStat 
+                        label="Hours Logged" 
+                        value={formatHours(activityLog?.durationInSeconds)} 
+                        icon={<Clock size={20} className="text-amber-600"/>} 
+                        bgColor="bg-amber-50"
+                      />
+                      <ProfileStat 
+                        label="Last Active" 
+                        value={activityLog?.loginTime ? format(parseISO(activityLog.loginTime), "MMM dd") : "N/A"} 
+                        icon={<Calendar size={20} className="text-violet-600"/>} 
+                        bgColor="bg-violet-50"
+                      />
+                   </div>
                 </div>
               </div>
-              <div className="bg-white overflow-hidden shadow rounded-lg">
-                <div className="p-5">
-                  <div className="flex items-center">
-                    <div className="flex-shrink-0 bg-blue-100 rounded-md p-3">
-                      <BriefcaseIcon className="h-6 w-6 text-blue-600" />
-                    </div>
-                    <div className="ml-5 w-0 flex-1">
-                      <dl>
-                        <dt className="text-sm font-medium text-gray-500 truncate">
-                          Last Active
-                        </dt>
-                        <dd className="text-md font-medium text-gray-900">
-                          {formatLoginTimeFns(activityLog?.loginTime)}
-                        </dd>
-                      </dl>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div className="bg-white overflow-hidden shadow rounded-lg">
-                <div className="p-5">
-                  <div className="flex items-center">
-                    <div className="flex-shrink-0 bg-purple-100 rounded-md p-3">
-                      <svg
-                        className="h-6 w-6 text-purple-600"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                        />
-                      </svg>
-                    </div>
-                    <div className="ml-5 w-0 flex-1">
-                      <dl>
-                        <dt className="text-sm font-medium text-gray-500 truncate">
-                          Hours Logged
-                        </dt>
-                        <dd className="text-lg font-medium text-gray-900">
-                          {formatHoursOnly(activityLog?.durationInSeconds)}
-                        </dd>
-                      </dl>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-              {/* Contact Info */}
-              <div className="bg-white shadow rounded-lg p-6">
-                <h2 className="text-lg font-medium text-gray-900 mb-4">
-                  Contact Information
-                </h2>
-                <div className="space-y-3">
-                  <div className="flex items-center text-sm">
-                    <MailIcon className="h-5 w-5 mr-3 text-gray-400" />
-                    <span className="text-gray-700">{employeeData?.email}</span>
-                  </div>
-                  <div className="flex items-center text-sm">
-                    <PhoneIcon className="h-5 w-5 mr-3 text-gray-400" />
-                    <span className="text-gray-700">
-                      {employeeData?.contactNo}
-                    </span>
-                  </div>
-                  <div className="flex items-center text-sm">
-                    <MapPinIcon className="h-5 w-5 mr-3 text-gray-400" />
-                    <span className="text-gray-700">
-                      {employeeData?.state}, {employeeData?.country}
-                    </span>
-                  </div>
-                </div>
-                <div className="mt-6 space-y-2">
-                  <button className="w-full inline-flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">
-                    Send Message
-                  </button>
-                  <button className="w-full inline-flex justify-center items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
-                    Schedule Meeting
-                  </button>
-                </div>
-              </div>
-              {/* About & Skills */}
-              <div className="lg:col-span-2 space-y-6">
-                <div className="bg-white shadow rounded-lg p-6">
-                  <h2 className="text-lg font-medium text-gray-900 mb-4">
-                    About
-                  </h2>
-                  <p className="text-sm text-gray-700">
-                    {employeeData?.bio === null
-                      ? "No Bio🙂"
-                      : employeeData?.bio}
-                  </p>
-                </div>
-                <div className="bg-white shadow rounded-lg p-6">
-                  <h2 className="text-lg font-medium text-gray-900 mb-4">
-                    Skills
-                  </h2>
-                  <div className="flex flex-wrap gap-2">
-                    {employeeData?.skills.length === 0
-                      ? "No Skills Added"
-                      : employeeData?.skills.map((skill, idx) => (
-                          <span
-                            key={idx}
-                            className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800"
-                          >
-                            {skill}
-                          </span>
-                        ))}
-                    {/* {employee.skills.map((skill, idx) => (
-                      <span
-                        key={idx}
-                        className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800"
-                      >
-                        {skill}
-                      </span>
-                    ))} */}
-                  </div>
-                </div>
-              </div>
-            </div>
-            {/* Recent Tasks */}
-            <div className="mt-6 bg-white shadow rounded-lg">
-              <div className="px-6 py-4 border-b border-gray-200">
-                <h2 className="text-lg font-medium text-gray-900">
-                  Recent Tasks
-                </h2>
-              </div>
-              <div className="divide-y divide-gray-200">
-                {taskList?.length === 0 ? (
-                  <p className="py-4 px-6 text-gray-700">No task present</p>
-                ) : (
-                  taskList?.map((task) => (
-                    <div
-                      key={task._id}
-                      className="px-6 py-4 hover:bg-gray-50 cursor-pointer"
-                      onClick={() => navigate(`/tasks/${task._id}`)}
-                    >
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <h3 className="text-sm font-medium text-gray-900">
-                            {task.title}
-                          </h3>
-                          <p className="text-sm text-gray-500 mt-1">
-                            Deadline: {formatLoginTimeFns(task.deadline)}
-                          </p>
+            </AnimatedContent>
+
+            {/* Editing Form Overlay */}
+            {isEditing && (
+               <AnimatedContent>
+                  <div className="bg-white rounded-2xl border border-blue-200 shadow-lg p-6 mb-6 ring-4 ring-blue-50/50 relative overflow-hidden">
+                     <div className="absolute top-0 left-0 w-1 h-full bg-blue-500"></div>
+                     <h2 className="text-lg font-bold text-slate-900 mb-6 flex items-center gap-2">
+                        <PenSquare className="text-blue-600" size={20} /> Edit Employee Information
+                     </h2>
+                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <InputField label="Full Name" value={employeeData.username} onChange={(e) => setEmployeeData({...employeeData, username: e.target.value})} />
+                        <InputField label="Job Title" value={employeeData.jobTitle} onChange={(e) => setEmployeeData({...employeeData, jobTitle: e.target.value})} />
+                        <InputField label="Email Address" value={employeeData.email} onChange={(e) => setEmployeeData({...employeeData, email: e.target.value})} type="email" />
+                        <InputField label="Phone Number" value={employeeData.contactNo} onChange={(e) => setEmployeeData({...employeeData, contactNo: e.target.value})} />
+                        <div className="md:col-span-2">
+                           <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Bio / Description</label>
+                           <textarea 
+                              className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all resize-none h-24"
+                              value={employeeData.bio || ""}
+                              onChange={(e) => setEmployeeData({...employeeData, bio: e.target.value})}
+                              placeholder="Write a short bio..."
+                           />
                         </div>
-                        <span
-                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                            task.status === "Completed"
-                              ? "bg-green-100 text-green-800"
-                              : task.status === "In Progress"
-                              ? "bg-blue-100 text-blue-800"
-                              : task.status === "Pending"
-                              ? "bg-yellow-100 text-yellow-800"
-                              : "bg-red-100 text-red-800"
-                          }`}
+                     </div>
+                     <div className="mt-6 flex justify-end gap-3">
+                        <button 
+                           onClick={() => setIsEditing(false)}
+                           className="px-4 py-2.5 text-slate-600 font-bold hover:bg-slate-100 rounded-xl transition-all"
                         >
-                          {task.status}
-                        </span>
-                      </div>
-                    </div>
-                  ))
-                )}
-              </div>
+                           Cancel
+                        </button>
+                        <button 
+                           onClick={() => setIsEditing(false)} // Add actual save logic here later
+                           className="flex items-center gap-2 px-6 py-2.5 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-600/20 active:scale-95"
+                        >
+                           <Save size={18} /> Save Changes
+                        </button>
+                     </div>
+                  </div>
+               </AnimatedContent>
+            )}
+
+            {/* 2. MAIN LAYOUT GRID */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+               
+               {/* LEFT COLUMN: Contact & Info */}
+               <div className="space-y-6">
+                  {/* Contact Card */}
+                  <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm h-fit">
+                     <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4 flex items-center gap-2">
+                        <Shield size={14} /> Contact Details
+                     </h3>
+                     <div className="space-y-5">
+                        <ContactRow icon={<Mail size={16} />} label="Email" value={employeeData?.email} copyable />
+                        <ContactRow icon={<Phone size={16} />} label="Phone" value={employeeData?.contactNo} />
+                        <ContactRow icon={<MapPin size={16} />} label="Location" value={`${employeeData?.city || 'Unknown'}, ${employeeData?.country || ''}`} />
+                        <ContactRow icon={<Calendar size={16} />} label="Joined Team" value={employeeData?.createdAt ? format(parseISO(employeeData.createdAt), "MMM d, yyyy") : "N/A"} />
+                     </div>
+                  </div>
+
+                  {/* Skills Card */}
+                  <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm h-fit">
+                     <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4">Skills & Expertise</h3>
+                     <div className="flex flex-wrap gap-2">
+                        {employeeData?.skills?.length > 0 ? (
+                           employeeData.skills.map((skill, idx) => (
+                              <span key={idx} className="px-3 py-1.5 bg-slate-50 text-slate-700 rounded-lg text-xs font-semibold border border-slate-200 hover:border-blue-300 hover:text-blue-600 transition-colors cursor-default">
+                                 {skill}
+                              </span>
+                           ))
+                        ) : (
+                           <p className="text-sm text-slate-400 italic">No skills listed yet.</p>
+                        )}
+                     </div>
+                  </div>
+               </div>
+
+               {/* RIGHT COLUMN: Tasks & Bio */}
+               <div className="lg:col-span-2 space-y-6">
+                  
+                  {/* About Section */}
+                  <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                     <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">About</h3>
+                     <p className="text-slate-600 text-sm leading-relaxed whitespace-pre-line">
+                        {employeeData?.bio || "This user has not added a bio yet."}
+                     </p>
+                  </div>
+
+                  {/* Tasks Table - Improved Visuals */}
+                  <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                     <div className="p-6 border-b border-slate-100 flex items-center justify-between">
+                        <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider flex items-center gap-2">
+                           <CheckCircle2 size={16} className="text-slate-400"/> Recent Tasks
+                        </h3>
+                        <button className="text-xs font-bold text-blue-600 hover:text-blue-700 hover:bg-blue-50 px-3 py-1.5 rounded-lg transition-colors">
+                           View All History
+                        </button>
+                     </div>
+                     <div className="divide-y divide-slate-100">
+                        {taskList.length === 0 ? (
+                           <div className="p-12 text-center text-slate-400 flex flex-col items-center">
+                              <div className="w-12 h-12 bg-slate-50 rounded-full flex items-center justify-center mb-3">
+                                 <Briefcase size={20} className="opacity-50" />
+                              </div>
+                              <p className="text-sm">No tasks assigned recently.</p>
+                           </div>
+                        ) : (
+                           taskList.slice(0, 5).map((task) => (
+                              <div key={task._id} className="p-4 hover:bg-slate-50/80 transition-colors flex items-center justify-between group cursor-pointer" onClick={() => navigate(`/tasks/${task._id}`)}>
+                                 <div className="flex items-center gap-4">
+                                    <div className={`p-2.5 rounded-xl shadow-sm ${task.status === 'Completed' ? 'bg-emerald-100 text-emerald-600' : 'bg-white border border-slate-200 text-slate-500'}`}>
+                                       {task.status === 'Completed' ? <CheckCircle2 size={18} /> : <Clock size={18} />}
+                                    </div>
+                                    <div>
+                                       <h4 className="font-bold text-slate-800 text-sm group-hover:text-blue-600 transition-colors">{task.title}</h4>
+                                       <div className="flex items-center gap-3 mt-1">
+                                          <span className="text-xs text-slate-500 flex items-center gap-1">
+                                             <Calendar size={12} /> {task.deadline ? format(parseISO(task.deadline), "MMM dd") : "No Date"}
+                                          </span>
+                                          {/* Priority Badge */}
+                                          {task.priority === 'High' && (
+                                             <span className="flex items-center gap-1 text-[10px] font-bold text-rose-600 bg-rose-50 px-1.5 py-0.5 rounded border border-rose-100">
+                                                <AlertCircle size={10} /> High
+                                             </span>
+                                          )}
+                                       </div>
+                                    </div>
+                                 </div>
+                                 <span className={`px-2.5 py-1 rounded-lg text-xs font-bold border ${getStatusStyle(task.status)}`}>
+                                    {task.status}
+                                 </span>
+                              </div>
+                           ))
+                        )}
+                     </div>
+                  </div>
+
+               </div>
             </div>
+
           </div>
         </main>
       </div>
@@ -583,4 +361,52 @@ const EmpDetails = () => {
     </div>
   );
 };
+
+// --- Sub-Components ---
+
+const StatItem = ({ label, value, icon }) => (
+   <div className="flex flex-col items-center justify-center p-2">
+      <div className="flex items-center gap-2 mb-1 text-slate-400">
+         {icon}
+         <span className="text-xs font-bold uppercase tracking-wider">{label}</span>
+      </div>
+      <span className="text-xl font-bold text-slate-900">{value}</span>
+   </div>
+);
+
+// Updated Profile Stat with colored background container
+const ProfileStat = ({ label, value, icon, bgColor }) => (
+   <div className="flex flex-col items-center justify-center p-4 bg-white rounded-2xl border border-slate-100 hover:border-blue-200 transition-all hover:shadow-md group">
+      <div className={`w-10 h-10 rounded-full flex items-center justify-center mb-3 ${bgColor}`}>
+         {icon}
+      </div>
+      <span className="text-2xl font-extrabold text-slate-900 tracking-tight">{value}</span>
+      <span className="text-xs font-bold text-slate-400 uppercase tracking-wider mt-1">{label}</span>
+   </div>
+);
+
+const InputField = ({ label, value, onChange, type = "text" }) => (
+   <div>
+      <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">{label}</label>
+      <input 
+         type={type} 
+         value={value || ""} 
+         onChange={onChange}
+         className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
+      />
+   </div>
+);
+
+const ContactRow = ({ icon, label, value }) => (
+   <div className="flex items-center gap-3 p-2 rounded-lg hover:bg-slate-50 transition-colors group">
+      <div className="w-9 h-9 rounded-lg bg-slate-100 flex items-center justify-center text-slate-500 group-hover:bg-white group-hover:text-blue-600 group-hover:shadow-sm transition-all border border-transparent group-hover:border-slate-200 shrink-0">
+         {icon}
+      </div>
+      <div className="overflow-hidden">
+         <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">{label}</p>
+         <p className="text-sm font-semibold text-slate-800 truncate">{value || "Not set"}</p>
+      </div>
+   </div>
+);
+
 export default EmpDetails;

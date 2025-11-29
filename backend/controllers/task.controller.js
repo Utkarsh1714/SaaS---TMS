@@ -162,23 +162,29 @@ const applyTaskFilters = async (
           department: { _id: "$department._id", name: "$department.name" },
           createdBy: {
             _id: "$createdBy._id",
-            username: "$createdBy.username",
+            firstName: "$createdBy.firstName",
+            middleName: "$createdBy.middleName",
+            lastName: "$createdBy.lastName",
             email: "$createdBy.email",
             jobTitle: "$createdBy.jobTitle",
             role: {
               _id: "$creatorRole._id",
               name: "$creatorRole.name",
             },
+            profileImage: "$createdBy.profileImage"
           },
           assignedManager: {
             _id: "$assignedManager._id",
-            username: "$assignedManager.username",
+            firstName: "$assignedManager.firstName",
+            middleName: "$assignedManager.middleName",
+            lastName: "$assignedManager.lastName",
             email: "$assignedManager.email",
             jobTitle: "$assignedManager.jobTitle",
             role: {
               _id: "$managerRole._id",
               name: "$managerRole.name",
             },
+            profileImage: "$assignedManager.profileImage"
           },
           assignedEmployees: {
             $map: {
@@ -186,9 +192,12 @@ const applyTaskFilters = async (
               as: "emp",
               in: {
                 _id: "$$emp._id",
-                username: "$$emp.username",
+                firstName: "$$emp.firstName",
+                middleName: "$$emp.middleName",
+                lastName: "$$emp.lastName",
                 email: "$$emp.email",
                 jobTitle: "$$emp.jobTitle", // Added
+                profileImage: "$$emp.profileImage",
                 role: {
                   // Added
                   $let: {
@@ -242,19 +251,19 @@ const applyTaskFilters = async (
         .populate({
           // MODIFIED
           path: "assignedManager",
-          select: "username email jobTitle",
+          select: "firstName middleName lastName email jobTitle profileImage",
           populate: { path: "role", select: "name" },
         })
         .populate({
           // MODIFIED
           path: "assignedEmployees",
-          select: "username email jobTitle",
+          select: "firstName middleName lastName email jobTitle profileImage",
           populate: { path: "role", select: "name" },
         })
         .populate({
           // MODIFIED for consistency
           path: "createdBy",
-          select: "username email jobTitle",
+          select: "firstName middleName lastName email jobTitle profileImage",
           populate: { path: "role", select: "name" },
         })
         .populate("team", "name _id")
@@ -282,7 +291,7 @@ export const createTask = async (req, res) => {
     const manager = await User.findById(assignedManager);
     if (!manager) return res.status(404).json({ message: "Manager not found" });
 
-    const { username, email } = manager;
+    const { firstName, lastName, email } = manager;
 
     const task = await Task.create({
       title,
@@ -304,6 +313,8 @@ export const createTask = async (req, res) => {
       $push: { task: task._id },
     });
 
+    const username = `${firstName} ${lastName}`
+
     await sendTaskNotificationEmail({
       title,
       description,
@@ -315,7 +326,7 @@ export const createTask = async (req, res) => {
 
     // ✅ Populate department and assignedManager before sending response
     const populatedTask = await Task.findById(task._id)
-      .populate("assignedManager", "username email _id")
+      .populate("assignedManager", "firstName middleName lastName email _id")
       .populate("department", "name _id");
 
     res.status(201).json({ message: "Task created", task: populatedTask });
@@ -410,7 +421,7 @@ export const assignTaskToTeam = async (req, res) => {
       _id: taskId,
       organizationId: organizationId,
     })
-      .populate("assignedManager", "username email jobTitle _id")
+      .populate("assignedManager", "firstName middleName lastName email jobTitle _id")
       .populate("department", "name _id")
       .populate("team", "name _id");
 

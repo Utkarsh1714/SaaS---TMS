@@ -57,7 +57,7 @@ const DeleteDialog = ({ employee, handleDelete }) => (
         <DialogTitle>Delete Employee</DialogTitle>
         <DialogDescription>
           Are you sure you want to delete{" "}
-          <span className="font-semibold">{employee.username}</span>? This
+          <span className="font-semibold">{employee.firstName}{" "}{employee.lastName}</span>? This
           action cannot be undone.
         </DialogDescription>
       </DialogHeader>
@@ -77,7 +77,7 @@ const DeleteDialog = ({ employee, handleDelete }) => (
 );
 
 const EmployeeCard = ({ employee, user, navigate, handleDelete }) => {
-  const initials = getInitials(employee.username);
+  const initials = getInitials(employee.firstName);
   const statusClasses = getStatusStyles(employee.status);
 
   return (
@@ -87,7 +87,7 @@ const EmployeeCard = ({ employee, user, navigate, handleDelete }) => {
           <img
             className="h-24 w-24 rounded-full mb-4 object-cover"
             src={employee.profileImage}
-            alt={employee.username}
+            alt={employee.firstName}
           />
         ) : (
           <div className="h-24 w-24 rounded-full mb-4 bg-blue-100 text-blue-800 flex items-center justify-center text-3xl font-bold">
@@ -96,7 +96,7 @@ const EmployeeCard = ({ employee, user, navigate, handleDelete }) => {
         )}
 
         <h3 className="text-lg font-medium text-gray-900">
-          {employee.username}
+          {employee.firstName}{" "}{employee.lastName}
         </h3>
         <p className="text-sm text-gray-600">{employee.jobTitle}</p>
         <span
@@ -281,17 +281,17 @@ const EmployeeDirectory = ({
                             <img
                               className="h-10 w-10 rounded-full object-cover"
                               src={employee.profileImage}
-                              alt={employee.username}
+                              alt={employee.firstName}
                             />
                           </div>
                         ) : (
                           <div className="flex-shrink-0 h-10 w-10 bg-gray-200 rounded-full flex items-center justify-center text-sm font-medium text-gray-800">
-                            {getInitials(employee.username)}
+                            {getInitials(employee.firstName)}
                           </div>
                         )}
                         <div className="ml-4">
                           <div className="text-sm font-medium text-gray-900">
-                            {employee.username}
+                            {employee.firstName}{" "}{employee.lastName}
                           </div>
                           <div className="text-xs text-gray-500">
                             {employee.email}

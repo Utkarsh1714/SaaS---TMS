@@ -1,208 +1,180 @@
 import React, { useEffect, useState } from "react";
 import {
-  UserIcon,
-  BuildingIcon,
-  CalendarIcon,
-  BarChartIcon,
-  PencilIcon,
-  Loader,
+  Building2,
+  Calendar,
+  BarChart3,
+  Users,
   User,
+  Trash2,
+  Edit,
+  Loader2,
 } from "lucide-react";
 import axios from "axios";
-import { useAuth } from "@/context/AuthContext";
+import { format } from "date-fns";
+import { toast } from "sonner";
 import { Link } from "react-router-dom";
 
-const DepartmentSummary = ({ departmentId }) => {
-  const { user } = useAuth();
-  const [department, setDepartment] = useState(null);
-  const [formattedDate, setFormattedDate] = useState("");
-
-  const formatter = new Intl.NumberFormat("en-US", {
-    notation: "compact",
-    maximumFractionDigits: 1,
-  });
-
-  const getInitials = (username) => {
-  if (!username) return "";
-  return username
-    .split(" ")
-    .map((word) => word[0])
-    .join("")
-    .toUpperCase();
-};
-
-  const formatDate = (isoDateString) => {
-    if (!isoDateString) return "N/A";
-
-    try {
-      const date = new Date(isoDateString);
-      const options = {
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-      };
-
-      return new Intl.DateTimeFormat("en-US", options).format(date);
-    } catch (error) {
-      console.error("Invalid date string:", isoDateString, error);
-      return "Invalid Date";
-    }
-  };
-
-  const fetchDepartmentDetails = async (id) => {
-    try {
-      const res = await axios.get(
-        `${import.meta.env.VITE_API_URL}/api/department/details/${id}`,
-        { withCredentials: true }
-      );
-      console.log(res.data);
-      setDepartment(res.data);
-      setFormattedDate(formatDate(res.data.createdAt));
-    } catch (error) {
-      console.error("Error fetching department details:", error);
-      // Optionally handle error state
-    }
-  };
+const DepartmentSummary = ({ departmentId, onDelete, isManager }) => {
+  const [dept, setDept] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (departmentId) {
-      setDepartment(null);
-      setFormattedDate("");
-      fetchDepartmentDetails(departmentId);
-    }
+    if (!departmentId) return;
+    const fetchDetails = async () => {
+      setLoading(true);
+      try {
+        const res = await axios.get(
+          `${
+            import.meta.env.VITE_API_URL
+          }/api/department/details/${departmentId}`,
+          { withCredentials: true }
+        );
+        console.log(res.data);
+        setDept(res.data);
+      } catch (error) {
+        console.error(error);
+        toast.error("Failed to load details");
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchDetails();
   }, [departmentId]);
 
-  if (!departmentId || !department) {
+  if (loading)
     return (
-      <div className="bg-white shadow rounded-lg p-6 flex items-center justify-center h-48">
-        {departmentId ? (
-          <div className="flex items-center justify-center h-screen bg-gray-50">
-            <Loader className="h-10 w-10 animate-spin text-blue-500" />
-            <p className="ml-3 text-lg text-gray-700">
-              Loading department details...
-            </p>
-          </div>
-        ) : (
-          "Select a department to view details."
-        )}
+      <div className="h-64 flex items-center justify-center bg-white rounded-2xl border border-slate-200">
+        <Loader2 className="animate-spin text-blue-600" />
       </div>
     );
-  }
+  if (!dept) return null;
+
+  const formatter = new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    notation: "compact",
+  });
 
   return (
-    <div className="bg-white shadow rounded-lg overflow-hidden">
-      <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
-        <div className="flex items-center">
-          <span
-            className={`inline-flex items-center justify-center w-10 h-10 rounded-lg bg-[#DBEAFE] text-blue-600 font-semibold text-lg`}
-          >
-            {department?.name.charAt(0)}
-          </span>
-          <h2 className="ml-3 text-lg font-medium text-gray-900">
-            {department?.name} Department
-          </h2>
+    <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+      {/* Header */}
+      <div className="p-6 border-b border-slate-100 flex justify-between items-start bg-slate-50/50">
+        <div className="flex gap-4">
+          <div className="w-12 h-12 bg-white border border-slate-200 rounded-xl flex items-center justify-center shadow-sm">
+            <Building2 className="text-blue-600" size={24} />
+          </div>
+          <div>
+            <h2 className="text-xl font-bold text-slate-900">{dept.name}</h2>
+            <p className="text-sm text-slate-500 mt-1 max-w-lg">
+              {dept.description || "No description provided."}
+            </p>
+          </div>
         </div>
-        <Link to={`/department/${department._id}`}>
-          <button className="inline-flex items-center px-3 py-1.5 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
-            <PencilIcon className="h-4 w-4 mr-1" />
-            Edit
-          </button>
-        </Link>
-      </div>
-      <div className="px-6 py-5">
-        <p className="text-gray-700 mb-6">
-          {department.description ||
-            "No description available for this department."}
-        </p>
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
-          <div className="flex items-center mb-4 md:mb-0 gap-4">
-            <span
-              className={`inline-flex items-center justify-center w-10 h-10 rounded-full bg-[#DBEAFE] text-blue-600 font-semibold text-lg`}
+        {isManager && (
+          <div className="flex gap-2">
+            <Link to={`/department/${dept._id}`}>
+              <button className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors">
+                <Edit size={18} />
+              </button>
+            </Link>
+            <button
+              onClick={onDelete}
+              className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
             >
-              {getInitials(department.manager?.username) || <User />}
-            </span>
-            <div>
-              <div className="flex items-center justify-center gap-1">
-                <h3 className="text-sm font-medium text-gray-900">
-                  {department.manager?.username || "No Manager Assigned"}
-                </h3>
-                <p className="text-sm text-gray-500">
-                  ({department.manager?.role})
-                </p>
-              </div>
-              <p className="text-sm text-gray-500">
-                {department.manager?.jobTitle}
+              <Trash2 size={18} />
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* Stats Grid */}
+      <div className="grid grid-cols-2 md:grid-cols-4 border-b border-slate-100 divide-x divide-slate-100">
+        <StatBox
+          label="Headcount"
+          value={dept.totalEmployees}
+          icon={<Users size={18} className="text-blue-500" />}
+        />
+        <StatBox
+          label="Teams"
+          value={dept.teams?.length || 0}
+          icon={<Building2 size={18} className="text-indigo-500" />}
+        />
+        <StatBox
+          label="Budget"
+          value={formatter.format(dept.budget || 0)}
+          icon={<BarChart3 size={18} className="text-emerald-500" />}
+        />
+        <StatBox
+          label="Created"
+          value={format(new Date(dept.createdAt), "MMM yyyy")}
+          icon={<Calendar size={18} className="text-purple-500" />}
+        />
+      </div>
+
+      {/* Manager Section */}
+      <div className="p-6">
+        <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4">
+          Department Lead
+        </h3>
+        <div className="flex items-center gap-4 p-4 bg-slate-50 rounded-xl border border-slate-100">
+          {dept.manager?.profileImage ? (
+            <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-bold border-2 border-white shadow-sm">
+              <img src={dept.manager?.profileImage} alt={dept.manager?.firstName} className="w-full h-full rounded-full object-cover" />
+            </div>
+          ) : (
+            <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-bold border-2 border-white shadow-sm">
+              {dept.manager?.firstName?.[0] || "?"}
+            </div>
+          )}
+
+          <div>
+            {dept.manager ? (
+              <p className="text-sm font-bold text-slate-900">
+                {dept.manager.firstName} {dept.manager.lastName}
               </p>
-            </div>
-          </div>
-          <div className="flex flex-wrap gap-4">
-            <div className="flex items-center">
-              <span className="inline-flex items-center justify-center h-8 w-8 rounded-md bg-blue-100 text-blue-600">
-                <UserIcon className="h-5 w-5" />
-              </span>
-              <div className="ml-2">
-                <p className="text-xs text-gray-500">Employees</p>
-                <p className="text-sm font-medium">
-                  {department.totalEmployees}
-                </p>
-              </div>
-            </div>
-            <div className="flex items-center">
-              <span className="inline-flex items-center justify-center h-8 w-8 rounded-md bg-green-100 text-green-600">
-                <BarChartIcon className="h-5 w-5" />
-              </span>
-              <div className="ml-2">
-                <p className="text-xs text-gray-500">Budget</p>
-                <p className="text-sm font-medium">
-                  ₹{formatter.format(department.budget)}
-                </p>
-              </div>
-            </div>
-            <div className="flex items-center">
-              <span className="inline-flex items-center justify-center h-8 w-8 rounded-md bg-yellow-100 text-yellow-600">
-                <BuildingIcon className="h-5 w-5" />
-              </span>
-              <div className="ml-2">
-                <p className="text-xs text-gray-500">Location</p>
-                <p className="text-sm font-medium">
-                  {user.organizationId?.country || "India"}
-                </p>
-              </div>
-            </div>
-            <div className="flex items-center">
-              <span className="inline-flex items-center justify-center h-8 w-8 rounded-md bg-purple-100 text-purple-600">
-                <CalendarIcon className="h-5 w-5" />
-              </span>
-              <div className="ml-2">
-                <p className="text-xs text-gray-500">Established</p>
-                <p className="text-sm font-medium">{formattedDate}</p>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div className="mt-6">
-          <h3 className="text-sm font-medium text-gray-900 mb-3">Teams</h3>
-          <div className="flex flex-wrap gap-2">
-            {department.teams.map((team, index) => (
-              <span
-                key={index}
-                className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-[#DBEAFE] text-blue-600`}
-              >
-                {team.name}
-              </span>
-            ))}
+            ) : (
+              <p className="text-sm font-bold text-slate-900">Unassigned</p>
+            )}
+
+            <p className="text-xs text-slate-500">
+              {dept.manager?.email || "No email"}
+            </p>
           </div>
         </div>
       </div>
-      <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 flex justify-between">
-        <button className="text-sm font-medium text-blue-600 hover:text-blue-500">
-          View Department Members
-        </button>
-        <button className="text-sm font-medium text-blue-600 hover:text-blue-500">
-          Department Reports
-        </button>
+
+      {/* Teams Section */}
+      <div className="p-6 pt-0">
+        <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4">
+          Teams
+        </h3>
+        <div className="flex flex-wrap gap-2">
+          {dept.teams?.length > 0 ? (
+            dept.teams.map((t, i) => (
+              <span
+                key={i}
+                className="px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-sm font-medium text-slate-700 shadow-sm"
+              >
+                {t.name}
+              </span>
+            ))
+          ) : (
+            <span className="text-sm text-slate-400 italic">
+              No teams created yet.
+            </span>
+          )}
+        </div>
       </div>
     </div>
   );
 };
+
+const StatBox = ({ label, value, icon }) => (
+  <div className="p-4 flex flex-col items-center justify-center text-center hover:bg-slate-50 transform-style-3d hover:scale-110 transition-transform duration-500 ease-out group">
+    <div className="mb-2">{icon}</div>
+    <span className="text-lg font-bold text-slate-900">{value}</span>
+    <span className="text-xs font-medium text-slate-500">{label}</span>
+  </div>
+);
+
 export default DepartmentSummary;

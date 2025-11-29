@@ -4,10 +4,11 @@ import {
   closestCorners,
   useSensor,
   useSensors,
-  PointerSensor,
+  TouchSensor,
   useDroppable,
   DragOverlay, // 👈 Import this
-  defaultDropAnimationSideEffects, 
+  defaultDropAnimationSideEffects,
+  MouseSensor, 
 } from "@dnd-kit/core";
 import {
   useSortable,
@@ -28,8 +29,18 @@ const KanbanBoard = ({ tasks, onUpdateStatus, navigate }) => {
   const [activeTask, setActiveTask] = useState(null);
 
   const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: { distance: 5 }, // Prevent accidental drags
+    useSensor(MouseSensor, {
+      // Require the mouse to move by 10 pixels before activating (prevents accidental clicks)
+      activationConstraint: {
+        distance: 10,
+      },
+    }),
+    useSensor(TouchSensor, {
+      // Press and hold for 250ms to start dragging (allows scrolling if swiped quickly)
+      activationConstraint: {
+        delay: 250,
+        tolerance: 5,
+      },
     })
   );
 
@@ -159,7 +170,8 @@ const SortableTaskItem = ({ task, navigate }) => {
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
-    opacity: isDragging ? 0.3 : 1, // Dim the original card while dragging
+    opacity: isDragging ? 0.3 : 1,
+    touchAction: "none",
   };
 
   return (
