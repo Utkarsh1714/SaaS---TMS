@@ -36,6 +36,10 @@ export const getDeptDetailDashboard = async (req, res) => {
           path: "task",
           populate: {
             path: "department"
+          },
+          populate: {
+            path: "assignedManager",
+            select: "-resetToken -resetTokenExpires -password -otp -otpExpires"
           }
         }),
       User.find({ departmentId: id, organizationId: organizationId })

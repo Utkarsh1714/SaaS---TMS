@@ -16,7 +16,7 @@ import {
 router.post(
   "/",
   verifyToken,
-  authorizePermission("can_create_department"),
+  authorizePermission("can_manage_department"),
   createDepartment
 );
 router.get("/", verifyToken, getDepartment);

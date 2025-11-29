@@ -90,7 +90,7 @@ export const changeDepartmentManager = async (req, res) => {
     department.manager = newManager._id;
     await department.save();
 
-    await department.populate("manager", "username email jobTitle role _id");
+    await department.populate("manager", "firstName middleName lastName email jobTitle role _id");
 
     res.status(200).json({ message: "Department manager changed successfully", department });
   } catch (error) {
@@ -129,7 +129,7 @@ export const getDepartmentWithDetails = async (req, res) => {
       organizationId: req.user.organizationId,
     })
       .sort({ createdAt: -1 })
-      .populate("manager", "_id username email") // Populate with specific fields
+      .populate("manager", "_id firstName middleName lastName email") // Populate with specific fields
       .lean(); // Use .lean() for performance
 
     // Step 3: Combine the two results in your application.
@@ -181,11 +181,14 @@ export const getSingleDepartmentWithDetails = async (req, res) => {
             },
             {
               $project: {
-                username: 1,
+                firstName: 1,
+                middleName: 1,
+                lastName: 1,
                 email: 1,
                 jobTitle: 1,
                 role: { $first: "$roleDetails.name" },
                 contactNo: 1,
+                profileImage: 1,
               },
             },
           ],
@@ -211,9 +214,12 @@ export const getSingleDepartmentWithDetails = async (req, res) => {
                   {
                     $project: {
                       _id: 1,
-                      username: 1,
+                      firstName: 1,
+                      middleName: 1,
+                      lastName: 1,
                       email: 1,
                       jobTitle: 1,
+                      profileImage: 1,
                     },
                   },
                 ],
@@ -278,11 +284,14 @@ export const getSingleDepartmentWithDetails = async (req, res) => {
               { $gt: ["$manager", null] },
               {
                 id: "$manager._id",
-                username: "$manager.username",
+                firstName: "$manager.firstName",
+                middleName: "$manager.middleName",
+                lastName: "$manager.lastName",
                 email: "$manager.email",
                 role: "$manager.role",
                 jobTitle: "$manager.jobTitle",
                 contactNo: "$manager.contactNo",
+                profileImage: "$manager.profileImage",
               },
               null,
             ],
@@ -293,11 +302,14 @@ export const getSingleDepartmentWithDetails = async (req, res) => {
               input: "$employees",
               as: "emp",
               in: {
-                username: "$$emp.username",
+                firstName: "$$emp.firstName",
+                middleName: "$$emp.middleName",
+                lastName: "$$emp.lastName",
                 email: "$$emp.email",
                 role: "$$emp.role",
                 jobTitle: "$$emp.jobTitle",
                 contactNo: "$$emp.contactNo",
+                profileImage: "$$emp.profileImage",
                 _id: "$$emp._id",
               },
             },

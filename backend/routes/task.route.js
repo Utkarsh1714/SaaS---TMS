@@ -20,13 +20,13 @@ import { authorizePermission } from "../middlewares/authorizePermission.js";
 router.post(
   "/create",
   verifyToken,
-  authorizePermission("can_create_task"),
+  authorizePermission("can_manage_task"),
   createTask
 );
 router.delete(
   "/:taskId",
   verifyToken,
-  authorizePermission("can_delete_task"),
+  authorizePermission("can_manage_task"),
   deleteTask
 );
 router.put(
@@ -50,25 +50,25 @@ router.patch(
 router.post(
   "/:taskId/milestone",
   verifyToken,
-  authorizePermission("can_add_milestone"),
+  authorizePermission("can_manage_milestone"),
   addMilestones
 );
 router.patch(
   "/:taskId/milestone",
   verifyToken,
-  authorizePermission("can_update_milestone"),
+  authorizePermission("can_manage_milestone"),
   updateMilestone
 );
 router.post(
   "/:taskId/assign-team",
   verifyToken,
-  authorizePermission("can_create_task"), // didn't create the 'can_assign_teamToTask' permission, therefore this permission is used
+  authorizePermission("can_manage_task"), // didn't create the 'can_assign_teamToTask' permission, therefore this permission is used
   assignTaskToTeam
 );
 router.put(
   "/:id",
   verifyToken,
-  authorizePermission("can_create_task"),
+  authorizePermission("can_manage_task"),
   updateTitleAndDesc
 );
 

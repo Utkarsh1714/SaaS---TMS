@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 import Task from "../models/task.model.js";
 import User from "../models/user.model.js";
+import Role from '../models/Role.model.js'
 
 const getInitialMonthlyCountsArray = (year) => {
   const months = Array.from({ length: 12 }, (_, i) => i + 1);
@@ -29,6 +30,9 @@ export const getDashboardAnalytics = async (req, res) => {
     const currentYear = now.getFullYear();
     const startOfYear = new Date(currentYear, 0, 1);
     const endOfYear = new Date(currentYear, 11, 31, 23, 59, 59);
+
+    const bossRole = await Role.findOne({ name: "Boss" });
+    const bossRoleId = bossRole ? bossRole._id : null;
 
     const [
       totalTaskCount,
@@ -93,7 +97,11 @@ export const getDashboardAnalytics = async (req, res) => {
 
       // 6. Number of employee count in each department
       User.aggregate([
-        { $match: { organizationId: orgId } },
+        { $match: { 
+            organizationId: orgId,
+            ...(bossRoleId && { role: { $ne: bossRoleId } })
+          } 
+        },
         {
           $group: {
             _id: "$departmentId",

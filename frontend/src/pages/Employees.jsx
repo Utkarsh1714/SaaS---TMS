@@ -12,6 +12,10 @@ import {
   ListIcon,
   GridIcon,
   BellDot,
+  Loader2,
+  Plus,
+  UserPlus,
+  X,
 } from "lucide-react";
 import EmployeeDirectory from "@/components/Employee/EmployeeDirectory ";
 import EmployeeStats from "@/components/Employee/EmployeeStats";
@@ -71,16 +75,25 @@ const EmployeesPage = () => {
   // Sidebar State
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
+  const [countryCode, setCountryCode] = useState("+91");
   const [formData, setFormData] = useState({
-    username: "",
+    firstName: "",
+    middleName: "",
+    lastName: "",
     email: "",
     contactNo: "",
     jobTitle: "",
     roleName: "",
+    city: "",
+    state: "",
+    country: "",
+    bio: "",
   });
   const [selectedRoles, setSelectedRoles] = useState(null);
   const [selectedDept, setSelectedDept] = useState(null);
   const [createLoading, setCreateLoading] = useState(false);
+  const [isCountriesLoading, setIsCountriesLoading] = useState(true);
+  const [countries, setCountries] = useState([]);
 
   const [employeeCount, setEmployeeCount] = useState(null);
   const [newHiresCount, setNewHiresCount] = useState(0);
@@ -157,10 +170,21 @@ const EmployeesPage = () => {
   const handleCreateSubmit = async (e) => {
     e.preventDefault();
     setCreateLoading(true);
+    const formFields = new FormData();
+
+    Object.keys(formData).forEach((key) => {
+      if (key === "contactNo") {
+        const cleanNumber = formData[key].replace(/[^0-9]/g, "");
+
+        formFields.append(key, countryCode + cleanNumber);
+      } else {
+        formFields.append(key, formData[key]);
+      }
+    });
 
     try {
       const payload = {
-        ...formData,
+        ...Object.fromEntries(formFields),
         departmentId: selectedDept.value,
         organizationId: user.organizationId,
       };
@@ -175,27 +199,22 @@ const EmployeesPage = () => {
 
       toast.success("Employee created successfully");
       setFormData({
-        username: "",
+        firstName: "",
+        middleName: "",
+        lastName: "",
         email: "",
         contactNo: "",
         jobTitle: "",
         roleName: "",
+        city: "",
+        state: "",
+        country: "",
+        bio: "",
       });
       setSelectedDept(null);
-      // setSelectedRoles(null);
       setIsCreateDialogOpen(false);
 
-      // fetch employee list
       getAllEmployee();
-
-      // const newEmployee = res.data;
-      // setEmployee((prevEmployee) => {
-      //   const exists = prevEmployee.some((emp) => emp._id === newEmployee._id);
-      //   if (!exists) {
-      //     return [newEmployee, ...prevEmployee];
-      //   }
-      //   return prevEmployee;
-      // });
     } catch (err) {
       console.error(err);
       if (
@@ -227,12 +246,15 @@ const EmployeesPage = () => {
     const lowerCasedTerm = searchTerm.toLowerCase();
 
     let filteredBySearch = employee.filter((emp) => {
-      const nameMatch = emp.username.toLowerCase().includes(lowerCasedTerm);
+      const firstNameMatch = emp.firstName
+        .toLowerCase()
+        .includes(lowerCasedTerm);
+      const lastNameMatch = emp.lastName.toLowerCase().includes(lowerCasedTerm);
       const roleMatch = emp.jobTitle.toLowerCase().includes(lowerCasedTerm);
       const deptMatch = emp.departmentId?.name
         ?.toLowerCase()
         .includes(lowerCasedTerm);
-      return nameMatch || roleMatch || deptMatch;
+      return firstNameMatch || lastNameMatch || roleMatch || deptMatch;
     });
 
     if (statusFilter !== "All") {
@@ -285,9 +307,65 @@ const EmployeesPage = () => {
     return Array.from(suggestions).slice(0, 10);
   }, [searchTerm, employee]);
 
+  const InputGroup = ({ label, children }) => (
+    <div className="space-y-1.5">
+      <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+        {label} <span className="text-red-500">*</span>
+      </label>
+      {children}
+    </div>
+  );
+
+  const inputClass =
+    "w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all";
+
   useEffect(() => {
     getAllEmployee();
     getDepartmentCount();
+  }, []);
+
+  useEffect(() => {
+    const fetchCountries = async () => {
+      try {
+        // We fetch only the fields we need: Name, Flags, and IDD (Phone Code)
+        const response = await axios.get(
+          "https://restcountries.com/v3.1/all?fields=name,flags,idd,cca2"
+        );
+
+        const countryData = response.data
+          .filter((country) => country.idd.root) // Filter out countries with no phone code
+          .map((country) => {
+            // Logic to handle codes like +1 (USA) vs +1242 (Bahamas)
+            const root = country.idd.root;
+            const suffix =
+              country.idd.suffixes && country.idd.suffixes.length === 1
+                ? country.idd.suffixes[0]
+                : "";
+
+            return {
+              name: country.name.common,
+              code: root + suffix,
+              flag: country.flags.svg, // We can use SVG in custom UI, or emoji for native select
+              emoji: country.flags.alt ? country.flag : "🏳️", // Fallback for flag emoji
+              cca2: country.cca2, // Two letter code (e.g. IN, US)
+            };
+          })
+          .sort((a, b) => a.name.localeCompare(b.name)); // Sort Alphabetically
+
+        setCountries(countryData);
+
+        // Auto-select India (+91) if available, otherwise default to first
+        const defaultCountry = countryData.find((c) => c.cca2 === "IN");
+        if (defaultCountry) setCountryCode(defaultCountry.code);
+
+        setIsCountriesLoading(false);
+      } catch (error) {
+        console.error("Failed to fetch countries", error);
+        setIsCountriesLoading(false);
+      }
+    };
+
+    fetchCountries();
   }, []);
 
   useEffect(() => {
@@ -438,86 +516,235 @@ const EmployeesPage = () => {
                   onOpenChange={setIsCreateDialogOpen}
                 >
                   <DialogTrigger asChild>
-                    <button className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700">
-                      <PlusIcon className="h-4 w-4 mr-2" />
-                      Add Employee
-                    </button>
+                    <Button className="bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-600/20 transition-all active:scale-95">
+                      <Plus className="h-5 w-5 mr-2" /> Add Employee
+                    </Button>
                   </DialogTrigger>
-                  <DialogContent className="sm:max-w-[500px] bg-white">
-                    <DialogHeader>
-                      <DialogTitle>Create New Employee</DialogTitle>
-                      <DialogDescription>
-                        Fill in the details to add a new employee.
-                      </DialogDescription>
-                    </DialogHeader>
-                    <form className="space-y-4" onSubmit={handleCreateSubmit}>
-                      <input
-                        type="text"
-                        name="username"
-                        value={formData.username}
-                        onChange={handleChange}
-                        placeholder="Full Name"
-                        className="w-full border px-3 py-2 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                        required
-                      />
-                      <input
-                        type="email"
-                        name="email"
-                        value={formData.email}
-                        onChange={handleChange}
-                        placeholder="Email"
-                        className="w-full border px-3 py-2 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                        required
-                      />
-                      <input
-                        type="text"
-                        name="contactNo"
-                        value={formData.contactNo}
-                        onChange={handleChange}
-                        placeholder="Contact Number"
-                        className="w-full border px-3 py-2 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                        required
-                      />
-                      <DeptOption
-                        selectedDept={selectedDept}
-                        setSelectedDept={setSelectedDept}
-                      />
-                      <input
-                        type="text"
-                        name="jobTitle"
-                        value={formData.jobTitle}
-                        onChange={handleChange}
-                        placeholder="Job Ttile"
-                        className="w-full border px-3 py-2 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                        required
-                      />
-                      <input
-                        type="text"
-                        name="roleName"
-                        value={formData.roleName}
-                        onChange={handleChange}
-                        placeholder="Role Name"
-                        className="w-full border px-3 py-2 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                        required
-                      />
-                      {/* <RoleSelect
-                        selectedRoles={selectedRoles}
-                        setSelectedRoles={setSelectedRoles}
-                      /> */}
-                      <Button
-                        type="submit"
-                        className="w-full bg-blue-600 hover:bg-blue-700"
-                        disabled={createLoading}
+
+                  {/* Note: Added [&>button]:hidden to hide the default Shadcn X button since we adding our own */}
+                  <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto p-0 gap-0 rounded-2xl border-slate-200 shadow-2xl bg-white [&>button]:hidden">
+                    {/* Header - Now Flexbox with Manual Close Button */}
+                    <DialogHeader className="p-6 border-b border-slate-100 bg-slate-50/80 backdrop-blur-sm sticky top-0 z-50 flex flex-row items-start justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="h-10 w-10 bg-blue-100 rounded-full flex items-center justify-center text-blue-600">
+                          <UserPlus size={20} />
+                        </div>
+                        <div className="text-left">
+                          <DialogTitle className="text-xl font-bold text-slate-900">
+                            Create New Employee
+                          </DialogTitle>
+                          <DialogDescription className="text-slate-500 text-sm mt-0.5">
+                            Enter the details to onboard a new team member.
+                          </DialogDescription>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => setIsCreateDialogOpen(false)}
+                        className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-200 rounded-full transition-colors -mr-2 -mt-2"
                       >
-                        {createLoading ? (
-                          <>
-                            <RefreshCcw className="mr-2 h-4 w-4 animate-spin" />{" "}
-                            Creating...
-                          </>
-                        ) : (
-                          "Create Employee"
-                        )}
-                      </Button>
+                        <X size={20} />
+                      </button>
+                    </DialogHeader>
+
+                    {/* Form */}
+                    <form
+                      onSubmit={handleCreateSubmit}
+                      className="p-6 space-y-6"
+                    >
+                      {/* Name Section */}
+                      <div className="grid grid-cols-3 gap-4">
+                        <InputGroup label="First Name">
+                          <input
+                            type="text"
+                            name="firstName"
+                            value={formData.firstName}
+                            onChange={handleChange}
+                            placeholder="Jane"
+                            className={inputClass}
+                            required
+                          />
+                        </InputGroup>
+                        <InputGroup label="Middle Name">
+                          <input
+                            type="text"
+                            name="middleName"
+                            value={formData.middleName}
+                            onChange={handleChange}
+                            placeholder="M."
+                            className={inputClass}
+                          />
+                        </InputGroup>
+                        <InputGroup label="Last Name">
+                          <input
+                            type="text"
+                            name="lastName"
+                            value={formData.lastName}
+                            onChange={handleChange}
+                            placeholder="Doe"
+                            className={inputClass}
+                            required
+                          />
+                        </InputGroup>
+                      </div>
+
+                      {/* Contact Section */}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <InputGroup label="Email Address">
+                          <input
+                            type="email"
+                            name="email"
+                            value={formData.email}
+                            onChange={handleChange}
+                            placeholder="jane@company.com"
+                            className={inputClass}
+                            required
+                          />
+                        </InputGroup>
+
+                        <InputGroup label="Phone Number">
+                          <div className="flex gap-2">
+                            <div className="relative w-24 shrink-0">
+                              <select
+                                value={countryCode}
+                                onChange={(e) => setCountryCode(e.target.value)}
+                                disabled={isCountriesLoading}
+                                className={`${inputClass} pr-6 appearance-none cursor-pointer`}
+                              >
+                                {isCountriesLoading ? (
+                                  <option>...</option>
+                                ) : (
+                                  countries.map((c) => (
+                                    <option key={c.cca2} value={c.code}>
+                                      {c.code}
+                                    </option>
+                                  ))
+                                )}
+                              </select>
+                            </div>
+                            <input
+                              type="tel"
+                              name="contactNo"
+                              value={formData.contactNo}
+                              onChange={handleChange}
+                              placeholder="98765 43210"
+                              className={inputClass}
+                              required
+                            />
+                          </div>
+                        </InputGroup>
+                      </div>
+
+                      {/* Role Section */}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <InputGroup label="Department">
+                          <div className="[&>select]:w-full [&>select]:px-3 [&>select]:py-2.5 [&>select]:bg-slate-50 [&>select]:border [&>select]:border-slate-200 [&>select]:rounded-xl [&>select]:text-sm [&>select]:focus:outline-none [&>select]:focus:ring-2 [&>select]:focus:ring-blue-500/20">
+                            {/* Pass props to your DeptOption component */}
+                            <DeptOption
+                              selectedDept={selectedDept}
+                              setSelectedDept={setSelectedDept}
+                            />
+                          </div>
+                        </InputGroup>
+                        <InputGroup label="Job Title">
+                          <input
+                            type="text"
+                            name="jobTitle"
+                            value={formData.jobTitle}
+                            onChange={handleChange}
+                            placeholder="e.g. Senior Developer"
+                            className={inputClass}
+                            required
+                          />
+                        </InputGroup>
+                      </div>
+
+                      <InputGroup label="System Role">
+                        <input
+                          type="text"
+                          name="roleName"
+                          value={formData.roleName}
+                          onChange={handleChange}
+                          placeholder="e.g. Employee, Manager"
+                          className={inputClass}
+                          required
+                        />
+                        <p className="text-[10px] text-slate-400">
+                          Defines their permissions in the system.
+                        </p>
+                      </InputGroup>
+
+                      {/* Location Section */}
+                      <div className="p-4 bg-slate-50 rounded-xl border border-slate-100">
+                        <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider mb-3">
+                          Location Details
+                        </h4>
+                        <div className="grid grid-cols-3 gap-3">
+                          <input
+                            type="text"
+                            name="city"
+                            value={formData.city}
+                            onChange={handleChange}
+                            placeholder="City"
+                            className={`bg-white ${inputClass}`}
+                          />
+                          <input
+                            type="text"
+                            name="state"
+                            value={formData.state}
+                            onChange={handleChange}
+                            placeholder="State"
+                            className={`bg-white ${inputClass}`}
+                          />
+                          <input
+                            type="text"
+                            name="country"
+                            value={formData.country}
+                            onChange={handleChange}
+                            placeholder="Country"
+                            className={`bg-white ${inputClass}`}
+                          />
+                        </div>
+                      </div>
+
+                      {/* Bio */}
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                          Bio (Optional)
+                        </label>
+                        <textarea
+                          name="bio"
+                          value={formData.bio}
+                          onChange={handleChange}
+                          placeholder="Short description about the employee..."
+                          className={`min-h-[80px] resize-y ${inputClass}`}
+                        />
+                      </div>
+
+                      {/* Footer */}
+                      <div className="pt-2 border-t border-slate-100 flex justify-end gap-3">
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          onClick={() => setIsCreateDialogOpen(false)}
+                          className="text-slate-500 hover:text-slate-700 hover:bg-slate-100"
+                        >
+                          Cancel
+                        </Button>
+                        <Button
+                          type="submit"
+                          disabled={createLoading}
+                          className="bg-blue-600 hover:bg-blue-700 text-white min-w-[140px]"
+                        >
+                          {createLoading ? (
+                            <>
+                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />{" "}
+                              Creating...
+                            </>
+                          ) : (
+                            "Create Employee"
+                          )}
+                        </Button>
+                      </div>
                     </form>
                   </DialogContent>
                 </Dialog>

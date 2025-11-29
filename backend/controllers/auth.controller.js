@@ -3,7 +3,7 @@ import Organization from "../models/organization.model.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import Razorpay from "razorpay";
-import { sendOTPByEmail, sendPasswordResetEmail } from "../utils/send.mail.js";
+import { registrationEmail, sendOTPByEmail, sendPasswordResetEmail } from "../utils/send.mail.js";
 import crypto from "crypto";
 import dotenv from "dotenv";
 import Role from "../models/Role.model.js";
@@ -17,7 +17,9 @@ export const registerOrg = async (req, res) => {
     const profileImageUrl = req.file ? req.file.path : undefined;
 
     const {
-      username,
+      firstName,
+      middleName,
+      lastName,
       email,
       contactNo,
       password,
@@ -97,7 +99,9 @@ export const registerOrg = async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const newUser = new User({
-      username,
+      firstName,
+      middleName,
+      lastName,
       email,
       contactNo,
       password: hashedPassword,
@@ -153,6 +157,26 @@ export const registerOrg = async (req, res) => {
       .select("-password")
       .populate("role", "_id name")
       .populate("organizationId");
+
+    // Email
+    let transactionDetails = null;
+    if (plan !== "free" && transactionRecord) {
+      transactionDetails = {
+        razorpayPaymentId: transactionRecord.razorpayPaymentId,
+        amount: transactionRecord.amount / 100
+      };
+    }
+
+    registrationEmail(
+      { 
+        firstName: newUser.firstName,
+        lastName: newUser.lastName,
+        email: newUser.email, 
+        organizationName: newOrg.name 
+      }, 
+      plan, 
+      transactionDetails
+    );
 
     res.status(201).json({
       message: "Organization registered successfully",

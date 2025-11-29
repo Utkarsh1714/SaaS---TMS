@@ -18,7 +18,7 @@ router.get("/:id", verifyToken, getSingleEmployee);
 router.post(
   "/",
   verifyToken,
-  authorizePermission("can_create_employee"),
+  authorizePermission("can_manage_employee"),
   createEmployee
 );
 router.put(
@@ -30,7 +30,7 @@ router.put(
 router.delete(
   "/:id",
   verifyToken,
-  authorizePermission("can_delete_employee"),
+  authorizePermission("can_manage_employee"),
   deleteEmployee
 );
 

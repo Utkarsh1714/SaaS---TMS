@@ -151,9 +151,8 @@ export const getSingleEmployee = async (req, res) => {
 
 export const createEmployee = async (req, res) => {
   try {
-    const { username, email, contactNo, roleName, jobTitle, departmentId } =
+    const { firstName, middleName, lastName, email, contactNo, roleName, jobTitle, departmentId, city, state, country, bio } =
       req.body;
-
     if (roleName !== "Boss" && !departmentId) {
       return res.status(400).json({
         message: "A department ID is required for Managers and Employees.",
@@ -188,7 +187,9 @@ export const createEmployee = async (req, res) => {
     const resetTokenExpires = Date.now() + 15 * 60 * 1000; // 15 minutes
 
     const newEmployee = new User({
-      username,
+      firstName,
+      middleName,
+      lastName,
       email,
       contactNo,
       password: hashedPassword,
@@ -198,6 +199,10 @@ export const createEmployee = async (req, res) => {
       organizationId: req.user.organizationId,
       resetToken: hashedResetToken,
       resetTokenExpires,
+      city,
+      state,
+      country,
+      bio
     });
 
     await newEmployee.save();
@@ -219,6 +224,8 @@ export const createEmployee = async (req, res) => {
     }
 
     const resetLink = `${process.env.FRONTEND_URL}/reset-password?email=${email}&token=${resetToken}`;
+
+    const username = `${newEmployee.firstName} ${newEmployee.lastName}`
 
     await sendWelcomeEmail({
       email,

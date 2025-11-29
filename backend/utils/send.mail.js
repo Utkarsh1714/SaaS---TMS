@@ -12,6 +12,74 @@ const transporter = nodemailer.createTransport({
   },
 });
 
+export const registrationEmail = async (user, plan, transactionDetails = null) => {
+  try {
+    const isPaid = plan !== "free" && transactionDetails;
+    
+    const subject = isPaid 
+      ? `Payment Receipt - Taskify ${plan.charAt(0).toUpperCase() + plan.slice(1)} Plan` 
+      : "Welcome to Taskify!";
+
+    // Simple HTML Template
+    const htmlContent = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0; border-radius: 8px;">
+        <div style="background-color: #2563EB; padding: 20px; border-radius: 8px 8px 0 0; text-align: center;">
+          <h1 style="color: white; margin: 0;">Taskify</h1>
+        </div>
+        
+        <div style="padding: 20px;">
+          <h2>Hello ${user.firstName} ${user.lastName},</h2>
+          <p>Thank you for registering your organization <strong>${user.organizationName}</strong> with Taskify.</p>
+          
+          <p>Your account is now active. You can log in and start setting up your workspace.</p>
+          
+          <div style="background-color: #f9fafb; padding: 15px; border-radius: 6px; margin: 20px 0;">
+            <p><strong>Plan:</strong> ${plan.toUpperCase()}</p>
+            <p><strong>Status:</strong> Active</p>
+          </div>
+
+          ${isPaid ? `
+            <h3>Payment Receipt</h3>
+            <table style="width: 100%; border-collapse: collapse;">
+              <tr>
+                <td style="padding: 8px; border-bottom: 1px solid #eee;">Transaction ID</td>
+                <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: right;">${transactionDetails.razorpayPaymentId}</td>
+              </tr>
+              <tr>
+                <td style="padding: 8px; border-bottom: 1px solid #eee;">Amount Paid</td>
+                <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: right;">₹${transactionDetails.amount}</td>
+              </tr>
+              <tr>
+                <td style="padding: 8px; border-bottom: 1px solid #eee;">Date</td>
+                <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: right;">${new Date().toLocaleDateString()}</td>
+              </tr>
+            </table>
+            <p style="font-size: 12px; color: #666; margin-top: 10px;">This is a computer-generated receipt.</p>
+          ` : ''}
+
+          <a href="${process.env.CLIENT_URL}/login" style="display: block; width: 200px; margin: 30px auto; padding: 12px; background-color: #2563EB; color: white; text-align: center; text-decoration: none; border-radius: 6px; font-weight: bold;">Go to Dashboard</a>
+        </div>
+        
+        <div style="padding: 20px; text-align: center; font-size: 12px; color: #666; border-top: 1px solid #eee;">
+          &copy; ${new Date().getFullYear()} Taskify Inc. All rights reserved.
+        </div>
+      </div>
+    `;
+
+    await transporter.sendMail({
+      from: `"Taskify Support" <${process.env.EMAIL_USER}>`,
+      to: user.email,
+      subject: subject,
+      html: htmlContent,
+    });
+
+    console.log("📧 Email sent successfully to:", user.email);
+  } catch (error) {
+    console.error("❌ Email sending failed:", error);
+    // Don't crash the app if email fails, just log it
+  }
+}
+
 export const sendPasswordResetEmail = async ({ email, name, resetLink }) => {
   await transporter.sendMail({
     from: `"Taskify Support" <${process.env.SMTP_USER}>`,
