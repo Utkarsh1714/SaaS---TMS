@@ -1,7 +1,7 @@
 import Task from "../models/task.model.js";
 import mongoose from "mongoose";
 import User from "../models/user.model.js";
-import { sendTaskNotificationEmail } from "../utils/send.mail.js";
+import { sendTaskNotificationEmail } from "../utils/sendGrid.mail.js";
 import Team from "../models/team.model.js";
 import Department from "../models/department.model.js";
 
