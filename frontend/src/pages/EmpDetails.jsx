@@ -125,8 +125,8 @@ const EmpDetails = () => {
               <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden group">
                 
                 {/* Banner - Now with a subtle pattern */}
-                <div className="h-48 bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 relative">
-                   <div className="absolute inset-0 bg-[linear-gradient(45deg,transparent_25%,rgba(255,255,255,0.1)_50%,transparent_75%,transparent_100%)] bg-[length:20px_20px] opacity-20"></div>
+                <div className="h-48 bg-linear-to-r from-blue-600 via-indigo-600 to-violet-600 relative">
+                   <div className="absolute inset-0 bg-[linear-gradient(45deg,transparent_25%,rgba(255,255,255,0.1)_50%,transparent_75%,transparent_100%)] bg-size-[20px_20px] opacity-20"></div>
                    
                    {/* Edit Button on Banner */}
                    <div className="absolute top-4 right-4 flex gap-2">

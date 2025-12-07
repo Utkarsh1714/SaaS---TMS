@@ -3,7 +3,11 @@ import Organization from "../models/organization.model.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import Razorpay from "razorpay";
-import { registrationEmail, sendOTPByEmail, sendPasswordResetEmail } from "../utils/send.mail.js";
+import {
+  registrationEmail,
+  sendOTPByEmail,
+  sendPasswordResetEmail,
+} from "../utils/sendGrid.mail.js";
 import crypto from "crypto";
 import dotenv from "dotenv";
 import Role from "../models/Role.model.js";
@@ -42,10 +46,12 @@ export const registerOrg = async (req, res) => {
     // --- 1. Validate Payment (For Paid Plans Only) ---
     if (plan !== "free") {
       if (!razorpayPaymentId) {
-        return res.status(400).json({ message: "Payment ID is required for paid plans" });
+        return res
+          .status(400)
+          .json({ message: "Payment ID is required for paid plans" });
       }
 
-      console.log("Searching for Transaction ID:", razorpayPaymentId)
+      console.log("Searching for Transaction ID:", razorpayPaymentId);
 
       // Find the transaction created by your verify-payment endpoint
       transactionRecord = await Transaction.findOne({
@@ -54,30 +60,40 @@ export const registerOrg = async (req, res) => {
 
       if (!transactionRecord) {
         console.log("❌ Transaction not found in DB.");
-        return res.status(400).json({ message: "Transaction record not found." });
+        return res
+          .status(400)
+          .json({ message: "Transaction record not found." });
       }
 
       // Optional: Check if already linked to an org (prevents reuse)
       if (transactionRecord.organizationId) {
-         return res.status(400).json({ message: "This payment is already registered to an organization." });
+        return res
+          .status(400)
+          .json({
+            message: "This payment is already registered to an organization.",
+          });
       }
     }
 
     // --- 2. Standard User/Org Validation ---
     const existing = await User.findOne({ email });
     if (existing) {
-      return res.status(400).json({ message: "User with this email already exists" });
+      return res
+        .status(400)
+        .json({ message: "User with this email already exists" });
     }
 
     const bossRole = await Role.findOne({ name: "Boss" });
     if (!bossRole) {
-      return res.status(500).json({ message: "Default 'Boss' role not found." });
+      return res
+        .status(500)
+        .json({ message: "Default 'Boss' role not found." });
     }
 
     // --- 3. Calculate Subscription Expiry ---
     const now = new Date();
     let expiryDate = null;
-    
+
     // Logic: Free plans might have no expiry, or set to null
     if (plan !== "free") {
       if (planType === "yearly") now.setFullYear(now.getFullYear() + 1);
@@ -88,7 +104,14 @@ export const registerOrg = async (req, res) => {
     // --- 4. Create Organization ---
     const newOrg = new Organization({
       name: companyName,
-      gstin, address, city, state, pincode, country, logoUrl, websiteUrl,
+      gstin,
+      address,
+      city,
+      state,
+      pincode,
+      country,
+      logoUrl,
+      websiteUrl,
       createdBy: null, // Updated later
       plan: plan,
       planType: planType || "monthly",
@@ -118,26 +141,26 @@ export const registerOrg = async (req, res) => {
     await newOrg.save();
 
     // --- 6. ✅ CREATE SUBSCRIPTION (The Scalable Part) ---
-    // Every Organization gets a subscription document. 
+    // Every Organization gets a subscription document.
     // This allows fast access checks without querying heavy transaction logs.
     const newSubscription = new Subscription({
-        organizationId: newOrg._id,
-        planId: plan,          // 'free', 'premium', 'enterprise'
-        status: "active",      // active
-        billingCycle: planType, // monthly/yearly
-        startDate: new Date(),
-        currentPeriodEnd: expiryDate // Null for free, Date for paid
+      organizationId: newOrg._id,
+      planId: plan, // 'free', 'premium', 'enterprise'
+      status: "active", // active
+      billingCycle: planType, // monthly/yearly
+      startDate: new Date(),
+      currentPeriodEnd: expiryDate, // Null for free, Date for paid
     });
-    
+
     await newSubscription.save();
 
     // --- 7. ✅ LINK TRANSACTION (Paid Only) ---
     // If they paid, we update the orphaned transaction record with the new Org ID.
     if (transactionRecord) {
-        transactionRecord.organizationId = newOrg._id;
-        // If your Transaction schema has a userId field:
-        // transactionRecord.userId = newUser._id; 
-        await transactionRecord.save();
+      transactionRecord.organizationId = newOrg._id;
+      // If your Transaction schema has a userId field:
+      // transactionRecord.userId = newUser._id;
+      await transactionRecord.save();
     }
 
     // --- 8. Response ---
@@ -163,18 +186,18 @@ export const registerOrg = async (req, res) => {
     if (plan !== "free" && transactionRecord) {
       transactionDetails = {
         razorpayPaymentId: transactionRecord.razorpayPaymentId,
-        amount: transactionRecord.amount / 100
+        amount: transactionRecord.amount / 100,
       };
     }
 
     registrationEmail(
-      { 
+      {
         firstName: newUser.firstName,
         lastName: newUser.lastName,
-        email: newUser.email, 
-        organizationName: newOrg.name 
-      }, 
-      plan, 
+        email: newUser.email,
+        organizationName: newOrg.name,
+      },
+      plan,
       transactionDetails
     );
 
@@ -183,10 +206,11 @@ export const registerOrg = async (req, res) => {
       user: finalUser,
       token,
     });
-
   } catch (error) {
     console.error("Error in registerOrg:", error);
-    res.status(500).json({ message: "Internal server error", error: error.message });
+    res
+      .status(500)
+      .json({ message: "Internal server error", error: error.message });
   }
 };
 
@@ -494,25 +518,43 @@ export const verifyOTPAndAllowPasswordChange = async (req, res) => {
 export const resetPassword = async (req, res) => {
   try {
     const { email, token, newPassword } = req.body;
-    const user = await User.findOne({ email });
+
+    if (!token) {
+      return res.status(400).json({ message: "Missing reset token" });
+    }
+
+    let decoded;
+
+    try {
+      decoded = jwt.verify(token, process.env.JWT_SECRET);
+    } catch (error) {
+      if (err.name === "TokenExpiredError") {
+        return res
+          .status(400)
+          .json({
+            message: "Reset token has expired. Please request a new OTP.",
+          });
+      }
+      return res.status(400).json({ message: "Invalid reset token" });
+    }
+
+    if (decoded.purpose !== "password_reset") {
+      return res.status(400).json({ message: "Invalid reset token purpose" });
+    }
+
+    const user = await User.findOne({ _id: decoded.id, email });
 
     if (!user) return res.status(404).json({ message: "User not found" });
 
-    // Compare hashed tokens
-    const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
-
-    if (
-      user.resetToken !== hashedToken ||
-      user.resetTokenExpires < Date.now()
-    ) {
-      return res.status(400).json({ message: "Invalid or expired token" });
-    }
-
-    // Hash new password and clear resetToken
     const hashedPassword = await bcrypt.hash(newPassword, 10);
     user.password = hashedPassword;
-    user.resetToken = undefined;
-    user.resetTokenExpires = undefined;
+
+    user.otp = null;
+    user.otpExpires = null;
+
+    user.resetToken = null;
+    user.resetTokenExpires = null;
+
     await user.save();
 
     res.json({ success: true, message: "Password reset successful" });

@@ -242,7 +242,7 @@ const ResetPasswordDialog = ({ open, setOpen, onComplete }) => {
     try {
       const response = await axios.post(
         `${VITE_API_URL}/api/auth/reset-password`,
-        { newPassword, resetToken },
+        { email, newPassword, token:resetToken },
         { withCredentials: true }
       );
       toast.success(response.data.message || "Password reset successful!");
