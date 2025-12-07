@@ -18,7 +18,6 @@ import Chat from "./pages/Chat";
 import Reports from "./pages/Reports";
 import Profile from "./pages/Profile";
 import DepartmentDetails from "./pages/DeptDetails";
-import { Loader } from "lucide-react";
 import ResetPassword from "./pages/ResetPassword";
 import Meeting from "./pages/Meeting";
 import HelpSupportPage from "./pages/HelpSupportPage";
@@ -26,7 +25,7 @@ import Settings from "./pages/Settings";
 import About from "./pages/About";
 import Product from "./pages/Product";
 import Solutions from "./pages/Solutions";
-import { Privacy, Security, Terms } from "./pages/Legal";
+import { CancellationRefund, Privacy, ShippingPolicy, Terms } from "./pages/Legal";
 import Changelog from "./pages/Changelog";
 import Integrations from "./pages/Integrations";
 import Contact from "./pages/Contact";
@@ -68,7 +67,8 @@ function App() {
           <Route path="/solutions" element={<Solutions />} />
           <Route path="/privacy" element={<Privacy />} />
           <Route path="/terms" element={<Terms />} />
-          <Route path="/security" element={<Security />} />
+          <Route path="/cancellation-refund" element={<CancellationRefund />} />
+          <Route path="/shipping-policy" element={<ShippingPolicy />} />
           <Route path="/changelog" element={<Changelog />} />
           <Route path="/integrations" element={<Integrations />} />
           <Route path="/contact" element={<Contact />} />

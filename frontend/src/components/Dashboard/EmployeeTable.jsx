@@ -27,7 +27,6 @@ const EmployeeTable = ({ onStatsCalculated }) => {
           `${import.meta.env.VITE_API_URL}/api/employee/all-employee`,
           { withCredentials: true }
         );
-        console.log(res.data);
         setEmployees(res.data);
       } catch (err) {
         console.error("Failed to fetch employees:", err);
