@@ -1,5 +1,5 @@
 import User from "../models/user.model.js";
-import { sendWelcomeEmail } from "../utils/sendgrid.mail.js";
+import { sendWelcomeEmail } from "../utils/sendGrid.mail.js";
 import crypto from "crypto";
 import bcrypt from "bcryptjs";
 import Department from "../models/department.model.js";
@@ -240,13 +240,13 @@ export const createEmployee = async (req, res) => {
 
     const username = `${newEmployee.firstName} ${newEmployee.lastName}`;
 
-    // await sendWelcomeEmail({
-    //   email,
-    //   name: username,
-    //   role: jobTitle,
-    //   tempPassword,
-    //   resetLink,
-    // });
+    await sendWelcomeEmail({
+      email,
+      name: username,
+      role: jobTitle,
+      tempPassword,
+      resetLink,
+    });
 
     const populatedEmployee = await User.findById(newEmployee._id)
       .select("-password -resetToken -resetTokenExpires")
