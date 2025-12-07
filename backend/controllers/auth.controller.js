@@ -456,7 +456,7 @@ export const sendOTP = async (req, res) => {
 
     res.status(200).json({
       message: "OTP sent to your email. Please check your inbox.",
-      email: user.email, // Useful for the next step on the frontend
+      email: user.email,
     });
   } catch (error) {
     console.error("Error sending OTP:", error);
@@ -466,7 +466,7 @@ export const sendOTP = async (req, res) => {
 
 export const verifyOTPAndAllowPasswordChange = async (req, res) => {
   try {
-    const { email, otp } = req.body; // Expecting both email and the raw OTP code
+    const { email, otp } = req.body;
 
     const user = await User.findOne({ email });
 

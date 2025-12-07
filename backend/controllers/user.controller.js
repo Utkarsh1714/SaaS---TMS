@@ -1,5 +1,5 @@
 import User from "../models/user.model.js";
-import { sendWelcomeEmail } from "../utils/send.mail.js";
+import { sendWelcomeEmail } from "../utils/sendgrid.mail.js";
 import crypto from "crypto";
 import bcrypt from "bcryptjs";
 import Department from "../models/department.model.js";
@@ -151,8 +151,20 @@ export const getSingleEmployee = async (req, res) => {
 
 export const createEmployee = async (req, res) => {
   try {
-    const { firstName, middleName, lastName, email, contactNo, roleName, jobTitle, departmentId, city, state, country, bio } =
-      req.body;
+    const {
+      firstName,
+      middleName,
+      lastName,
+      email,
+      contactNo,
+      roleName,
+      jobTitle,
+      departmentId,
+      city,
+      state,
+      country,
+      bio,
+    } = req.body;
     if (roleName !== "Boss" && !departmentId) {
       return res.status(400).json({
         message: "A department ID is required for Managers and Employees.",
@@ -202,7 +214,7 @@ export const createEmployee = async (req, res) => {
       city,
       state,
       country,
-      bio
+      bio,
     });
 
     await newEmployee.save();
@@ -210,7 +222,8 @@ export const createEmployee = async (req, res) => {
     if (roleName === "Manager" && departmentId) {
       const updatedDept = await Department.findOneAndUpdate(
         { _id: departmentId, organizationId: req.user.organizationId },
-        { $set: { manager: newEmployee._id } }
+        { $addToSet: { manager: newEmployee._id } },
+        { new: true }
       );
 
       await updatedDept.save();
@@ -225,15 +238,15 @@ export const createEmployee = async (req, res) => {
 
     const resetLink = `${process.env.FRONTEND_URL}/reset-password?email=${email}&token=${resetToken}`;
 
-    const username = `${newEmployee.firstName} ${newEmployee.lastName}`
+    const username = `${newEmployee.firstName} ${newEmployee.lastName}`;
 
-    await sendWelcomeEmail({
-      email,
-      name: username,
-      role: jobTitle,
-      tempPassword,
-      resetLink,
-    });
+    // await sendWelcomeEmail({
+    //   email,
+    //   name: username,
+    //   role: jobTitle,
+    //   tempPassword,
+    //   resetLink,
+    // });
 
     const populatedEmployee = await User.findById(newEmployee._id)
       .select("-password -resetToken -resetTokenExpires")
@@ -254,10 +267,10 @@ export const createEmployee = async (req, res) => {
   }
 };
 
-export const updateEmployee = async (req, res) => {
+export const updatePersonalDetails = async (req, res) => {
   try {
     const { id } = req.params;
-    const { username, email, role, departmentId } = req.body;
+    const { firstName, middleName, lastName, email, contactNo, bio } = req.body;
 
     const employee = await User.findOne({
       _id: id,
@@ -271,9 +284,43 @@ export const updateEmployee = async (req, res) => {
       return res.status(403).json({ message: "Cannot modify Boss account" });
     }
 
-    employee.username = username || employee.username;
-    employee.role = role || employee.role;
+    employee.firstName = firstName || employee.firstName;
+    employee.middleName = middleName || employee.middleName;
+    employee.lastName = lastName || employee.lastName;
     employee.email = email || employee.email;
+    employee.contactNo = contactNo || employee.contactNo;
+    employee.bio = bio || employee.bio;
+
+    await employee.save();
+
+    return res
+      .status(200)
+      .json({ message: "Employee updated successfully", employee });
+  } catch (error) {
+    console.error("Error updating employee:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+export const updateOrganizationalDetails = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { role, jobTitle, departmentId } = req.body;
+
+    const employee = await User.findOne({
+      _id: id,
+      organizationId: req.user.organizationId,
+    });
+
+    if (!employee)
+      return res.status(404).json({ message: "Employee not found" });
+
+    if (employee.role === "Boss") {
+      return res.status(403).json({ message: "Cannot modify Boss account" });
+    }
+
+    employee.role = role || employee.role;
+    employee.jobTitle = jobTitle || employee.jobTitle;
     employee.departmentId = departmentId || employee.departmentId;
 
     await employee.save();

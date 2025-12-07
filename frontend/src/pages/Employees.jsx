@@ -60,6 +60,15 @@ const calculatePercentageChange = (current, previous) => {
   return `${change > 0 ? "+" : ""}${change.toFixed(2)}%`;
 };
 
+const InputGroup = ({ label, children }) => (
+  <div className="space-y-1.5">
+    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+      {label} <span className="text-red-500">*</span>
+    </label>
+    {children}
+  </div>
+);
+
 const EmployeesPage = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
@@ -164,8 +173,9 @@ const EmployeesPage = () => {
   };
 
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
+  const { name, value } = e.target;
+  setFormData(prev => ({ ...prev, [name]: value }));
+};
 
   const handleCreateSubmit = async (e) => {
     e.preventDefault();
@@ -241,16 +251,16 @@ const EmployeesPage = () => {
 
   // Memorized filter logic (from old Employees.jsx)
   const filteredEmployees = useMemo(() => {
-    setCurrentPage(1);
-
     const lowerCasedTerm = searchTerm.toLowerCase();
 
     let filteredBySearch = employee.filter((emp) => {
       const firstNameMatch = emp.firstName
-        .toLowerCase()
+        ?.toLowerCase()
         .includes(lowerCasedTerm);
-      const lastNameMatch = emp.lastName.toLowerCase().includes(lowerCasedTerm);
-      const roleMatch = emp.jobTitle.toLowerCase().includes(lowerCasedTerm);
+      const lastNameMatch = emp.lastName
+        ?.toLowerCase()
+        .includes(lowerCasedTerm);
+      const roleMatch = emp.jobTitle?.toLowerCase().includes(lowerCasedTerm);
       const deptMatch = emp.departmentId?.name
         ?.toLowerCase()
         .includes(lowerCasedTerm);
@@ -258,11 +268,8 @@ const EmployeesPage = () => {
     });
 
     if (statusFilter !== "All") {
-      // Normalize status to match data (assuming data uses "Active", "Inactive", "On Leave")
-      const targetStatus = statusFilter;
-
       filteredBySearch = filteredBySearch.filter(
-        (emp) => emp.status === targetStatus
+        (emp) => emp.status === statusFilter
       );
     }
 
@@ -307,15 +314,6 @@ const EmployeesPage = () => {
     return Array.from(suggestions).slice(0, 10);
   }, [searchTerm, employee]);
 
-  const InputGroup = ({ label, children }) => (
-    <div className="space-y-1.5">
-      <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-        {label} <span className="text-red-500">*</span>
-      </label>
-      {children}
-    </div>
-  );
-
   const inputClass =
     "w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all";
 
@@ -323,6 +321,11 @@ const EmployeesPage = () => {
     getAllEmployee();
     getDepartmentCount();
   }, []);
+
+  useEffect(() => {
+  setCurrentPage(1);
+}, [searchTerm, statusFilter]);
+
 
   useEffect(() => {
     const fetchCountries = async () => {

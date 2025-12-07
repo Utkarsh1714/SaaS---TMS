@@ -20,63 +20,59 @@ import { authorizePermission } from "../middlewares/authorizePermission.js";
 router.post(
   "/create",
   verifyToken,
-  authorizePermission("can_manage_task"),
+  authorizePermission("task.create"),
   createTask
 );
 router.delete(
   "/:taskId",
   verifyToken,
-  authorizePermission("can_manage_task"),
+  authorizePermission("task.delete"),
   deleteTask
 );
 router.put(
   "/:taskId/employees/add",
   verifyToken,
-  authorizePermission("can_add_emp_to_task"),
+  authorizePermission("task.addEmployee"),
   addEmployeeToTask
 );
 router.put(
   "/:taskId/employees/remove/:employeeId",
   verifyToken,
-  authorizePermission("can_remove_emp_from_task"),
+  authorizePermission("task.removeEmployee"),
   removeEmployeeFromTask
 );
 router.patch(
   "/:taskId/status",
   verifyToken,
-  authorizePermission("can_update_task_status"),
+  authorizePermission("task.update"),
   updateTaskStatus
 );
 router.post(
   "/:taskId/milestone",
   verifyToken,
-  authorizePermission("can_manage_milestone"),
+  authorizePermission("task.manageMilestones"),
   addMilestones
 );
 router.patch(
   "/:taskId/milestone",
   verifyToken,
-  authorizePermission("can_manage_milestone"),
+  authorizePermission("task.manageMilestones"),
   updateMilestone
 );
 router.post(
   "/:taskId/assign-team",
   verifyToken,
-  authorizePermission("can_manage_task"), // didn't create the 'can_assign_teamToTask' permission, therefore this permission is used
+  authorizePermission("task.assignTeam"),
   assignTaskToTeam
 );
 router.put(
   "/:id",
   verifyToken,
-  authorizePermission("can_manage_task"),
+  authorizePermission("task.update"),
   updateTitleAndDesc
 );
 
 router.get("/getTask", verifyToken, getTasks);
 router.get("/:id", verifyToken, getTaskById);
-
-// router.get("/boss", verifyToken, getTasksByBoss);
-// router.get("/manager", verifyToken, getTasksByManager);
-// router.get("/employee", verifyToken, getTasksByEmployee);
 
 export default router;
