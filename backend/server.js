@@ -20,6 +20,8 @@ import taskRouter from "./routes/task.route.js";
 import commentRoute from "./routes/Comment.route.js";
 import chatRoute from "./routes/chat.route.js";
 import dashboard from "./routes/dashboard.route.js";
+import roomRoute from './routes/room.route.js';
+import meetingRoute from './routes/meeting.route.js';
 import initializeSocket from "./sockets/socketManager.js";
 
 connectDB();
@@ -68,6 +70,8 @@ app.use("/api/employeePage", employeePageRoute);
 app.use("/api/employee", employeeRoute);
 app.use("/api/team", teamRouter);
 app.use("/api/chat", chatRoute);
+app.use('/api/room', roomRoute);
+app.use('/api/meeting', meetingRoute);
 
 // Global error handler
 app.use((err, req, res, next) => {
