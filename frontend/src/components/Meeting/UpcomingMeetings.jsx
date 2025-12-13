@@ -1,282 +1,213 @@
-import React from 'react'
+import React from "react";
 import {
-  CalendarIcon,
-  ClockIcon,
-  UsersIcon,
-  VideoIcon,
-  MapPinIcon,
-} from 'lucide-react'
-const UpcomingMeetings = ({ listView = false }) => {
-  const meetings = [
-    {
-      id: 1,
-      title: 'Weekly Team Standup',
-      date: 'Today',
-      time: '10:00 AM - 10:30 AM',
-      participants: [
-        {
-          name: 'Jane Cooper',
-          avatar:
-            'https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
-        },
-        {
-          name: 'Cody Fisher',
-          avatar:
-            'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
-        },
-        {
-          name: 'Esther Howard',
-          avatar:
-            'https://images.unsplash.com/photo-1520813792240-56fc4a3765a7?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
-        },
-      ],
-      totalParticipants: 8,
-      location: 'Virtual Meeting',
-      type: 'video',
-    },
-    {
-      id: 2,
-      title: 'Project Review',
-      date: 'Today',
-      time: '1:00 PM - 2:30 PM',
-      participants: [
-        {
-          name: 'Jenny Wilson',
-          avatar:
-            'https://images.unsplash.com/photo-1498551172505-8ee7ad69f235?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
-        },
-        {
-          name: 'Kristin Watson',
-          avatar:
-            'https://images.unsplash.com/photo-1532417344469-368f9ae6d187?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
-        },
-      ],
-      totalParticipants: 5,
-      location: 'Conference Room A',
-      type: 'in-person',
-    },
-    {
-      id: 3,
-      title: 'Client Presentation',
-      date: 'Today',
-      time: '3:00 PM - 4:00 PM',
-      participants: [
-        {
-          name: 'Cameron Williamson',
-          avatar:
-            'https://images.unsplash.com/photo-1566492031773-4f4e44671857?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
-        },
-        {
-          name: 'Michael Johnson',
-          avatar:
-            'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
-        },
-      ],
-      totalParticipants: 12,
-      location: 'Virtual Meeting',
-      type: 'video',
-    },
-    {
-      id: 4,
-      title: 'Sprint Planning',
-      date: 'Tomorrow',
-      time: '10:00 AM - 11:30 AM',
-      participants: [
-        {
-          name: 'Jane Cooper',
-          avatar:
-            'https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
-        },
-        {
-          name: 'Cody Fisher',
-          avatar:
-            'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
-        },
-      ],
-      totalParticipants: 10,
-      location: 'Conference Room B',
-      type: 'in-person',
-    },
-  ]
-  return (
-    <div className="bg-white shadow rounded-lg overflow-hidden">
-      <div className="px-6 py-4 border-b border-gray-200">
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg font-medium text-gray-900 flex items-center">
-            <CalendarIcon className="h-5 w-5 mr-2 text-gray-500" />
-            Upcoming Meetings
-          </h2>
-          <button className="text-sm font-medium text-blue-600 hover:text-blue-500">
-            View All
-          </button>
+  Calendar,
+  Clock,
+  MapPin,
+  Video,
+  ArrowRight,
+  MoreHorizontal,
+} from "lucide-react";
+
+const UpcomingMeetings = ({ listView = false, allMeetings }) => {
+  const getUpcoming = () => {
+    const now = new Date();
+    now.setHours(0, 0, 0, 0);
+    return (Array.isArray(allMeetings) ? allMeetings : []).filter(
+      (m) => new Date(m.startTime) >= now
+    );
+  };
+
+  const upcoming = getUpcoming();
+  const formatDate = (d) =>
+    new Date(d).toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  const formatTime = (d) =>
+    new Date(d).toLocaleTimeString("en-US", {
+      hour: "numeric",
+      minute: "2-digit",
+    });
+
+  // Initials Helper
+  const getInitials = (name) =>
+    name ? name.substring(0, 2).toUpperCase() : "??";
+
+  if (listView) {
+    return (
+      <div className="bg-white">
+        <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+          <h3 className="font-bold text-slate-800">All Upcoming</h3>
+          <span className="bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full text-xs font-bold">
+            {upcoming.length}
+          </span>
         </div>
-      </div>
-      {listView ? (
-        <div>
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th
-                  scope="col"
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                >
-                  Meeting
-                </th>
-                <th
-                  scope="col"
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                >
-                  Date & Time
-                </th>
-                <th
-                  scope="col"
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                >
-                  Participants
-                </th>
-                <th
-                  scope="col"
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                >
-                  Location
-                </th>
-                <th scope="col" className="relative px-6 py-3">
-                  <span className="sr-only">Actions</span>
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {meetings.map((meeting) => (
-                <tr key={meeting.id}>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-medium text-gray-900">
-                      {meeting.title}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">{meeting.date}</div>
-                    <div className="text-sm text-gray-500">{meeting.time}</div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex -space-x-2 overflow-hidden">
-                      {meeting.participants.map((participant, idx) => (
-                        <img
-                          key={idx}
-                          className="inline-block h-8 w-8 rounded-full ring-2 ring-white"
-                          src={participant.avatar}
-                          alt={participant.name}
-                        />
-                      ))}
-                      {meeting.totalParticipants >
-                        meeting.participants.length && (
-                        <span className="flex items-center justify-center h-8 w-8 rounded-full bg-gray-200 text-xs font-medium text-gray-700 ring-2 ring-white">
-                          +
-                          {meeting.totalParticipants -
-                            meeting.participants.length}
-                        </span>
-                      )}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span
-                      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${meeting.type === 'video' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'}`}
-                    >
-                      {meeting.type === 'video' ? (
-                        <>
-                          <VideoIcon className="mr-1 h-3 w-3" />
-                          {meeting.location}
-                        </>
-                      ) : (
-                        <>
-                          <MapPinIcon className="mr-1 h-3 w-3" />
-                          {meeting.location}
-                        </>
-                      )}
+        <div className="divide-y divide-slate-100">
+          {upcoming.length === 0 ? (
+            <div className="p-8 text-center text-slate-400 text-sm">
+              No upcoming meetings found.
+            </div>
+          ) : (
+            upcoming.map((meeting) => (
+              <div
+                key={meeting._id}
+                className="p-4 hover:bg-slate-50 transition-colors flex items-center justify-between group"
+              >
+                <div className="flex items-center gap-4">
+                  <div className="flex flex-col items-center justify-center w-12 h-12 bg-blue-50 text-blue-600 rounded-xl border border-blue-100 shrink-0">
+                    <span className="text-xs font-bold uppercase">
+                      {new Date(meeting.startTime).toLocaleString("default", {
+                        month: "short",
+                      })}
                     </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                    <a href="#" className="text-blue-600 hover:text-blue-900">
-                      Join
-                    </a>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      ) : (
-        <div className="divide-y divide-gray-200">
-          {meetings.map((meeting) => (
-            <div key={meeting.id} className="px-6 py-4 hover:bg-gray-50">
-              <div className="flex justify-between items-start">
-                <div>
-                  <h3 className="text-sm font-medium text-gray-900">
-                    {meeting.title}
-                  </h3>
-                  <div className="mt-2 flex items-center text-sm text-gray-500">
-                    <CalendarIcon className="flex-shrink-0 mr-1.5 h-4 w-4 text-gray-400" />
-                    <p>{meeting.date}</p>
+                    <span className="text-lg font-bold leading-none">
+                      {new Date(meeting.startTime).getDate()}
+                    </span>
                   </div>
-                  <div className="mt-1 flex items-center text-sm text-gray-500">
-                    <ClockIcon className="flex-shrink-0 mr-1.5 h-4 w-4 text-gray-400" />
-                    <p>{meeting.time}</p>
-                  </div>
-                  <div className="mt-1 flex items-center text-sm text-gray-500">
-                    <UsersIcon className="flex-shrink-0 mr-1.5 h-4 w-4 text-gray-400" />
-                    <div className="flex items-center">
-                      <div className="flex -space-x-2 mr-2">
-                        {meeting.participants
-                          .slice(0, 3)
-                          .map((participant, idx) => (
-                            <img
-                              key={idx}
-                              className="inline-block h-6 w-6 rounded-full ring-2 ring-white"
-                              src={participant.avatar}
-                              alt={participant.name}
-                            />
-                          ))}
-                      </div>
-                      {meeting.totalParticipants > 3 && (
-                        <span className="text-xs text-gray-500">
-                          +{meeting.totalParticipants - 3} more
-                        </span>
-                      )}
+                  <div>
+                    <h4 className="font-bold text-slate-900 text-sm group-hover:text-blue-600 transition-colors">
+                      {meeting.title}
+                    </h4>
+                    <div className="flex items-center gap-3 text-xs text-slate-500 mt-1">
+                      <span className="flex items-center gap-1">
+                        <Clock size={12} /> {formatTime(meeting.startTime)} -{" "}
+                        {formatTime(meeting.endTime)}
+                      </span>
+                      <span className="flex items-center gap-1">
+                        {meeting.meetingType === "Virtual" ? (
+                          <Video size={12} />
+                        ) : (
+                          <MapPin size={12} />
+                        )}
+                        {meeting.meetingType === "Virtual"
+                          ? "Online"
+                          : meeting.roomId?.name || "Room"}
+                      </span>
                     </div>
                   </div>
                 </div>
+
+                <div className="flex items-center gap-4">
+                  {/* Avatar Stack */}
+                  <div className="flex -space-x-2">
+                    {meeting.participants.slice(0, 3).map((p, i) => (
+                      <div
+                        key={i}
+                        className="w-8 h-8 rounded-full border-2 border-white bg-slate-200 flex items-center justify-center text-[10px] font-bold text-slate-600"
+                        title={p.firstName}
+                      >
+                        {p.profileImage ? (
+                          <img
+                            src={p.profileImage}
+                            className="w-full h-full rounded-full object-cover"
+                          />
+                        ) : (
+                          <img
+                            src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSs_aMoCDAkVZluRbcd0H1DA9exUnhbXNlzgA&s"
+                            className="w-full h-full rounded-full object-cover"
+                          />
+                        )}
+                      </div>
+                    ))}
+                    {meeting.participants.length > 3 && (
+                      <div className="w-8 h-8 rounded-full border-2 border-white bg-slate-100 flex items-center justify-center text-[10px] font-bold text-slate-500">
+                        +{meeting.participants.length - 3}
+                      </div>
+                    )}
+                  </div>
+                  <button className="text-sm font-medium text-blue-600 hover:bg-blue-50 px-3 py-1.5 rounded-lg transition-colors">
+                    Join
+                  </button>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // Widget View (Cards)
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+          <Calendar className="text-blue-600" size={20} /> Upcoming
+        </h2>
+        <button className="text-xs font-bold text-slate-500 hover:text-blue-600 flex items-center gap-1">
+          View All <ArrowRight size={14} />
+        </button>
+      </div>
+
+      <div className="grid gap-4">
+        {upcoming.length === 0 ? (
+          <div className="p-6 bg-white rounded-xl border border-dashed border-slate-300 text-center text-slate-400 text-sm">
+            No meetings scheduled.
+          </div>
+        ) : (
+          upcoming.slice(0, 3).map((meeting) => (
+            <div
+              key={meeting._id}
+              className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-all group relative overflow-hidden"
+            >
+              <div className="absolute top-0 left-0 w-1 h-full bg-blue-500"></div>
+              <div className="flex justify-between items-start mb-3">
+                <div>
+                  <h3 className="font-bold text-slate-900 text-base">
+                    {meeting.title}
+                  </h3>
+                  <p className="text-xs text-slate-500 mt-1 flex items-center gap-1.5">
+                    <Clock size={12} className="text-blue-500" />{" "}
+                    {formatDate(meeting.startTime)} •{" "}
+                    {formatTime(meeting.startTime)} -{" "}
+                    {formatTime(meeting.endTime)}
+                  </p>
+                </div>
                 <span
-                  className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${meeting.type === 'video' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'}`}
+                  className={`px-2 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wide ${
+                    meeting.meetingType === "Virtual"
+                      ? "bg-purple-50 text-purple-700"
+                      : "bg-emerald-50 text-emerald-700"
+                  }`}
                 >
-                  {meeting.type === 'video' ? (
-                    <>
-                      <VideoIcon className="mr-1 h-3 w-3" />
-                      Virtual
-                    </>
-                  ) : (
-                    <>
-                      <MapPinIcon className="mr-1 h-3 w-3" />
-                      In-person
-                    </>
-                  )}
+                  {meeting.meetingType}
                 </span>
               </div>
-              <div className="mt-3">
-                <button className="text-sm font-medium text-blue-600 hover:text-blue-500">
-                  Join Meeting
+
+              <div className="flex items-center justify-between pt-3 border-t border-slate-100">
+                <div className="flex -space-x-2">
+                  {meeting.participants.slice(0, 3).map((p, i) => (
+                    <div
+                      key={i}
+                      className="w-8 h-8 rounded-full border-2 border-white bg-slate-200 flex items-center justify-center text-[10px] font-bold text-slate-600"
+                      title={p.firstName}
+                    >
+                      {p.profileImage ? (
+                        <img
+                          src={p.profileImage}
+                          className="w-full h-full rounded-full object-cover"
+                        />
+                      ) : (
+                        <img
+                          src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSs_aMoCDAkVZluRbcd0H1DA9exUnhbXNlzgA&s"
+                          className="w-full h-full rounded-full object-cover"
+                        />
+                      )}
+                    </div>
+                  ))}
+                  {meeting.participants.length > 3 && (
+                    <div className="flex items-center justify-center text-xs font-bold text-slate-500 ml-3">
+                      +{meeting.participants.length - 3} more
+                    </div>
+                  )}
+                </div>
+                <button className="text-xs font-bold text-blue-600 hover:bg-blue-50 px-3 py-1.5 rounded-lg transition-colors">
+                  Details
                 </button>
               </div>
             </div>
-          ))}
-        </div>
-      )}
-      {!listView && (
-        <div className="px-6 py-4 bg-gray-50 border-t border-gray-200">
-          <button className="w-full flex justify-center items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
-            View All Meetings
-          </button>
-        </div>
-      )}
+          ))
+        )}
+      </div>
     </div>
-  )
-}
-export default UpcomingMeetings
+  );
+};
+
+export default UpcomingMeetings;

@@ -1,140 +1,293 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from "react";
 import {
-  BellIcon,
-  SearchIcon,
-  UserIcon,
-  PlusIcon,
-  CalendarIcon,
-  ListIcon,
-  BellDot,
-} from 'lucide-react'
-import Sidebar from '@/components/Layout/Sidebar'
-import MeetingCalendar from '@/components/Meeting/MeetingCalendar'
-import UpcomingMeetings from '@/components/Meeting/UpcomingMeetings'
-import MeetingRooms from '@/components/Meeting/MeetingRooms'
-import { useNotifications } from '@/context/NotificationContext'
-import NotificationPanel from '@/components/Dashboard/NotificationPanel'
+  Bell,
+  Search,
+  User,
+  Plus,
+  Calendar,
+  List,
+  Menu,
+  Video,
+  Users,
+  MapPin,
+  Loader2,
+  Clock
+} from "lucide-react";
+import Sidebar from "@/components/Layout/Sidebar";
+import MeetingCalendar from "@/components/Meeting/MeetingCalendar";
+import UpcomingMeetings from "@/components/Meeting/UpcomingMeetings";
+import MeetingRooms from "@/components/Meeting/MeetingRooms";
+import { useNotifications } from "@/context/NotificationContext";
+import NotificationPanel from "@/components/Dashboard/NotificationPanel";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { useAuth } from "@/context/AuthContext";
+import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
+import axios from "axios";
+
 const Meeting = () => {
+  const { user } = useAuth();
+  const isBossOrManager = user.role?.name === "Boss" || user.role?.name === "Manager";
   const { toggleNotificationPanel, notifications } = useNotifications();
-  const [sidebarOpen, setSidebarOpen] = useState(false)
-  const [view, setView] = useState('calendar')
+
+  // UI States
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [view, setView] = useState("calendar");
+  const [isOpen, setIsOpen] = useState(false);
+  const [creatingMeeting, setCreatingMeeting] = useState(false);
+  const [loadingData, setLoadingData] = useState(false);
+
+  // Data Lists
+  const [employees, setEmployees] = useState([]);
+  const [rooms, setRooms] = useState([]);
+  const [meetings, setMeetings] = useState([]);
+
+  // Form State
+  const [formData, setFormData] = useState({
+    title: "", description: "", participants: [], meetingType: "Virtual",
+    roomId: "", virtualLink: "", startTime: "", endTime: "",
+  });
+
+  // --- Fetch Helper Data ---
+  const fetchFormDependencies = async () => {
+    setLoadingData(true);
+    try {
+      const [empRes, roomRes] = await Promise.all([
+        axios.get(`${import.meta.env.VITE_API_URL}/api/employee/all-employee`, { withCredentials: true }),
+        axios.get(`${import.meta.env.VITE_API_URL}/api/room`, { withCredentials: true }),
+      ]);
+      setEmployees(empRes.data.employees || empRes.data || []);
+      setRooms(roomRes.data || []);
+    } catch (error) {
+      console.error("Failed to load form data", error);
+    } finally {
+      setLoadingData(false);
+    }
+  };
+
+  useEffect(() => { if (isOpen) fetchFormDependencies(); }, [isOpen]);
+
+  // --- Handlers ---
+  const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
+
+  const handleParticipantToggle = (userId) => {
+    setFormData((prev) => {
+      const isSelected = prev.participants.includes(userId);
+      return {
+        ...prev,
+        participants: isSelected ? prev.participants.filter((id) => id !== userId) : [...prev.participants, userId],
+      };
+    });
+  };
+
+  const handleCreateMeeting = async (e) => {
+    e.preventDefault();
+    if (new Date(formData.startTime) >= new Date(formData.endTime)) return toast.error("End time must be after start time");
+    if ((formData.meetingType === "In-Person" || formData.meetingType === "Hybrid") && !formData.roomId) return toast.error("Please select a room");
+
+    setCreatingMeeting(true);
+    try {
+      await axios.post(`${import.meta.env.VITE_API_URL}/api/meeting`, formData, { withCredentials: true });
+      toast.success("Meeting scheduled successfully!");
+      setIsOpen(false);
+      setFormData({ title: "", description: "", participants: [], meetingType: "Virtual", roomId: "", virtualLink: "", startTime: "", endTime: "" });
+      window.location.reload();
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Failed to create meeting");
+    } finally {
+      setCreatingMeeting(false);
+    }
+  };
+
+  const fetchAllMeetings = async () => {
+    try {
+      const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/meeting`, { withCredentials: true });
+      setMeetings(res.data);
+    } catch (error) { toast.error("Failed to load meetings"); }
+  };
+
+  useEffect(() => { fetchAllMeetings(); }, []);
+
+  // --- Sub-Components for Styles ---
+  const ToggleButton = ({ active, onClick, icon: Icon, label }) => (
+    <button
+      onClick={onClick}
+      className={`flex items-center gap-2 px-4 py-2 text-sm font-medium transition-all duration-200 ${
+        active 
+          ? "bg-white text-blue-600 shadow-sm ring-1 ring-slate-200" 
+          : "text-slate-500 hover:text-slate-700 hover:bg-slate-100/50"
+      } first:rounded-l-lg last:rounded-r-lg`}
+    >
+      <Icon size={16} /> {label}
+    </button>
+  );
+
   return (
-    <div className="flex h-screen bg-gray-50">
+    <div className="flex h-screen bg-slate-50 font-sans text-slate-900">
       <Sidebar isOpen={sidebarOpen} setIsOpen={setSidebarOpen} />
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <header className="bg-white shadow-sm z-10">
-          <div className="px-4 sm:px-6 lg:px-8">
-            <div className="flex items-center justify-between h-16">
-              <div className="flex">
-                <button
-                  onClick={() => setSidebarOpen(!sidebarOpen)}
-                  className="text-gray-500 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 lg:hidden"
-                >
-                  <svg
-                    className="h-6 w-6"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M4 6h16M4 12h16M4 18h7"
-                    />
-                  </svg>
-                </button>
-                <div className="ml-4 flex items-center lg:ml-0">
-                  <div className="relative w-64">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <SearchIcon className="h-5 w-5 text-gray-400" />
-                    </div>
-                    <input
-                      className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-gray-50 placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                      placeholder="Search meetings..."
-                      type="search"
-                    />
-                  </div>
-                </div>
+      
+      <div className="flex-1 flex flex-col overflow-hidden relative">
+        {/* Header */}
+        <header className="bg-white border-b border-slate-200 h-16 flex items-center justify-between px-4 sm:px-6 lg:px-8 z-20">
+           <div className="flex items-center gap-4">
+              <button onClick={() => setSidebarOpen(!sidebarOpen)} className="lg:hidden p-2 text-slate-500 hover:bg-slate-100 rounded-lg"><Menu size={24} /></button>
+              <div className="relative hidden sm:block w-72">
+                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                 <input 
+                    type="text" 
+                    placeholder="Search meetings..." 
+                    className="w-full pl-10 pr-4 py-2 bg-slate-50 border-none rounded-xl text-sm focus:ring-2 focus:ring-blue-500/20 focus:bg-white transition-all placeholder:text-slate-400"
+                 />
               </div>
-              <div className="flex items-center">
-                <button
-                  onClick={toggleNotificationPanel}
-                  className="flex-shrink-0 p-1 text-gray-400 rounded-full hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                >
-                  <span className="sr-only">View notifications</span>
-                  {/* Notification Icon */}
-                  {notifications && notifications.length > 0 ? (
-                    <BellDot className="text-green-500" />
-                  ) : (
-                    <BellIcon className="text-gray-400" />
-                  )}
-                </button>
-                <div className="ml-3 relative">
-                  <div>
-                    <button className="flex items-center max-w-xs bg-gray-100 p-1 rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                      <span className="sr-only">Open user menu</span>
-                      <UserIcon className="h-8 w-8 rounded-full p-1" />
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </header>
-        <main className="flex-1 overflow-auto p-4 sm:p-6 lg:p-8">
-          <div className="mb-6 flex justify-between items-center">
-            <h1 className="text-2xl font-semibold text-gray-900">Meetings</h1>
-            <div className="flex items-center space-x-3">
-              <div className="flex items-center">
-                <button
-                  onClick={() => setView('calendar')}
-                  className={`inline-flex items-center px-3 py-1.5 border ${view === 'calendar' ? 'border-blue-600 text-blue-600 bg-blue-50' : 'border-gray-300 text-gray-700 bg-white hover:bg-gray-50'} text-sm font-medium rounded-l-md`}
-                >
-                  <CalendarIcon className="h-4 w-4 mr-1" />
-                  Calendar
-                </button>
-                <button
-                  onClick={() => setView('list')}
-                  className={`inline-flex items-center px-3 py-1.5 border ${view === 'list' ? 'border-blue-600 text-blue-600 bg-blue-50' : 'border-gray-300 text-gray-700 bg-white hover:bg-gray-50'} text-sm font-medium rounded-r-md`}
-                >
-                  <ListIcon className="h-4 w-4 mr-1" />
-                  List
-                </button>
-              </div>
-              <button className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700">
-                <PlusIcon className="h-4 w-4 mr-2" />
-                New Meeting
+           </div>
+           <div className="flex items-center gap-4">
+              <button onClick={toggleNotificationPanel} className="relative p-2 text-slate-500 hover:bg-slate-100 rounded-full transition-colors">
+                 <Bell size={22} />
+                 {notifications?.length > 0 && <span className="absolute top-2 right-2.5 h-2 w-2 bg-rose-500 rounded-full ring-2 ring-white"></span>}
               </button>
-            </div>
-          </div>
-          {/* Calendar or List View */}
-          <div className="mb-8">
-            {view === 'calendar' ? (
-              <div className="bg-white shadow rounded-lg overflow-hidden">
-                <MeetingCalendar />
+              <div className="h-9 w-9 rounded-full bg-linear-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-medium shadow-sm">
+                 {user?.username?.[0] || <User size={18} />}
               </div>
-            ) : (
-              <div className="bg-white shadow rounded-lg overflow-hidden">
-                <UpcomingMeetings listView={true} />
-              </div>
-            )}
-          </div>
-          {/* Bottom Section */}
-          <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
-            {/* Upcoming Meetings */}
-            <div className="lg:col-span-2">
-              {view === 'calendar' && <UpcomingMeetings />}
+           </div>
+        </header>
+
+        {/* Content */}
+        <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 scroll-smooth">
+          <div className="max-w-7xl mx-auto space-y-6">
+            
+            {/* Page Title & Actions */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+               <div>
+                  <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Meetings</h1>
+                  <p className="text-slate-500 text-sm mt-1">Manage your schedule and team collaborations.</p>
+               </div>
+
+               <div className="flex items-center gap-3">
+                  <div className="flex p-1 bg-slate-100 rounded-xl">
+                     <ToggleButton active={view === "calendar"} onClick={() => setView("calendar")} icon={Calendar} label="Calendar" />
+                     <ToggleButton active={view === "list"} onClick={() => setView("list")} icon={List} label="List" />
+                  </div>
+
+                  {isBossOrManager && (
+                    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+                      <DialogTrigger asChild>
+                        <Button className="bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-600/20 rounded-xl px-5 h-11">
+                          <Plus size={18} className="mr-2" /> Schedule
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent className="sm:max-w-[600px] max-h-[85vh] overflow-y-auto p-0 gap-0 bg-white rounded-2xl">
+                        <DialogHeader className="p-6 border-b border-slate-100 bg-slate-50/50">
+                          <DialogTitle className="text-xl font-bold text-slate-900">Schedule New Meeting</DialogTitle>
+                          <DialogDescription className="text-slate-500">Organize a session with your team.</DialogDescription>
+                        </DialogHeader>
+                        
+                        <form onSubmit={handleCreateMeeting} className="p-6 space-y-5">
+                           <div className="space-y-1.5">
+                              <label className="text-xs font-bold text-slate-500 uppercase">Title</label>
+                              <input name="title" value={formData.title} onChange={handleChange} className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none" placeholder="e.g. Q3 Roadmap Review" required />
+                           </div>
+
+                           <div className="grid grid-cols-2 gap-4">
+                              <div className="space-y-1.5">
+                                 <label className="text-xs font-bold text-slate-500 uppercase">Start Time</label>
+                                 <input type="datetime-local" name="startTime" value={formData.startTime} onChange={handleChange} className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none" required min={new Date().toISOString().slice(0, 16)} />
+                              </div>
+                              <div className="space-y-1.5">
+                                 <label className="text-xs font-bold text-slate-500 uppercase">End Time</label>
+                                 <input type="datetime-local" name="endTime" value={formData.endTime} onChange={handleChange} className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none" required min={formData.startTime} />
+                              </div>
+                           </div>
+
+                           <div className="space-y-1.5">
+                              <label className="text-xs font-bold text-slate-500 uppercase">Meeting Type</label>
+                              <div className="grid grid-cols-3 gap-3">
+                                 {["Virtual", "In-Person", "Hybrid"].map((type) => (
+                                    <button key={type} type="button" onClick={() => setFormData({ ...formData, meetingType: type })} className={`py-2.5 px-3 text-sm font-medium rounded-lg border flex items-center justify-center gap-2 transition-all ${formData.meetingType === type ? "border-blue-600 bg-blue-50 text-blue-700 ring-1 ring-blue-600" : "border-slate-200 text-slate-600 hover:bg-slate-50"}`}>
+                                       {type === "Virtual" && <Video size={14} />} {type === "In-Person" && <Users size={14} />} {type === "Hybrid" && <MapPin size={14} />} {type}
+                                    </button>
+                                 ))}
+                              </div>
+                           </div>
+
+                           {(formData.meetingType === "In-Person" || formData.meetingType === "Hybrid") && (
+                              <div className="space-y-1.5 animate-in fade-in slide-in-from-top-1">
+                                 <label className="text-xs font-bold text-slate-500 uppercase">Select Room</label>
+                                 <select name="roomId" value={formData.roomId} onChange={handleChange} className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none" required>
+                                    <option value="">-- Choose a Room --</option>
+                                    {rooms.map((room) => <option key={room._id} value={room._id}>{room.name} (Cap: {room.capacity})</option>)}
+                                 </select>
+                              </div>
+                           )}
+
+                           {(formData.meetingType === "Virtual" || formData.meetingType === "Hybrid") && (
+                              <div className="space-y-1.5 animate-in fade-in slide-in-from-top-1">
+                                 <label className="text-xs font-bold text-slate-500 uppercase">Link</label>
+                                 <input name="virtualLink" value={formData.virtualLink} onChange={handleChange} className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none" placeholder="https://..." />
+                              </div>
+                           )}
+
+                           <div className="space-y-1.5">
+                              <label className="text-xs font-bold text-slate-500 uppercase">Participants ({formData.participants.length})</label>
+                              <div className="border border-slate-200 rounded-lg max-h-32 overflow-y-auto bg-slate-50 p-1">
+                                 {loadingData ? <div className="text-xs text-slate-400 p-2">Loading...</div> : employees.map((emp) => (
+                                    <div key={emp._id} onClick={() => handleParticipantToggle(emp._id)} className="flex items-center gap-2 p-2 hover:bg-white hover:shadow-sm rounded-md cursor-pointer transition-all">
+                                       <div className={`w-4 h-4 rounded border flex items-center justify-center transition-colors ${formData.participants.includes(emp._id) ? "bg-blue-600 border-blue-600" : "bg-white border-slate-300"}`}>
+                                          {formData.participants.includes(emp._id) && <Plus size={10} className="text-white" />}
+                                       </div>
+                                       <span className="text-sm text-slate-700 font-medium">{emp.firstName} {emp.lastName}</span>
+                                       <span className="text-xs text-slate-400 ml-auto">{emp.jobTitle}</span>
+                                    </div>
+                                 ))}
+                              </div>
+                           </div>
+
+                           <div className="space-y-1.5">
+                              <label className="text-xs font-bold text-slate-500 uppercase">Agenda</label>
+                              <textarea name="description" value={formData.description} onChange={handleChange} rows={3} className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none resize-none" placeholder="Brief description..." />
+                           </div>
+
+                           <div className="flex justify-end gap-3 pt-2">
+                              <Button type="button" variant="ghost" onClick={() => setIsOpen(false)} className="text-slate-500">Cancel</Button>
+                              <Button type="submit" disabled={creatingMeeting} className="bg-blue-600 hover:bg-blue-700 text-white min-w-[120px]">
+                                 {creatingMeeting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : "Schedule Meeting"}
+                              </Button>
+                           </div>
+                        </form>
+                      </DialogContent>
+                    </Dialog>
+                  )}
+               </div>
             </div>
-            {/* Meeting Rooms */}
-            <div className="lg:col-span-1">
-              <MeetingRooms />
+
+            {/* Views */}
+            <div className="space-y-8">
+               <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                  {view === "calendar" ? <MeetingCalendar meetingsData={meetings} /> : <UpcomingMeetings listView={true} allMeetings={meetings} />}
+               </div>
+
+               <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                  <div className="lg:col-span-2">
+                     {view === "calendar" && <UpcomingMeetings allMeetings={meetings} />}
+                  </div>
+                  <div className="lg:col-span-1">
+                     <MeetingRooms />
+                  </div>
+               </div>
             </div>
+
           </div>
         </main>
       </div>
       <NotificationPanel />
     </div>
-  )
-}
-export default Meeting
+  );
+};
+
+export default Meeting;
