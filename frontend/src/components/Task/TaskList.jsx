@@ -99,18 +99,18 @@ const TaskList = ({ tasks, loading, handleDeleteTask, user, navigate }) => {
                   </div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-right">
-                  <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className="flex items-center justify-end gap-2 ">
                     {user.role.name === "Boss" && (
                       <button
                         onClick={() => handleDeleteTask(task._id)}
-                        className="p-2 hover:bg-rose-50 text-slate-400 hover:text-rose-600 rounded-lg transition-colors"
+                        className="p-2 hover:bg-rose-50 text-slate-400 hover:text-rose-600 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity"
                       >
                         <Trash2 size={16} />
                       </button>
                     )}
                     <button
                       onClick={() => navigate(`/tasks/${task._id}`)}
-                      className="p-2 hover:bg-slate-100 text-slate-400 hover:text-blue-600 rounded-lg transition-colors"
+                      className="p-2 hover:bg-slate-100 text-slate-400 hover:text-blue-600 rounded-lg"
                     >
                       <MoreHorizontal size={16} />
                     </button>

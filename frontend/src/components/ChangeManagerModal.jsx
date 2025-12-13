@@ -100,7 +100,7 @@ const ChangeManagerModal = ({
                         />
                         <div className="ml-3">
                           <span className="text-sm font-medium text-gray-900">
-                            {emp.username}
+                            {emp.firstName} {emp.lastName}
                           </span>
                           <span className="text-sm text-gray-500 ml-2">
                             ({emp.jobTitle})

@@ -13,11 +13,9 @@ import Registration from "./pages/Registration";
 import Tasks from "./pages/Tasks";
 import Departments from "./pages/Departments";
 import Employees from "./pages/Employees";
-import EmpDetails from "./pages/EmpDetails";
 import Chat from "./pages/Chat";
 import Reports from "./pages/Reports";
 import Profile from "./pages/Profile";
-import DepartmentDetails from "./pages/DeptDetails";
 import ResetPassword from "./pages/ResetPassword";
 import Meeting from "./pages/Meeting";
 import HelpSupportPage from "./pages/HelpSupportPage";
@@ -32,13 +30,14 @@ import Contact from "./pages/Contact";
 import Status from "./pages/Status";
 import Careers from "./pages/Careers";
 import PageLoader from "./components/ui/PageLoader";
-import MeetingDetails from "./pages/MeetingDetails";
 import Home from "./pages/Home";
 
 // Lazy load the pages... (keep all your lazy imports here)
-// const Home = lazy(() => import("./pages/Home"));
-// ... other lazy imports ...
+
 const TaskDetails = lazy(() => import("./pages/TaskDetails"));
+const EmpDetails = lazy(() => import("./pages/EmpDetails"));
+const DepartmentDetails = lazy(() => import("./pages/DeptDetails"));
+const MeetingDetails = lazy(() => import("./pages/MeetingDetails"));
 
 function App() {
   const { loading } = useAuth();

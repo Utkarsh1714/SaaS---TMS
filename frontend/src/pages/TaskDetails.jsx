@@ -78,6 +78,7 @@ const TaskDetails = () => {
         `${import.meta.env.VITE_API_URL}/api/task/${taskId}`,
         { withCredentials: true }
       );
+      console.log(res.data)
       const data = res.data;
       setTaskDetail(data);
       setTitle(data.title);
@@ -125,13 +126,14 @@ const TaskDetails = () => {
     if (!selectedTeam) return;
     setIsAssigning(true);
     try {
-      await axios.post(
+      const res = await axios.post(
         `${import.meta.env.VITE_API_URL}/api/task/${
           taskDetail._id
         }/assign-team`,
         { teamId: selectedTeam },
         { withCredentials: true }
       );
+      console.log(res.data)
       toast.success("Team assigned successfully!");
       setIsAssignTeamDialogOpen(false);
       await fetchTask();
@@ -408,7 +410,7 @@ const TaskDetails = () => {
               {/* --- LEFT COLUMN (Description, Milestones, Chat) --- */}
               <div className="lg:col-span-2 space-y-8">
                 {/* Description */}
-                <div className="bg-white p-0 rounded-2xl">
+                <div className="bg-white p-4 rounded-2xl">
                   {isEditing ? (
                     <div className="space-y-4">
                       <textarea
@@ -575,7 +577,7 @@ const TaskDetails = () => {
                   <div className="flex gap-3 bg-white p-2 rounded-xl border border-slate-200 shadow-sm focus-within:ring-2 focus-within:ring-blue-500/20 focus-within:border-blue-500 transition-all">
                     <textarea
                       placeholder="Write a comment..."
-                      className="flex-1 bg-transparent border-none focus:ring-0 text-sm p-2 resize-none min-h-[44px] max-h-32"
+                      className="flex-1 bg-transparent border-none focus:ring-0 text-sm p-2 resize-none min-h-11 max-h-32"
                       value={comment}
                       onChange={(e) => setComment(e.target.value)}
                       onKeyDown={(e) => {
@@ -604,9 +606,9 @@ const TaskDetails = () => {
                     <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">
                       Assigned To
                     </h4>
-                    {taskDetail.assignedEmployees?.length > 0 ? (
+                    {taskDetail.team?.members || taskDetail.team?.members > 0 ? (
                       <div className="flex flex-col gap-3">
-                        {taskDetail.assignedEmployees.map((emp) => (
+                        {taskDetail.team?.members.map((emp) => (
                           <div
                             key={emp._id}
                             className="flex items-center gap-3"
@@ -695,7 +697,7 @@ const TaskDetails = () => {
 
                 {/* Action Box */}
                 {isManagerOrBoss && !taskDetail.team && (
-                  <div className="bg-gradient-to-br from-blue-600 to-indigo-600 p-6 rounded-2xl text-white shadow-lg shadow-blue-600/20">
+                  <div className="bg-linear-to-br from-blue-600 to-indigo-600 p-6 rounded-2xl text-white shadow-lg shadow-blue-600/20">
                     <h4 className="font-bold text-lg mb-2">Needs a Team?</h4>
                     <p className="text-blue-100 text-sm mb-4">
                       Assign this task to a specific team to start tracking

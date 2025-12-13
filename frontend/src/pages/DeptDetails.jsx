@@ -227,11 +227,11 @@ const DepartmentDetails = () => {
             {/* 1. DEPARTMENT HEADER */}
             <AnimatedContent direction="vertical" distance={20}>
               <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden relative group">
-                <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-blue-500 to-indigo-600"></div>
+                <div className="absolute top-0 left-0 w-full h-1.5 bg-linear-to-r from-blue-500 to-indigo-600"></div>
                 <div className="p-8">
                   <div className="flex flex-col md:flex-row justify-between items-start gap-6">
                     <div className="flex gap-5">
-                      <div className="w-16 h-16 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl flex items-center justify-center text-blue-600 shadow-sm border border-blue-100">
+                      <div className="w-16 h-16 bg-linear-to-br from-blue-50 to-indigo-50 rounded-2xl flex items-center justify-center text-blue-600 shadow-sm border border-blue-100">
                         <Building size={32} />
                       </div>
                       <div>
@@ -253,7 +253,7 @@ const DepartmentDetails = () => {
                           className="w-12 h-12 rounded-full object-cover border-2 border-white shadow-sm"
                         />
                       ) : (
-                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 text-white flex items-center justify-center font-bold text-sm border-2 border-white shadow-sm">
+                        <div className="w-12 h-12 rounded-full bg-linear-to-br from-indigo-500 to-purple-600 text-white flex items-center justify-center font-bold text-sm border-2 border-white shadow-sm">
                           {getInitials(
                             deptDetails?.department.manager?.firstName
                           )}
