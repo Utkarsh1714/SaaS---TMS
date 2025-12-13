@@ -11,7 +11,7 @@ import {
   Users,
   MapPin,
   Loader2,
-  Clock
+  Clock,
 } from "lucide-react";
 import Sidebar from "@/components/Layout/Sidebar";
 import MeetingCalendar from "@/components/Meeting/MeetingCalendar";
@@ -34,7 +34,8 @@ import axios from "axios";
 
 const Meeting = () => {
   const { user } = useAuth();
-  const isBossOrManager = user.role?.name === "Boss" || user.role?.name === "Manager";
+  const isBossOrManager =
+    user.role?.name === "Boss" || user.role?.name === "Manager";
   const { toggleNotificationPanel, notifications } = useNotifications();
 
   // UI States
@@ -51,8 +52,14 @@ const Meeting = () => {
 
   // Form State
   const [formData, setFormData] = useState({
-    title: "", description: "", participants: [], meetingType: "Virtual",
-    roomId: "", virtualLink: "", startTime: "", endTime: "",
+    title: "",
+    description: "",
+    participants: [],
+    meetingType: "Virtual",
+    roomId: "",
+    virtualLink: "",
+    startTime: "",
+    endTime: "",
   });
 
   // --- Fetch Helper Data ---
@@ -60,8 +67,12 @@ const Meeting = () => {
     setLoadingData(true);
     try {
       const [empRes, roomRes] = await Promise.all([
-        axios.get(`${import.meta.env.VITE_API_URL}/api/employee/all-employee`, { withCredentials: true }),
-        axios.get(`${import.meta.env.VITE_API_URL}/api/room`, { withCredentials: true }),
+        axios.get(`${import.meta.env.VITE_API_URL}/api/employee/all-employee`, {
+          withCredentials: true,
+        }),
+        axios.get(`${import.meta.env.VITE_API_URL}/api/room`, {
+          withCredentials: true,
+        }),
       ]);
       setEmployees(empRes.data.employees || empRes.data || []);
       setRooms(roomRes.data || []);
@@ -72,32 +83,56 @@ const Meeting = () => {
     }
   };
 
-  useEffect(() => { if (isOpen) fetchFormDependencies(); }, [isOpen]);
+  useEffect(() => {
+    if (isOpen) fetchFormDependencies();
+  }, [isOpen]);
 
   // --- Handlers ---
-  const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
+  const handleChange = (e) =>
+    setFormData({ ...formData, [e.target.name]: e.target.value });
 
   const handleParticipantToggle = (userId) => {
     setFormData((prev) => {
       const isSelected = prev.participants.includes(userId);
       return {
         ...prev,
-        participants: isSelected ? prev.participants.filter((id) => id !== userId) : [...prev.participants, userId],
+        participants: isSelected
+          ? prev.participants.filter((id) => id !== userId)
+          : [...prev.participants, userId],
       };
     });
   };
 
   const handleCreateMeeting = async (e) => {
     e.preventDefault();
-    if (new Date(formData.startTime) >= new Date(formData.endTime)) return toast.error("End time must be after start time");
-    if ((formData.meetingType === "In-Person" || formData.meetingType === "Hybrid") && !formData.roomId) return toast.error("Please select a room");
+    if (new Date(formData.startTime) >= new Date(formData.endTime))
+      return toast.error("End time must be after start time");
+    if (
+      (formData.meetingType === "In-Person" ||
+        formData.meetingType === "Hybrid") &&
+      !formData.roomId
+    )
+      return toast.error("Please select a room");
 
     setCreatingMeeting(true);
     try {
-      await axios.post(`${import.meta.env.VITE_API_URL}/api/meeting`, formData, { withCredentials: true });
+      await axios.post(
+        `${import.meta.env.VITE_API_URL}/api/meeting`,
+        formData,
+        { withCredentials: true }
+      );
       toast.success("Meeting scheduled successfully!");
       setIsOpen(false);
-      setFormData({ title: "", description: "", participants: [], meetingType: "Virtual", roomId: "", virtualLink: "", startTime: "", endTime: "" });
+      setFormData({
+        title: "",
+        description: "",
+        participants: [],
+        meetingType: "Virtual",
+        roomId: "",
+        virtualLink: "",
+        startTime: "",
+        endTime: "",
+      });
       window.location.reload();
     } catch (error) {
       toast.error(error.response?.data?.message || "Failed to create meeting");
@@ -108,20 +143,27 @@ const Meeting = () => {
 
   const fetchAllMeetings = async () => {
     try {
-      const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/meeting`, { withCredentials: true });
+      const res = await axios.get(
+        `${import.meta.env.VITE_API_URL}/api/meeting`,
+        { withCredentials: true }
+      );
       setMeetings(res.data);
-    } catch (error) { toast.error("Failed to load meetings"); }
+    } catch (error) {
+      toast.error("Failed to load meetings");
+    }
   };
 
-  useEffect(() => { fetchAllMeetings(); }, []);
+  useEffect(() => {
+    fetchAllMeetings();
+  }, []);
 
   // --- Sub-Components for Styles ---
   const ToggleButton = ({ active, onClick, icon: Icon, label }) => (
     <button
       onClick={onClick}
       className={`flex items-center gap-2 px-4 py-2 text-sm font-medium transition-all duration-200 ${
-        active 
-          ? "bg-white text-blue-600 shadow-sm ring-1 ring-slate-200" 
+        active
+          ? "bg-white text-blue-600 shadow-sm ring-1 ring-slate-200"
           : "text-slate-500 hover:text-slate-700 hover:bg-slate-100/50"
       } first:rounded-l-lg last:rounded-r-lg`}
     >
@@ -132,156 +174,326 @@ const Meeting = () => {
   return (
     <div className="flex h-screen bg-slate-50 font-sans text-slate-900">
       <Sidebar isOpen={sidebarOpen} setIsOpen={setSidebarOpen} />
-      
+
       <div className="flex-1 flex flex-col overflow-hidden relative">
         {/* Header */}
         <header className="bg-white border-b border-slate-200 h-16 flex items-center justify-between px-4 sm:px-6 lg:px-8 z-20">
-           <div className="flex items-center gap-4">
-              <button onClick={() => setSidebarOpen(!sidebarOpen)} className="lg:hidden p-2 text-slate-500 hover:bg-slate-100 rounded-lg"><Menu size={24} /></button>
-              <div className="relative hidden sm:block w-72">
-                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-                 <input 
-                    type="text" 
-                    placeholder="Search meetings..." 
-                    className="w-full pl-10 pr-4 py-2 bg-slate-50 border-none rounded-xl text-sm focus:ring-2 focus:ring-blue-500/20 focus:bg-white transition-all placeholder:text-slate-400"
-                 />
-              </div>
-           </div>
-           <div className="flex items-center gap-4">
-              <button onClick={toggleNotificationPanel} className="relative p-2 text-slate-500 hover:bg-slate-100 rounded-full transition-colors">
-                 <Bell size={22} />
-                 {notifications?.length > 0 && <span className="absolute top-2 right-2.5 h-2 w-2 bg-rose-500 rounded-full ring-2 ring-white"></span>}
-              </button>
-              <div className="h-9 w-9 rounded-full bg-linear-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-medium shadow-sm">
-                 {user?.username?.[0] || <User size={18} />}
-              </div>
-           </div>
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => setSidebarOpen(!sidebarOpen)}
+              className="lg:hidden p-2 text-slate-500 hover:bg-slate-100 rounded-lg"
+            >
+              <Menu size={24} />
+            </button>
+            <div className="relative hidden sm:block w-72">
+              <Search
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+                size={18}
+              />
+              <input
+                type="text"
+                placeholder="Search meetings..."
+                className="w-full pl-10 pr-4 py-2 bg-slate-50 border-none rounded-xl text-sm focus:ring-2 focus:ring-blue-500/20 focus:bg-white transition-all placeholder:text-slate-400"
+              />
+            </div>
+          </div>
+          <div className="flex items-center gap-4">
+            <button
+              onClick={toggleNotificationPanel}
+              className="relative p-2 text-slate-500 hover:bg-slate-100 rounded-full transition-colors"
+            >
+              <Bell size={22} />
+              {notifications?.length > 0 && (
+                <span className="absolute top-2 right-2.5 h-2 w-2 bg-rose-500 rounded-full ring-2 ring-white"></span>
+              )}
+            </button>
+            <div className="h-9 w-9 rounded-full bg-linear-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-medium shadow-sm">
+              {user?.username?.[0] || <User size={18} />}
+            </div>
+          </div>
         </header>
 
         {/* Content */}
         <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 scroll-smooth">
-          <div className="max-w-7xl mx-auto space-y-6">
-            
+          <div className=" mx-auto space-y-6">
             {/* Page Title & Actions */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-               <div>
-                  <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Meetings</h1>
-                  <p className="text-slate-500 text-sm mt-1">Manage your schedule and team collaborations.</p>
-               </div>
+              <div>
+                <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
+                  Meetings
+                </h1>
+                <p className="text-slate-500 text-sm mt-1">
+                  Manage your schedule and team collaborations.
+                </p>
+              </div>
 
-               <div className="flex items-center gap-3">
-                  <div className="flex p-1 bg-slate-100 rounded-xl">
-                     <ToggleButton active={view === "calendar"} onClick={() => setView("calendar")} icon={Calendar} label="Calendar" />
-                     <ToggleButton active={view === "list"} onClick={() => setView("list")} icon={List} label="List" />
-                  </div>
+              <div className="flex items-center gap-3">
+                <div className="flex p-1 bg-slate-100 rounded-xl">
+                  <ToggleButton
+                    active={view === "calendar"}
+                    onClick={() => setView("calendar")}
+                    icon={Calendar}
+                    label="Calendar"
+                  />
+                  <ToggleButton
+                    active={view === "list"}
+                    onClick={() => setView("list")}
+                    icon={List}
+                    label="List"
+                  />
+                </div>
 
-                  {isBossOrManager && (
-                    <Dialog open={isOpen} onOpenChange={setIsOpen}>
-                      <DialogTrigger asChild>
-                        <Button className="bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-600/20 rounded-xl px-5 h-11">
-                          <Plus size={18} className="mr-2" /> Schedule
-                        </Button>
-                      </DialogTrigger>
-                      <DialogContent className="sm:max-w-[600px] max-h-[85vh] overflow-y-auto p-0 gap-0 bg-white rounded-2xl">
-                        <DialogHeader className="p-6 border-b border-slate-100 bg-slate-50/50">
-                          <DialogTitle className="text-xl font-bold text-slate-900">Schedule New Meeting</DialogTitle>
-                          <DialogDescription className="text-slate-500">Organize a session with your team.</DialogDescription>
-                        </DialogHeader>
-                        
-                        <form onSubmit={handleCreateMeeting} className="p-6 space-y-5">
-                           <div className="space-y-1.5">
-                              <label className="text-xs font-bold text-slate-500 uppercase">Title</label>
-                              <input name="title" value={formData.title} onChange={handleChange} className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none" placeholder="e.g. Q3 Roadmap Review" required />
-                           </div>
+                {isBossOrManager && (
+                  <Dialog open={isOpen} onOpenChange={setIsOpen}>
+                    <DialogTrigger asChild>
+                      <Button className="bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-600/20 rounded-xl px-5 h-11">
+                        <Plus size={18} className="mr-2" /> Schedule
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="sm:max-w-[600px] max-h-[85vh] overflow-y-auto p-0 gap-0 bg-white rounded-2xl">
+                      <DialogHeader className="p-6 border-b border-slate-100 bg-slate-50/50">
+                        <DialogTitle className="text-xl font-bold text-slate-900">
+                          Schedule New Meeting
+                        </DialogTitle>
+                        <DialogDescription className="text-slate-500">
+                          Organize a session with your team.
+                        </DialogDescription>
+                      </DialogHeader>
 
-                           <div className="grid grid-cols-2 gap-4">
-                              <div className="space-y-1.5">
-                                 <label className="text-xs font-bold text-slate-500 uppercase">Start Time</label>
-                                 <input type="datetime-local" name="startTime" value={formData.startTime} onChange={handleChange} className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none" required min={new Date().toISOString().slice(0, 16)} />
+                      <form
+                        onSubmit={handleCreateMeeting}
+                        className="p-6 space-y-5"
+                      >
+                        <div className="space-y-1.5">
+                          <label className="text-xs font-bold text-slate-500 uppercase">
+                            Title
+                          </label>
+                          <input
+                            name="title"
+                            value={formData.title}
+                            onChange={handleChange}
+                            className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none"
+                            placeholder="e.g. Q3 Roadmap Review"
+                            required
+                          />
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-1.5">
+                            <label className="text-xs font-bold text-slate-500 uppercase">
+                              Start Time
+                            </label>
+                            <input
+                              type="datetime-local"
+                              name="startTime"
+                              value={formData.startTime}
+                              onChange={handleChange}
+                              className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none"
+                              required
+                              min={new Date().toISOString().slice(0, 16)}
+                            />
+                          </div>
+                          <div className="space-y-1.5">
+                            <label className="text-xs font-bold text-slate-500 uppercase">
+                              End Time
+                            </label>
+                            <input
+                              type="datetime-local"
+                              name="endTime"
+                              value={formData.endTime}
+                              onChange={handleChange}
+                              className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none"
+                              required
+                              min={formData.startTime}
+                            />
+                          </div>
+                        </div>
+
+                        <div className="space-y-1.5">
+                          <label className="text-xs font-bold text-slate-500 uppercase">
+                            Meeting Type
+                          </label>
+                          <div className="grid grid-cols-3 gap-3">
+                            {["Virtual", "In-Person", "Hybrid"].map((type) => (
+                              <button
+                                key={type}
+                                type="button"
+                                onClick={() =>
+                                  setFormData({
+                                    ...formData,
+                                    meetingType: type,
+                                  })
+                                }
+                                className={`py-2.5 px-3 text-sm font-medium rounded-lg border flex items-center justify-center gap-2 transition-all ${
+                                  formData.meetingType === type
+                                    ? "border-blue-600 bg-blue-50 text-blue-700 ring-1 ring-blue-600"
+                                    : "border-slate-200 text-slate-600 hover:bg-slate-50"
+                                }`}
+                              >
+                                {type === "Virtual" && <Video size={14} />}{" "}
+                                {type === "In-Person" && <Users size={14} />}{" "}
+                                {type === "Hybrid" && <MapPin size={14} />}{" "}
+                                {type}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+
+                        {(formData.meetingType === "In-Person" ||
+                          formData.meetingType === "Hybrid") && (
+                          <div className="space-y-1.5 animate-in fade-in slide-in-from-top-1">
+                            <label className="text-xs font-bold text-slate-500 uppercase">
+                              Select Room
+                            </label>
+                            <select
+                              name="roomId"
+                              value={formData.roomId}
+                              onChange={handleChange}
+                              className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none"
+                              required
+                            >
+                              <option value="">-- Choose a Room --</option>
+                              {rooms.map((room) => (
+                                <option key={room._id} value={room._id}>
+                                  {room.name} (Cap: {room.capacity})
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                        )}
+
+                        {(formData.meetingType === "Virtual" ||
+                          formData.meetingType === "Hybrid") && (
+                          <div className="space-y-1.5 animate-in fade-in slide-in-from-top-1">
+                            <label className="text-xs font-bold text-slate-500 uppercase">
+                              Link
+                            </label>
+                            <input
+                              name="virtualLink"
+                              value={formData.virtualLink}
+                              onChange={handleChange}
+                              className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none"
+                              placeholder="https://..."
+                            />
+                          </div>
+                        )}
+
+                        <div className="space-y-1.5">
+                          <label className="text-xs font-bold text-slate-500 uppercase">
+                            Participants ({formData.participants.length})
+                          </label>
+                          <div className="border border-slate-200 rounded-lg max-h-32 overflow-y-auto bg-slate-50 p-1">
+                            {loadingData ? (
+                              <div className="text-xs text-slate-400 p-2">
+                                Loading...
                               </div>
-                              <div className="space-y-1.5">
-                                 <label className="text-xs font-bold text-slate-500 uppercase">End Time</label>
-                                 <input type="datetime-local" name="endTime" value={formData.endTime} onChange={handleChange} className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none" required min={formData.startTime} />
-                              </div>
-                           </div>
+                            ) : (
+                              employees.map((emp) => (
+                                <div
+                                  key={emp._id}
+                                  onClick={() =>
+                                    handleParticipantToggle(emp._id)
+                                  }
+                                  className="flex items-center gap-2 p-2 hover:bg-white hover:shadow-sm rounded-md cursor-pointer transition-all"
+                                >
+                                  <div
+                                    className={`w-4 h-4 rounded border flex items-center justify-center transition-colors ${
+                                      formData.participants.includes(emp._id)
+                                        ? "bg-blue-600 border-blue-600"
+                                        : "bg-white border-slate-300"
+                                    }`}
+                                  >
+                                    {formData.participants.includes(
+                                      emp._id
+                                    ) && (
+                                      <Plus size={10} className="text-white" />
+                                    )}
+                                  </div>
+                                  <span className="text-sm text-slate-700 font-medium">
+                                    {emp.firstName} {emp.lastName}
+                                  </span>
+                                  <span className="text-xs text-slate-400 ml-auto">
+                                    {emp.jobTitle}
+                                  </span>
+                                </div>
+                              ))
+                            )}
+                          </div>
+                        </div>
 
-                           <div className="space-y-1.5">
-                              <label className="text-xs font-bold text-slate-500 uppercase">Meeting Type</label>
-                              <div className="grid grid-cols-3 gap-3">
-                                 {["Virtual", "In-Person", "Hybrid"].map((type) => (
-                                    <button key={type} type="button" onClick={() => setFormData({ ...formData, meetingType: type })} className={`py-2.5 px-3 text-sm font-medium rounded-lg border flex items-center justify-center gap-2 transition-all ${formData.meetingType === type ? "border-blue-600 bg-blue-50 text-blue-700 ring-1 ring-blue-600" : "border-slate-200 text-slate-600 hover:bg-slate-50"}`}>
-                                       {type === "Virtual" && <Video size={14} />} {type === "In-Person" && <Users size={14} />} {type === "Hybrid" && <MapPin size={14} />} {type}
-                                    </button>
-                                 ))}
-                              </div>
-                           </div>
+                        <div className="space-y-1.5">
+                          <label className="text-xs font-bold text-slate-500 uppercase">
+                            Agenda
+                          </label>
+                          <textarea
+                            name="description"
+                            value={formData.description}
+                            onChange={handleChange}
+                            rows={3}
+                            className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none resize-none"
+                            placeholder="Brief description..."
+                          />
+                        </div>
 
-                           {(formData.meetingType === "In-Person" || formData.meetingType === "Hybrid") && (
-                              <div className="space-y-1.5 animate-in fade-in slide-in-from-top-1">
-                                 <label className="text-xs font-bold text-slate-500 uppercase">Select Room</label>
-                                 <select name="roomId" value={formData.roomId} onChange={handleChange} className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none" required>
-                                    <option value="">-- Choose a Room --</option>
-                                    {rooms.map((room) => <option key={room._id} value={room._id}>{room.name} (Cap: {room.capacity})</option>)}
-                                 </select>
-                              </div>
-                           )}
-
-                           {(formData.meetingType === "Virtual" || formData.meetingType === "Hybrid") && (
-                              <div className="space-y-1.5 animate-in fade-in slide-in-from-top-1">
-                                 <label className="text-xs font-bold text-slate-500 uppercase">Link</label>
-                                 <input name="virtualLink" value={formData.virtualLink} onChange={handleChange} className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none" placeholder="https://..." />
-                              </div>
-                           )}
-
-                           <div className="space-y-1.5">
-                              <label className="text-xs font-bold text-slate-500 uppercase">Participants ({formData.participants.length})</label>
-                              <div className="border border-slate-200 rounded-lg max-h-32 overflow-y-auto bg-slate-50 p-1">
-                                 {loadingData ? <div className="text-xs text-slate-400 p-2">Loading...</div> : employees.map((emp) => (
-                                    <div key={emp._id} onClick={() => handleParticipantToggle(emp._id)} className="flex items-center gap-2 p-2 hover:bg-white hover:shadow-sm rounded-md cursor-pointer transition-all">
-                                       <div className={`w-4 h-4 rounded border flex items-center justify-center transition-colors ${formData.participants.includes(emp._id) ? "bg-blue-600 border-blue-600" : "bg-white border-slate-300"}`}>
-                                          {formData.participants.includes(emp._id) && <Plus size={10} className="text-white" />}
-                                       </div>
-                                       <span className="text-sm text-slate-700 font-medium">{emp.firstName} {emp.lastName}</span>
-                                       <span className="text-xs text-slate-400 ml-auto">{emp.jobTitle}</span>
-                                    </div>
-                                 ))}
-                              </div>
-                           </div>
-
-                           <div className="space-y-1.5">
-                              <label className="text-xs font-bold text-slate-500 uppercase">Agenda</label>
-                              <textarea name="description" value={formData.description} onChange={handleChange} rows={3} className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none resize-none" placeholder="Brief description..." />
-                           </div>
-
-                           <div className="flex justify-end gap-3 pt-2">
-                              <Button type="button" variant="ghost" onClick={() => setIsOpen(false)} className="text-slate-500">Cancel</Button>
-                              <Button type="submit" disabled={creatingMeeting} className="bg-blue-600 hover:bg-blue-700 text-white min-w-[120px]">
-                                 {creatingMeeting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : "Schedule Meeting"}
-                              </Button>
-                           </div>
-                        </form>
-                      </DialogContent>
-                    </Dialog>
-                  )}
-               </div>
+                        <div className="flex justify-end gap-3 pt-2">
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            onClick={() => setIsOpen(false)}
+                            className="text-slate-500"
+                          >
+                            Cancel
+                          </Button>
+                          <Button
+                            type="submit"
+                            disabled={creatingMeeting}
+                            className="bg-blue-600 hover:bg-blue-700 text-white min-w-[120px]"
+                          >
+                            {creatingMeeting ? (
+                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            ) : (
+                              "Schedule Meeting"
+                            )}
+                          </Button>
+                        </div>
+                      </form>
+                    </DialogContent>
+                  </Dialog>
+                )}
+              </div>
             </div>
 
             {/* Views */}
-            <div className="space-y-8">
+            {/* <div className="w-full flex items-start justify-between gap-8">
                <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
                   {view === "calendar" ? <MeetingCalendar meetingsData={meetings} /> : <UpcomingMeetings listView={true} allMeetings={meetings} />}
                </div>
-
-               <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                  <div className="lg:col-span-2">
-                     {view === "calendar" && <UpcomingMeetings allMeetings={meetings} />}
-                  </div>
-                  <div className="lg:col-span-1">
+                  <div className="">
                      <MeetingRooms />
                   </div>
-               </div>
-            </div>
+            </div> */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+              {/* Left Column: Calendar or List */}
+              <div className="lg:col-span-2 space-y-8">
+                {view === "calendar" ? (
+                  <>
+                    <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                      <MeetingCalendar meetingsData={meetings} />
+                    </div>
+                  </>
+                ) : (
+                  /* List View - Full Height */
+                  <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                    <UpcomingMeetings listView={true} allMeetings={meetings} />
+                  </div>
+                )}
+              </div>
 
+              {/* Right Column: Rooms & Quick Actions */}
+              <div className="lg:col-span-1 space-y-8">
+                <MeetingRooms />
+              </div>
+            </div>
           </div>
         </main>
       </div>

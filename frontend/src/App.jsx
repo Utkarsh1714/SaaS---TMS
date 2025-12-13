@@ -32,9 +32,11 @@ import Contact from "./pages/Contact";
 import Status from "./pages/Status";
 import Careers from "./pages/Careers";
 import PageLoader from "./components/ui/PageLoader";
+import MeetingDetails from "./pages/MeetingDetails";
+import Home from "./pages/Home";
 
 // Lazy load the pages... (keep all your lazy imports here)
-const Home = lazy(() => import("./pages/Home"));
+// const Home = lazy(() => import("./pages/Home"));
 // ... other lazy imports ...
 const TaskDetails = lazy(() => import("./pages/TaskDetails"));
 
@@ -86,6 +88,7 @@ function App() {
             <Route path="/departments" element={<Departments />} />
             <Route path="/department/:id" element={<DepartmentDetails />} />
             <Route path="/meetings" element={<Meeting />} />
+            <Route path="/meetings/:id" element={<MeetingDetails />} />
             <Route path="/messages" element={<Chat />} />
             <Route path="/reports" element={<Reports />} />
             <Route path="/settings" element={<Settings />} />

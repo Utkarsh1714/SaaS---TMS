@@ -7,6 +7,7 @@ import {
   ArrowRight,
   MoreHorizontal,
 } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const UpcomingMeetings = ({ listView = false, allMeetings }) => {
   const getUpcoming = () => {
@@ -18,6 +19,7 @@ const UpcomingMeetings = ({ listView = false, allMeetings }) => {
   };
 
   const upcoming = getUpcoming();
+  console.log("Upcoming Meetings:", upcoming);
   const formatDate = (d) =>
     new Date(d).toLocaleDateString("en-US", { month: "short", day: "numeric" });
   const formatTime = (d) =>
@@ -26,13 +28,9 @@ const UpcomingMeetings = ({ listView = false, allMeetings }) => {
       minute: "2-digit",
     });
 
-  // Initials Helper
-  const getInitials = (name) =>
-    name ? name.substring(0, 2).toUpperCase() : "??";
-
   if (listView) {
     return (
-      <div className="bg-white">
+      <div className="bg-white w-full">
         <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
           <h3 className="font-bold text-slate-800">All Upcoming</h3>
           <span className="bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full text-xs font-bold">
@@ -112,9 +110,21 @@ const UpcomingMeetings = ({ listView = false, allMeetings }) => {
                       </div>
                     )}
                   </div>
-                  <button className="text-sm font-medium text-blue-600 hover:bg-blue-50 px-3 py-1.5 rounded-lg transition-colors">
-                    Join
-                  </button>
+                  {meeting.meetingType === "Virtual" ||
+                  meeting.meetingType === "Hybrid" ? (
+                    <Link
+                      to={meeting.virtualLink}
+                      target="_blank"
+                    >
+                      <button className="text-sm font-medium text-blue-600 hover:bg-blue-50 px-3 py-1.5 rounded-lg transition-colors">
+                        Join
+                      </button>
+                    </Link>
+                  ) : (
+                    <Link to={`/meetings/${meeting._id}`} className="text-sm font-medium text-blue-600 hover:bg-blue-50 px-3 py-1.5 rounded-lg transition-colors">
+                      View
+                    </Link>
+                  )}
                 </div>
               </div>
             ))

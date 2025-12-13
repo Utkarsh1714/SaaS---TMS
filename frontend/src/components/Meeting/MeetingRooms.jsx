@@ -85,7 +85,7 @@ const MeetingRooms = () => {
         )}
       </div>
 
-      <div className="flex-1 overflow-y-auto divide-y divide-slate-100 max-h-[400px]">
+      <div className="flex-1 overflow-y-auto divide-y divide-slate-100 max-h-[550px]">
         {loading ? <div className="flex items-center justify-center h-32"><Loader className="animate-spin text-indigo-500" /></div> : 
         rooms.length === 0 ? <div className="p-8 text-center text-slate-400 text-sm">No rooms added.</div> : (
             rooms.map((room) => (
