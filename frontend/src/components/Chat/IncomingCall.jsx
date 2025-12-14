@@ -1,18 +1,34 @@
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import { Phone, PhoneOff, Video } from "lucide-react";
 
 const IncomingCall = ({ caller, type, onAccept, onDecline }) => {
+  const audioRef = useRef(null);
+
+  useEffect(() => {
+    const audio = new Audio("/sounds/ringtone.mp3");
+    audio.loop = true;
+    audio.volume = 0.5;
+
+    audio.play().catch((error) => {
+      console.warn("Audio play failed (browser policy):", error);
+    });
+
+    audioRef.current = audio;
+
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current.currentTime = 0;
+        audioRef.current = null;
+      }
+    };
+  }, []);
   return (
-    // 1. Position fixed top-right, give it z-index, and slide-in animation
     <div className="fixed top-20 right-4 z-100 w-full max-w-sm animate-in slide-in-from-top-5 fade-in duration-300">
-      {/* 2. Card container styling (white bg, shadow, rounded corners) */}
       <div className="bg-white p-4 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-slate-100 flex items-center gap-4 relative overflow-hidden">
-        
-        {/* Subtle animated background gradient for visual interest */}
         <div className="absolute top-0 left-0 w-full h-1 bg-linear-to-r from-blue-500 to-indigo-500"></div>
         <div className="absolute -left-10 -bottom-10 w-40 h-40 bg-blue-50 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob"></div>
 
-        {/* 3. Avatar (Smaller size) */}
         <div className="relative shrink-0">
           {caller.profileImage ? (
             <img
@@ -25,7 +41,6 @@ const IncomingCall = ({ caller, type, onAccept, onDecline }) => {
               {caller.firstName?.[0]?.toUpperCase()}
             </div>
           )}
-          {/* Ringing indicator dot */}
           <span className="absolute bottom-0 right-0 block h-3.5 w-3.5 rounded-full ring-2 ring-white bg-emerald-500 animate-pulse"></span>
         </div>
 
@@ -50,7 +65,10 @@ const IncomingCall = ({ caller, type, onAccept, onDecline }) => {
             className="p-3 rounded-full bg-rose-50 text-rose-600 border border-rose-100 hover:bg-rose-100 hover:border-rose-200 transition-all active:scale-95 group"
             title="Decline"
           >
-            <PhoneOff size={20} className="group-hover:rotate-12 transition-transform" />
+            <PhoneOff
+              size={20}
+              className="group-hover:rotate-12 transition-transform"
+            />
           </button>
 
           {/* Accept Button (With subtle bounce animation) */}
@@ -60,9 +78,15 @@ const IncomingCall = ({ caller, type, onAccept, onDecline }) => {
             title="Accept"
           >
             {type === "video" ? (
-              <Video size={20} className="group-hover:-rotate-12 transition-transform" />
+              <Video
+                size={20}
+                className="group-hover:-rotate-12 transition-transform"
+              />
             ) : (
-              <Phone size={20} className="group-hover:-rotate-12 transition-transform" />
+              <Phone
+                size={20}
+                className="group-hover:-rotate-12 transition-transform"
+              />
             )}
           </button>
         </div>
