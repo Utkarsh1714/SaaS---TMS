@@ -138,7 +138,7 @@ export const CallProvider = ({ children }) => {
 
   const endCall = () => {
     if (activeCall?.recipientId && socket) {
-      socket.emit("cancelCall", { to: activeCall.recipientId });
+      socket.emit("endCall", { to: activeCall.recipientId });
     }
 
     addNotification({
