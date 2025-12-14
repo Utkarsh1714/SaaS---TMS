@@ -9,7 +9,6 @@ const initializeSocket = (io) => {
 
     if (!cookieHeader) {
       console.error("Socket Auth Error: No cookie header provided.");
-      // Stop the connection attempt immediately
       return next(new Error("Authentication Error: Cookie not provided."));
     }
 
@@ -47,44 +46,31 @@ const initializeSocket = (io) => {
 
   io.on("connection", (socket) => {
     console.log(`✅ User connected: ${socket.user.id}`);
-    socket.join(socket.user.organizationId); // 1. Logic for joining a specific chat room // The frontend will emit this event when user click on chat.
-    console.log(
-      `🏠 User ${socket.user.id} auto-joined org room: ${socket.user.organizationId}`
-    );
-    // socket.on("joinOrgRoom", (organizationId) => {
-    //   // We log to ensure the client is communicating properly
-    //   console.log(
-    //     `🏠 Client ${socket.user.id} explicitly joined status room: ${organizationId}`
-    //   );
+    socket.join(socket.user.organizationId);
 
-    //   // Safety: Ensure the client is joining the correct room ID (which should match the JWT one)
-    //   socket.join(organizationId);
-    // });
+    socket.join(socket.user.id);
 
     socket.on("joinChat", async (channelId) => {
       try {
-        // <-- CHANGED: ADDED SECURITY CHECK
-        // Verify the user is actually a participant in this channel
         const channel = await Channel.findOne({
           _id: channelId,
           participants: { $elemMatch: { $eq: socket.user.id } },
-          organizationId: socket.user.organizationId, // Double-check it's in their org
+          organizationId: socket.user.organizationId,
         });
 
         if (!channel) {
           console.warn(
             `SECURITY: User ${socket.user.id} denied from joining channel ${channelId}`
           );
-          return; // Stop execution
+          return;
         }
-        // <-- END SECURITY CHECK
 
         socket.join(channelId);
         console.log(`User ${socket.user.id} joined channel: ${channelId}`);
       } catch (error) {
         console.error(`Error joining channel ${channelId}:`, error.message);
       }
-    }); // 2. Logic for sending and broadcasting the message.
+    });
 
     socket.on("sendMessage", async (data) => {
       const { channelId, content } = data;
@@ -95,7 +81,6 @@ const initializeSocket = (io) => {
       }
 
       try {
-        // Verify the user is a participant before letting them send a message
         const channel = await Channel.findOne({
           _id: channelId,
           participants: { $elemMatch: { $eq: socket.user.id } },
@@ -105,9 +90,8 @@ const initializeSocket = (io) => {
           console.warn(
             `SECURITY: User ${socket.user.id} tried to send to un-joined channel ${channelId}`
           );
-          return; // Stop execution
+          return;
         }
-        // <-- END SECURITY CHECK
 
         // User is authorized, now create the message
         const newMessageData = {
@@ -117,18 +101,42 @@ const initializeSocket = (io) => {
           organizationId: socket.user.organizationId,
         };
 
-        // Step A: Save the message to the database
         let message = await Message.create(newMessageData);
-        
-        // Step B: Populate the sender's info
-        message = await message.populate("sender", "username email contactNo");
-        
+
+        message = await message.populate(
+          "sender",
+          "firstName MiddleName lastName email contactNo"
+        );
+
         // Step C: Broadcast the new message to everyone in the channel's room
         io.to(channelId).emit("newMessage", message);
         console.log("✅ Message sent successfully to channel:", channelId);
       } catch (error) {
         console.error("❌ Error sending message:", error);
       }
+    });
+
+    socket.on("startCall", ({ to, caller, roomId, type }) => {
+      console.log(`📞 Call signaling: ${caller.username} calling ${to}`);
+      io.to(to).emit("incomingCall", {
+        caller,
+        roomId,
+        type,
+      });
+    });
+
+    socket.on("cancelCall", ({ to }) => {
+      console.log(`Call cancelled by caller for: ${to}`);
+      io.to(to).emit("callCancelled"); 
+    });
+
+    socket.on("rejectCall", ({ to }) => {
+      // 'to' here is the ID of the person who CALLED you
+      io.to(to).emit("callRejected");
+    });
+
+    socket.on("endCall", ({ to }) => {
+       io.to(to).emit("callEnded");
     });
 
     socket.on("disconnect", () => {

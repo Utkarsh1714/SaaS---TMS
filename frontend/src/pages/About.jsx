@@ -24,7 +24,7 @@ const About = () => {
       {/* --- HERO SECTION --- */}
       <section className="relative pt-32 pb-20 lg:pt-48 lg:pb-32 overflow-hidden">
         {/* Background Pattern */}
-        <div className="absolute inset-0 -z-10 h-full w-full bg-[linear-gradient(to_right,#f0f0f0_1px,transparent_1px),linear-gradient(to_bottom,#f0f0f0_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)]"></div>
+        <div className="absolute inset-0 -z-10 h-full w-full bg-[linear-gradient(to_right,#f0f0f0_1px,transparent_1px),linear-gradient(to_bottom,#f0f0f0_1px,transparent_1px)] bg-size-[4rem_4rem] mask-[radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)]"></div>
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <AnimatedContent direction="vertical" distance={20}>
@@ -33,7 +33,7 @@ const About = () => {
             </h2>
             <h1 className="text-4xl md:text-6xl lg:text-7xl font-extrabold text-slate-900 mb-8 tracking-tight leading-[0.95]">
               We build tools for the <br />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-violet-600">
+              <span className="text-transparent bg-clip-text bg-linear-to-r from-blue-600 to-violet-600">
                 builders of tomorrow.
               </span>
             </h1>

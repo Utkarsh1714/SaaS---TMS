@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import { useAuth } from "@/context/AuthContext";
 import { useSocket } from "@/context/SocketContext";
+import VideoCall from "./VideoCall";
 import {
   Phone,
   Video,
@@ -14,14 +15,20 @@ import {
   Check,
   CheckCheck,
 } from "lucide-react";
+import IncomingCall from "./IncomingCall";
+import { useCall } from "@/context/CallContext";
+import { toast } from "sonner";
 
 const ChatWindow = ({ chat, onBack }) => {
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState("");
   const [loading, setLoading] = useState(false);
+
   const { user } = useAuth();
   const socket = useSocket();
   const scrollRef = useRef(null);
+
+  const { initiateCall } = useCall();
 
   const otherUser = chat.participants.find((p) => p._id !== user._id);
 
@@ -47,13 +54,18 @@ const ChatWindow = ({ chat, onBack }) => {
   // Socket Listener
   useEffect(() => {
     if (!socket) return;
+
     const messageListener = (newMsg) => {
       if (newMsg.channel === chat._id) {
         setMessages((prev) => [...prev, newMsg]);
       }
     };
+
     socket.on("newMessage", messageListener);
-    return () => socket.off("newMessage", messageListener);
+
+    return () => {
+      socket.off("newMessage", messageListener);
+    };
   }, [socket, chat]);
 
   // Send Message
@@ -87,11 +99,15 @@ const ChatWindow = ({ chat, onBack }) => {
 
           <div className="relative">
             {otherUser.profileImage ? (
-              <div className="h-10 w-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-sm shadow-md">
-                <img src={otherUser.profileImage} alt={otherUser.firstName} className="w-full h-full rounded-full object-cover" />
+              <div className="h-10 w-10 rounded-full bg-linear-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-sm shadow-md">
+                <img
+                  src={otherUser.profileImage}
+                  alt={otherUser.firstName}
+                  className="w-full h-full rounded-full object-cover"
+                />
               </div>
             ) : (
-              <div className="h-10 w-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-sm shadow-md">
+              <div className="h-10 w-10 rounded-full bg-linear-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-sm shadow-md">
                 {otherUser?.firstName?.charAt(0).toUpperCase()}
               </div>
             )}
@@ -111,8 +127,14 @@ const ChatWindow = ({ chat, onBack }) => {
         </div>
 
         <div className="flex items-center gap-2">
-          <IconButton icon={<Phone size={18} />} />
-          <IconButton icon={<Video size={18} />} />
+          <IconButton
+            icon={<Phone size={18} />}
+            onClick={() => initiateCall(otherUser._id, 'audio')}
+          />
+          <IconButton
+            icon={<Video size={18} />}
+            onClick={() => initiateCall(otherUser._id, "video")}
+          />
           <IconButton icon={<MoreVertical size={18} />} />
         </div>
       </div>
@@ -208,7 +230,7 @@ const ChatWindow = ({ chat, onBack }) => {
           </div>
 
           <textarea
-            className="flex-1 bg-transparent border-none focus:ring-0 text-sm text-slate-800 placeholder-slate-400 resize-none py-2 px-1 max-h-32 min-h-[44px]"
+            className="flex-1 bg-transparent border-none focus:ring-0 text-sm text-slate-800 placeholder-slate-400 resize-none py-2 px-1 max-h-32 min-h-11"
             placeholder="Type a message..."
             rows={1}
             value={newMessage}

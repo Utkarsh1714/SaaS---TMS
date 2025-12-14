@@ -154,6 +154,29 @@
   display: none;
 }
 
+/* Width & Height */
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+/* Track */
+*::-webkit-scrollbar-track {
+  background: #eff6ff; /* Blue-50: Very light blue background */
+}
+
+/* Thumb */
+*::-webkit-scrollbar-thumb {
+  background-color: #bfdbfe; /* Blue-200: Soft blue */
+  border-radius: 10px;
+  border: 2px solid #eff6ff; /* Adds a nice padding effect */
+}
+
+/* Hover State */
+*::-webkit-scrollbar-thumb:hover {
+  background-color: #3b82f6; /* Blue-500: Your primary brand color */
+}
+
 @layer utilities {
   .perspective-2000 {
     perspective: 2000px;

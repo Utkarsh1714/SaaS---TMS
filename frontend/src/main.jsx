@@ -6,17 +6,20 @@ import { AuthProvider } from "./context/AuthContext.jsx";
 import { SocketProvider } from "./context/SocketContext";
 import { NotificationProvider } from "./context/NotificationContext";
 import { HelmetProvider } from "react-helmet-async";
+import { CallProvider } from "./context/CallContext";
 
 createRoot(document.getElementById("root")).render(
   <BrowserRouter>
-    <HelmetProvider>
-      <AuthProvider>
+    <AuthProvider>
+      <SocketProvider>
         <NotificationProvider>
-          <SocketProvider>
-            <App />
-          </SocketProvider>
+          <CallProvider>
+            <HelmetProvider>
+              <App />
+            </HelmetProvider>
+          </CallProvider>
         </NotificationProvider>
-      </AuthProvider>
-    </HelmetProvider>
+      </SocketProvider>
+    </AuthProvider>
   </BrowserRouter>
 );

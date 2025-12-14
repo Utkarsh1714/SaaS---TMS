@@ -176,7 +176,7 @@ const Departments = () => {
                            <div className="space-y-1.5">
                               <label className="text-xs font-bold text-slate-500 uppercase">Description</label>
                               <textarea 
-                                className="w-full p-2.5 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none min-h-[80px]" 
+                                className="w-full p-2.5 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none min-h-20" 
                                 placeholder="What does this team do?"
                                 value={newDeptData.description} onChange={e => setNewDeptData({...newDeptData, description: e.target.value})}
                               />
@@ -200,10 +200,10 @@ const Departments = () => {
             </div>
 
             {/* Master-Detail Layout */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[calc(100vh-170px)]">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 ">
                
                {/* List (Left) */}
-               <div className="lg:col-span-1 bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
+               <div className="lg:col-span-1 bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col max-h-[70vh]">
                   <div className="p-4 border-b border-slate-100 bg-slate-50/50">
                      <h3 className="font-bold text-slate-900 text-sm uppercase tracking-wider">All Departments</h3>
                   </div>
