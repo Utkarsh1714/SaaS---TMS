@@ -82,7 +82,7 @@ export const updateRoom = async (req, res) => {
     delete updates.organizationId;
 
     const room = await Room.findOneAndUpdate(
-      { _id: id },
+      { _id: id, organizationId: organizationId },
       { $set: updates },
       { new: true, runValidators: true }
     );
@@ -125,8 +125,7 @@ export const deleteRoom = async (req, res) => {
       });
     }
 
-    room.isActive = true;
-    await room.save();
+    await Room.deleteOne({ _id: id, organizationId: organizationId });
 
     res.status(200).json({ message: "Room deleted successfully" });
   } catch (error) {

@@ -148,8 +148,6 @@ export const getMeetings = async (req, res) => {
       .populate("participants", "username email profileImage")
       .populate("roomId", "name capacity")
       .sort({ startTime: 1 }); // Sort by date ascending
-    
-      console.log(meetings)
 
     res.status(200).json(meetings);
   } catch (error) {

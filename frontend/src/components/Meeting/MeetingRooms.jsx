@@ -1,9 +1,27 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { toast } from "sonner";
-import { Loader, MapPin, Plus, Users, Layers, Wifi, Monitor, CheckCircle2 } from "lucide-react";
+import {
+  Loader,
+  MapPin,
+  Plus,
+  Users,
+  Layers,
+  Wifi,
+  Monitor,
+  CheckCircle2,
+  Trash,
+} from "lucide-react";
 import { Button } from "../ui/button";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "../ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "../ui/dialog";
 import { useAuth } from "@/context/AuthContext";
 
 const MeetingRooms = () => {
@@ -12,40 +30,81 @@ const MeetingRooms = () => {
   const [loading, setLoading] = useState(true);
   const [isOpen, setIsOpen] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
-  
-  const [formData, setFormData] = useState({ name: "", capacity: "", floor: "", amenities: [] });
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const [formData, setFormData] = useState({
+    name: "",
+    capacity: "",
+    floor: "",
+    amenities: [],
+  });
   const isBoss = user?.role?.name === "Boss" || user?.role?.name === "Manager";
 
   const fetchRooms = async () => {
     try {
-      const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/room`, { withCredentials: true });
+      const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/room`, {
+        withCredentials: true,
+      });
       setRooms(res.data);
-    } catch (error) { console.error("Failed to fetch rooms", error); } 
-    finally { setLoading(false); }
+    } catch (error) {
+      console.error("Failed to fetch rooms", error);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  useEffect(() => { fetchRooms(); }, []);
+  useEffect(() => {
+    fetchRooms();
+  }, []);
 
-  const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
-  
+  const handleChange = (e) =>
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+
   const toggleAmenity = (amenity) => {
     setFormData((prev) => ({
-        ...prev,
-        amenities: prev.amenities.includes(amenity) ? prev.amenities.filter(a => a !== amenity) : [...prev.amenities, amenity]
+      ...prev,
+      amenities: prev.amenities.includes(amenity)
+        ? prev.amenities.filter((a) => a !== amenity)
+        : [...prev.amenities, amenity],
     }));
-  }
+  };
 
   const handleCreateRoom = async (e) => {
     e.preventDefault();
     setIsCreating(true);
     try {
-      await axios.post(`${import.meta.env.VITE_API_URL}/api/room`, { ...formData, capacity: parseInt(formData.capacity) }, { withCredentials: true });
+      await axios.post(
+        `${import.meta.env.VITE_API_URL}/api/room`,
+        { ...formData, capacity: parseInt(formData.capacity) },
+        { withCredentials: true }
+      );
       toast.success("Room created!");
       setIsOpen(false);
       setFormData({ name: "", capacity: "", floor: "", amenities: [] });
       fetchRooms();
-    } catch (error) { toast.error("Failed to create room."); } 
-    finally { setIsCreating(false); }
+    } catch (error) {
+      toast.error(error.response?.data?.message ||"Failed to create room.");
+    } finally {
+      setIsCreating(false);
+    }
+  };
+
+  const handleDeleteRoom = async (roomId) => {
+    if (isDeleting) return;
+    setIsDeleting(true);
+    try {
+      let res = await axios.delete(`${import.meta.env.VITE_API_URL}/api/room/${roomId}`, {
+        withCredentials: true,
+      });
+
+      toast.success("Room deleted!");
+      await fetchRooms();
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Failed to delete room.");
+      console.log("Delete room error:", error);
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   return (
@@ -64,21 +123,82 @@ const MeetingRooms = () => {
             <DialogContent className="sm:max-w-[500px] bg-white rounded-2xl">
               <DialogHeader>
                 <DialogTitle>Add Meeting Room</DialogTitle>
-                <DialogDescription>Define a new space for collaboration.</DialogDescription>
+                <DialogDescription>
+                  Define a new space for collaboration.
+                </DialogDescription>
               </DialogHeader>
               <form onSubmit={handleCreateRoom} className="space-y-4 mt-2">
-                <div className="space-y-1.5"><label className="text-xs font-bold text-slate-500 uppercase">Name</label><input name="name" value={formData.name} onChange={handleChange} placeholder="e.g. Conference A" className="w-full p-2 border rounded-md text-sm" required /></div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-slate-500 uppercase">
+                    Name
+                  </label>
+                  <input
+                    name="name"
+                    value={formData.name}
+                    onChange={handleChange}
+                    placeholder="e.g. Conference A"
+                    className="w-full p-2 border rounded-md text-sm"
+                    required
+                  />
+                </div>
                 <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-1.5"><label className="text-xs font-bold text-slate-500 uppercase">Capacity</label><input type="number" name="capacity" value={formData.capacity} onChange={handleChange} className="w-full p-2 border rounded-md text-sm" required min="1" /></div>
-                    <div className="space-y-1.5"><label className="text-xs font-bold text-slate-500 uppercase">Floor</label><input name="floor" value={formData.floor} onChange={handleChange} className="w-full p-2 border rounded-md text-sm" required /></div>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-slate-500 uppercase">
+                      Capacity
+                    </label>
+                    <input
+                      type="number"
+                      name="capacity"
+                      value={formData.capacity}
+                      onChange={handleChange}
+                      className="w-full p-2 border rounded-md text-sm"
+                      required
+                      min="1"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-slate-500 uppercase">
+                      Floor
+                    </label>
+                    <input
+                      name="floor"
+                      value={formData.floor}
+                      onChange={handleChange}
+                      className="w-full p-2 border rounded-md text-sm"
+                      required
+                    />
+                  </div>
                 </div>
                 <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-slate-500 uppercase">Amenities</label>
-                    <div className="flex flex-wrap gap-2">{['WiFi', 'Projector', 'TV', 'Whiteboard'].map(item => (
-                        <button key={item} type="button" onClick={() => toggleAmenity(item)} className={`px-3 py-1 text-xs rounded-full border transition-all ${formData.amenities.includes(item) ? 'bg-indigo-100 border-indigo-200 text-indigo-700 font-bold' : 'bg-white border-slate-200 text-slate-600'}`}>{item}</button>
-                    ))}</div>
+                  <label className="text-xs font-bold text-slate-500 uppercase">
+                    Amenities
+                  </label>
+                  <div className="flex flex-wrap gap-2">
+                    {["WiFi", "Projector", "TV", "Whiteboard"].map((item) => (
+                      <button
+                        key={item}
+                        type="button"
+                        onClick={() => toggleAmenity(item)}
+                        className={`px-3 py-1 text-xs rounded-full border transition-all ${
+                          formData.amenities.includes(item)
+                            ? "bg-indigo-100 border-indigo-200 text-indigo-700 font-bold"
+                            : "bg-white border-slate-200 text-slate-600"
+                        }`}
+                      >
+                        {item}
+                      </button>
+                    ))}
+                  </div>
                 </div>
-                <DialogFooter className="pt-2"><Button type="submit" disabled={isCreating}>{isCreating ? <Loader className="animate-spin h-4 w-4"/> : "Create"}</Button></DialogFooter>
+                <DialogFooter className="pt-2">
+                  <Button type="submit" disabled={isCreating}>
+                    {isCreating ? (
+                      <Loader className="animate-spin h-4 w-4" />
+                    ) : (
+                      "Create"
+                    )}
+                  </Button>
+                </DialogFooter>
               </form>
             </DialogContent>
           </Dialog>
@@ -86,27 +206,63 @@ const MeetingRooms = () => {
       </div>
 
       <div className="flex-1 overflow-y-auto divide-y divide-slate-100 max-h-[550px]">
-        {loading ? <div className="flex items-center justify-center h-32"><Loader className="animate-spin text-indigo-500" /></div> : 
-        rooms.length === 0 ? <div className="p-8 text-center text-slate-400 text-sm">No rooms added.</div> : (
-            rooms.map((room) => (
-            <div key={room._id} className="p-4 hover:bg-slate-50 transition-colors group">
-                <div className="flex justify-between items-start">
-                    <div>
-                        <h3 className="text-sm font-bold text-slate-900">{room.name}</h3>
-                        <div className="mt-1 flex flex-wrap gap-3 text-xs text-slate-500">
-                            <span className="flex items-center gap-1"><Users size={12}/> {room.capacity}</span>
-                            <span className="flex items-center gap-1"><Layers size={12}/> {room.floor}</span>
-                        </div>
-                        <div className="mt-2 flex flex-wrap gap-1">
-                            {room.amenities.map(am => <span key={am} className="px-1.5 py-0.5 bg-slate-100 text-slate-500 rounded text-[10px] border border-slate-200">{am}</span>)}
-                        </div>
-                    </div>
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-100">
-                        <CheckCircle2 size={10} /> Active
+        {loading ? (
+          <div className="flex items-center justify-center h-32">
+            <Loader className="animate-spin text-indigo-500" />
+          </div>
+        ) : rooms.length === 0 ? (
+          <div className="p-8 text-center text-slate-400 text-sm">
+            No rooms added.
+          </div>
+        ) : (
+          rooms.map((room) => (
+            <div
+              key={room._id}
+              className="p-4 hover:bg-slate-50 transition-colors group"
+            >
+              <div className="flex justify-between items-start">
+                <div>
+                  <h3 className="text-sm font-bold text-slate-900">
+                    {room.name}
+                  </h3>
+                  <div className="mt-1 flex flex-wrap gap-3 text-xs text-slate-500">
+                    <span className="flex items-center gap-1">
+                      <Users size={12} /> {room.capacity}
                     </span>
+                    <span className="flex items-center gap-1">
+                      <Layers size={12} /> {room.floor}
+                    </span>
+                  </div>
+                  <div className="mt-2 flex flex-wrap gap-1">
+                    {room.amenities.map((am) => (
+                      <span
+                        key={am}
+                        className="px-1.5 py-0.5 bg-slate-100 text-slate-500 rounded text-[10px] border border-slate-200"
+                      >
+                        {am}
+                      </span>
+                    ))}
+                  </div>
                 </div>
+                <div className="flex flex-col items-end gap-2">
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-100">
+                    <CheckCircle2 size={10} /> {room.isActive ? 'Active' : 'Inactive'}
+                  </span>
+                  <Button
+                    onClick={() => handleDeleteRoom(room._id)}
+                    className="opacity-0 group-hover:opacity-100"
+                    variant="ghost"
+                  >
+                    {isDeleting ? (
+                      <Loader className="animate-spin h-4 w-4 text-red-500" />
+                    ) : (
+                      <Trash size={14} className="text-red-500" />
+                    )}
+                  </Button>
+                </div>
+              </div>
             </div>
-            ))
+          ))
         )}
       </div>
     </div>

@@ -147,6 +147,7 @@ const Meeting = () => {
         `${import.meta.env.VITE_API_URL}/api/meeting`,
         { withCredentials: true }
       );
+      console.log(res.data)
       setMeetings(res.data);
     } catch (error) {
       toast.error("Failed to load meetings");
@@ -462,16 +463,6 @@ const Meeting = () => {
                 )}
               </div>
             </div>
-
-            {/* Views */}
-            {/* <div className="w-full flex items-start justify-between gap-8">
-               <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-                  {view === "calendar" ? <MeetingCalendar meetingsData={meetings} /> : <UpcomingMeetings listView={true} allMeetings={meetings} />}
-               </div>
-                  <div className="">
-                     <MeetingRooms />
-                  </div>
-            </div> */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
               {/* Left Column: Calendar or List */}
               <div className="lg:col-span-2 space-y-8">
