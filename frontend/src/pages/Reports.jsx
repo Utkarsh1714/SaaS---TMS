@@ -7,6 +7,7 @@ import {
   CalendarIcon,
   FilterIcon,
   BellDot,
+  User,
 } from 'lucide-react'
 import {
   BarChart,
@@ -26,7 +27,11 @@ import {
 import Sidebar from '@/components/Layout/Sidebar'
 import { useNotifications } from '@/context/NotificationContext'
 import NotificationPanel from '@/components/Dashboard/NotificationPanel'
+import ProfileImage from '@/components/ui/ProfileImage'
+import { useAuth } from '@/context/AuthContext'
 const Reports = () => {
+  const { user } = useAuth();
+
   const { toggleNotificationPanel, notifications } = useNotifications();
 
   const [sidebarOpen, setSidebarOpen] = useState(false)
@@ -169,7 +174,7 @@ const Reports = () => {
               <div className="flex items-center">
                 <button
                   onClick={toggleNotificationPanel}
-                  className="flex-shrink-0 p-1 text-gray-400 rounded-full hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                  className="shrink-0 p-1 text-gray-400 rounded-full hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                 >
                   <span className="sr-only">View notifications</span>
                   {notifications && notifications.length > 0 ? (
@@ -180,10 +185,15 @@ const Reports = () => {
                 </button>
                 <div className="ml-3 relative">
                   <div>
-                    <button className="flex items-center max-w-xs bg-gray-100 p-1 rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                      <span className="sr-only">Open user menu</span>
-                      <UserIcon className="h-8 w-8 rounded-full p-1" />
-                    </button>
+                    <button className="h-10 w-10 rounded-full bg-linear-to-br from-blue-500 to-indigo-600 p-0.5 shadow-md hover:shadow-lg transition-shadow">
+                <div className="h-full w-full rounded-full bg-white flex items-center justify-center overflow-hidden">
+                  {user.profileImage ? (
+                    <ProfileImage src={user.profileImage}/>
+                  ) : (
+                    <User className="text-blue-600" size={20} />
+                  )}
+                </div>
+              </button>
                   </div>
                 </div>
               </div>
@@ -224,7 +234,7 @@ const Reports = () => {
             <div className="bg-white overflow-hidden shadow rounded-lg">
               <div className="p-5">
                 <div className="flex items-center">
-                  <div className="flex-shrink-0 bg-blue-100 rounded-md p-3">
+                  <div className="shrink-0 bg-blue-100 rounded-md p-3">
                     <svg
                       className="h-6 w-6 text-blue-600"
                       fill="none"
@@ -259,7 +269,7 @@ const Reports = () => {
             <div className="bg-white overflow-hidden shadow rounded-lg">
               <div className="p-5">
                 <div className="flex items-center">
-                  <div className="flex-shrink-0 bg-green-100 rounded-md p-3">
+                  <div className="shrink-0 bg-green-100 rounded-md p-3">
                     <svg
                       className="h-6 w-6 text-green-600"
                       fill="none"
@@ -294,7 +304,7 @@ const Reports = () => {
             <div className="bg-white overflow-hidden shadow rounded-lg">
               <div className="p-5">
                 <div className="flex items-center">
-                  <div className="flex-shrink-0 bg-yellow-100 rounded-md p-3">
+                  <div className="shrink-0 bg-yellow-100 rounded-md p-3">
                     <svg
                       className="h-6 w-6 text-yellow-600"
                       fill="none"
@@ -329,7 +339,7 @@ const Reports = () => {
             <div className="bg-white overflow-hidden shadow rounded-lg">
               <div className="p-5">
                 <div className="flex items-center">
-                  <div className="flex-shrink-0 bg-purple-100 rounded-md p-3">
+                  <div className="shrink-0 bg-purple-100 rounded-md p-3">
                     <svg
                       className="h-6 w-6 text-purple-600"
                       fill="none"

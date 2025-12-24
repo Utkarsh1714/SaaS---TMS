@@ -1,13 +1,23 @@
-import React, { useState } from 'react'
-import { BellIcon, SearchIcon, UserIcon, SaveIcon, BellDot } from 'lucide-react'
-import Sidebar from '@/components/Layout/Sidebar'
-import { useNotifications } from '@/context/NotificationContext';
-import NotificationPanel from '@/components/Dashboard/NotificationPanel';
+import React, { useState } from "react";
+import {
+  BellIcon,
+  SearchIcon,
+  UserIcon,
+  SaveIcon,
+  BellDot,
+  User,
+} from "lucide-react";
+import Sidebar from "@/components/Layout/Sidebar";
+import { useNotifications } from "@/context/NotificationContext";
+import NotificationPanel from "@/components/Dashboard/NotificationPanel";
+import ProfileImage from "@/components/ui/ProfileImage";
+import { useAuth } from "@/context/AuthContext";
 const Settings = () => {
+  const { user } = useAuth();
   const { toggleNotificationPanel, notifications } = useNotifications();
 
-  const [sidebarOpen, setSidebarOpen] = useState(false)
-  const [activeTab, setActiveTab] = useState('general')
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState("general");
   return (
     <div className="flex h-screen bg-gray-50">
       <Sidebar isOpen={sidebarOpen} setIsOpen={setSidebarOpen} />
@@ -43,7 +53,7 @@ const Settings = () => {
               <div className="flex items-center">
                 <button
                   onClick={toggleNotificationPanel}
-                  className="flex-shrink-0 p-1 text-gray-400 rounded-full hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                  className="shrink-0 p-1 text-gray-400 rounded-full hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                 >
                   <span className="sr-only">View notifications</span>
                   {notifications && notifications.length > 0 ? (
@@ -54,9 +64,14 @@ const Settings = () => {
                 </button>
                 <div className="ml-3 relative">
                   <div>
-                    <button className="flex items-center max-w-xs bg-gray-100 p-1 rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                      <span className="sr-only">Open user menu</span>
-                      <UserIcon className="h-8 w-8 rounded-full p-1" />
+                    <button className="h-10 w-10 rounded-full bg-linear-to-br from-blue-500 to-indigo-600 p-0.5 shadow-md hover:shadow-lg transition-shadow">
+                      <div className="h-full w-full rounded-full bg-white flex items-center justify-center overflow-hidden">
+                        {user.profileImage ? (
+                          <ProfileImage src={user.profileImage} />
+                        ) : (
+                          <User className="text-blue-600" size={20} />
+                        )}
+                      </div>
                     </button>
                   </div>
                 </div>
@@ -71,11 +86,15 @@ const Settings = () => {
               <aside className="py-6 px-2 sm:px-6 lg:py-0 lg:px-0 lg:col-span-3">
                 <nav className="space-y-1">
                   <button
-                    onClick={() => setActiveTab('general')}
-                    className={`${activeTab === 'general' ? 'bg-blue-50 border-blue-500 text-blue-700' : 'border-transparent text-gray-900 hover:bg-gray-50 hover:text-gray-900'} group border-l-4 px-3 py-2 flex items-center text-sm font-medium w-full`}
+                    onClick={() => setActiveTab("general")}
+                    className={`${
+                      activeTab === "general"
+                        ? "bg-blue-50 border-blue-500 text-blue-700"
+                        : "border-transparent text-gray-900 hover:bg-gray-50 hover:text-gray-900"
+                    } group border-l-4 px-3 py-2 flex items-center text-sm font-medium w-full`}
                   >
                     <svg
-                      className="flex-shrink-0 -ml-1 mr-3 h-6 w-6"
+                      className="shrink-0 -ml-1 mr-3 h-6 w-6"
                       fill="none"
                       viewBox="0 0 24 24"
                       stroke="currentColor"
@@ -96,11 +115,15 @@ const Settings = () => {
                     General
                   </button>
                   <button
-                    onClick={() => setActiveTab('profile')}
-                    className={`${activeTab === 'profile' ? 'bg-blue-50 border-blue-500 text-blue-700' : 'border-transparent text-gray-900 hover:bg-gray-50 hover:text-gray-900'} group border-l-4 px-3 py-2 flex items-center text-sm font-medium w-full`}
+                    onClick={() => setActiveTab("profile")}
+                    className={`${
+                      activeTab === "profile"
+                        ? "bg-blue-50 border-blue-500 text-blue-700"
+                        : "border-transparent text-gray-900 hover:bg-gray-50 hover:text-gray-900"
+                    } group border-l-4 px-3 py-2 flex items-center text-sm font-medium w-full`}
                   >
                     <svg
-                      className="flex-shrink-0 -ml-1 mr-3 h-6 w-6"
+                      className="shrink-0 -ml-1 mr-3 h-6 w-6"
                       fill="none"
                       viewBox="0 0 24 24"
                       stroke="currentColor"
@@ -115,11 +138,15 @@ const Settings = () => {
                     Profile
                   </button>
                   <button
-                    onClick={() => setActiveTab('notifications')}
-                    className={`${activeTab === 'notifications' ? 'bg-blue-50 border-blue-500 text-blue-700' : 'border-transparent text-gray-900 hover:bg-gray-50 hover:text-gray-900'} group border-l-4 px-3 py-2 flex items-center text-sm font-medium w-full`}
+                    onClick={() => setActiveTab("notifications")}
+                    className={`${
+                      activeTab === "notifications"
+                        ? "bg-blue-50 border-blue-500 text-blue-700"
+                        : "border-transparent text-gray-900 hover:bg-gray-50 hover:text-gray-900"
+                    } group border-l-4 px-3 py-2 flex items-center text-sm font-medium w-full`}
                   >
                     <svg
-                      className="flex-shrink-0 -ml-1 mr-3 h-6 w-6"
+                      className="shrink-0 -ml-1 mr-3 h-6 w-6"
                       fill="none"
                       viewBox="0 0 24 24"
                       stroke="currentColor"
@@ -134,11 +161,15 @@ const Settings = () => {
                     Notifications
                   </button>
                   <button
-                    onClick={() => setActiveTab('security')}
-                    className={`${activeTab === 'security' ? 'bg-blue-50 border-blue-500 text-blue-700' : 'border-transparent text-gray-900 hover:bg-gray-50 hover:text-gray-900'} group border-l-4 px-3 py-2 flex items-center text-sm font-medium w-full`}
+                    onClick={() => setActiveTab("security")}
+                    className={`${
+                      activeTab === "security"
+                        ? "bg-blue-50 border-blue-500 text-blue-700"
+                        : "border-transparent text-gray-900 hover:bg-gray-50 hover:text-gray-900"
+                    } group border-l-4 px-3 py-2 flex items-center text-sm font-medium w-full`}
                   >
                     <svg
-                      className="flex-shrink-0 -ml-1 mr-3 h-6 w-6"
+                      className="shrink-0 -ml-1 mr-3 h-6 w-6"
                       fill="none"
                       viewBox="0 0 24 24"
                       stroke="currentColor"
@@ -153,11 +184,15 @@ const Settings = () => {
                     Security
                   </button>
                   <button
-                    onClick={() => setActiveTab('billing')}
-                    className={`${activeTab === 'billing' ? 'bg-blue-50 border-blue-500 text-blue-700' : 'border-transparent text-gray-900 hover:bg-gray-50 hover:text-gray-900'} group border-l-4 px-3 py-2 flex items-center text-sm font-medium w-full`}
+                    onClick={() => setActiveTab("billing")}
+                    className={`${
+                      activeTab === "billing"
+                        ? "bg-blue-50 border-blue-500 text-blue-700"
+                        : "border-transparent text-gray-900 hover:bg-gray-50 hover:text-gray-900"
+                    } group border-l-4 px-3 py-2 flex items-center text-sm font-medium w-full`}
                   >
                     <svg
-                      className="flex-shrink-0 -ml-1 mr-3 h-6 w-6"
+                      className="shrink-0 -ml-1 mr-3 h-6 w-6"
                       fill="none"
                       viewBox="0 0 24 24"
                       stroke="currentColor"
@@ -172,11 +207,15 @@ const Settings = () => {
                     Billing
                   </button>
                   <button
-                    onClick={() => setActiveTab('integrations')}
-                    className={`${activeTab === 'integrations' ? 'bg-blue-50 border-blue-500 text-blue-700' : 'border-transparent text-gray-900 hover:bg-gray-50 hover:text-gray-900'} group border-l-4 px-3 py-2 flex items-center text-sm font-medium w-full`}
+                    onClick={() => setActiveTab("integrations")}
+                    className={`${
+                      activeTab === "integrations"
+                        ? "bg-blue-50 border-blue-500 text-blue-700"
+                        : "border-transparent text-gray-900 hover:bg-gray-50 hover:text-gray-900"
+                    } group border-l-4 px-3 py-2 flex items-center text-sm font-medium w-full`}
                   >
                     <svg
-                      className="flex-shrink-0 -ml-1 mr-3 h-6 w-6"
+                      className="shrink-0 -ml-1 mr-3 h-6 w-6"
                       fill="none"
                       viewBox="0 0 24 24"
                       stroke="currentColor"
@@ -194,7 +233,7 @@ const Settings = () => {
               </aside>
               {/* Main Content */}
               <div className="space-y-6 sm:px-6 lg:px-0 lg:col-span-9">
-                {activeTab === 'general' && (
+                {activeTab === "general" && (
                   <div className="shadow sm:rounded-md sm:overflow-hidden">
                     <div className="bg-white py-6 px-4 sm:p-6">
                       <div>
@@ -293,7 +332,7 @@ const Settings = () => {
                     </div>
                   </div>
                 )}
-                {activeTab === 'profile' && (
+                {activeTab === "profile" && (
                   <div className="shadow sm:rounded-md sm:overflow-hidden">
                     <div className="bg-white py-6 px-4 sm:p-6">
                       <div>
@@ -393,7 +432,7 @@ const Settings = () => {
                     </div>
                   </div>
                 )}
-                {activeTab === 'notifications' && (
+                {activeTab === "notifications" && (
                   <div className="shadow sm:rounded-md sm:overflow-hidden">
                     <div className="bg-white py-6 px-4 space-y-6 sm:p-6">
                       <div>
@@ -489,7 +528,7 @@ const Settings = () => {
                     </div>
                   </div>
                 )}
-                {activeTab === 'security' && (
+                {activeTab === "security" && (
                   <div className="shadow sm:rounded-md sm:overflow-hidden">
                     <div className="bg-white py-6 px-4 space-y-6 sm:p-6">
                       <div>
@@ -577,7 +616,7 @@ const Settings = () => {
                     </div>
                   </div>
                 )}
-                {activeTab === 'billing' && (
+                {activeTab === "billing" && (
                   <div className="shadow sm:rounded-md sm:overflow-hidden">
                     <div className="bg-white py-6 px-4 space-y-6 sm:p-6">
                       <div>
@@ -590,7 +629,7 @@ const Settings = () => {
                       </div>
                       <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                         <div className="flex">
-                          <div className="flex-shrink-0">
+                          <div className="shrink-0">
                             <svg
                               className="h-5 w-5 text-blue-400"
                               fill="currentColor"
@@ -657,7 +696,7 @@ const Settings = () => {
                     </div>
                   </div>
                 )}
-                {activeTab === 'integrations' && (
+                {activeTab === "integrations" && (
                   <div className="shadow sm:rounded-md sm:overflow-hidden">
                     <div className="bg-white py-6 px-4 space-y-6 sm:p-6">
                       <div>
@@ -671,23 +710,23 @@ const Settings = () => {
                       <div className="space-y-4">
                         {[
                           {
-                            name: 'Slack',
-                            description: 'Connect your Slack workspace',
+                            name: "Slack",
+                            description: "Connect your Slack workspace",
                             connected: true,
                           },
                           {
-                            name: 'Google Calendar',
-                            description: 'Sync your meetings and events',
+                            name: "Google Calendar",
+                            description: "Sync your meetings and events",
                             connected: true,
                           },
                           {
-                            name: 'GitHub',
-                            description: 'Link your repositories',
+                            name: "GitHub",
+                            description: "Link your repositories",
                             connected: false,
                           },
                           {
-                            name: 'Zoom',
-                            description: 'Enable video conferencing',
+                            name: "Zoom",
+                            description: "Enable video conferencing",
                             connected: false,
                           },
                         ].map((integration) => (
@@ -704,9 +743,13 @@ const Settings = () => {
                               </p>
                             </div>
                             <button
-                              className={`px-4 py-2 text-sm font-medium rounded-md ${integration.connected ? 'bg-red-100 text-red-700 hover:bg-red-200' : 'bg-blue-100 text-blue-700 hover:bg-blue-200'}`}
+                              className={`px-4 py-2 text-sm font-medium rounded-md ${
+                                integration.connected
+                                  ? "bg-red-100 text-red-700 hover:bg-red-200"
+                                  : "bg-blue-100 text-blue-700 hover:bg-blue-200"
+                              }`}
                             >
-                              {integration.connected ? 'Disconnect' : 'Connect'}
+                              {integration.connected ? "Disconnect" : "Connect"}
                             </button>
                           </div>
                         ))}
@@ -721,6 +764,6 @@ const Settings = () => {
       </div>
       <NotificationPanel />
     </div>
-  )
-}
-export default Settings
+  );
+};
+export default Settings;

@@ -13,8 +13,11 @@ import DepartmentsChart from "../components/Dashboard/DepartmentsChart";
 import UpcomingDeadline from "@/components/UpcomingDeadline";
 import NotificationPanel from "../components/Dashboard/NotificationPanel";
 import { useNotifications } from "@/context/NotificationContext";
+import { useAuth } from "@/context/AuthContext";
+import ProfileImage from "@/components/ui/ProfileImage";
 
 const Home = () => {
+  const { user } = useAuth();
   const { toggleNotificationPanel, notifications } = useNotifications();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -99,9 +102,13 @@ const Home = () => {
               </button>
 
               {/* User Avatar Trigger (Dropdown logic usually goes here) */}
-              <button className="h-10 w-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 p-0.5 shadow-md hover:shadow-lg transition-shadow">
+              <button className="h-10 w-10 rounded-full bg-linear-to-br from-blue-500 to-indigo-600 p-0.5 shadow-md hover:shadow-lg transition-shadow">
                 <div className="h-full w-full rounded-full bg-white flex items-center justify-center overflow-hidden">
-                  <User className="text-slate-700 h-5 w-5" />
+                  {user.profileImage ? (
+                    <ProfileImage src={user.profileImage}/>
+                  ) : (
+                    <User className="text-blue-600" size={20} />
+                  )}
                 </div>
               </button>
             </div>

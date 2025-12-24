@@ -16,6 +16,7 @@ import {
   Plus,
   UserPlus,
   X,
+  User,
 } from "lucide-react";
 import EmployeeDirectory from "@/components/Employee/EmployeeDirectory ";
 import EmployeeStats from "@/components/Employee/EmployeeStats";
@@ -48,6 +49,7 @@ import { RxCross1 } from "react-icons/rx";
 import NotificationPanel from "@/components/Dashboard/NotificationPanel";
 import { useNotifications } from "@/context/NotificationContext";
 import DepartmentsChart from "@/components/Dashboard/DepartmentsChart";
+import ProfileImage from "@/components/ui/ProfileImage";
 
 const EMPLOYEES_PER_PAGE = 6;
 
@@ -173,9 +175,9 @@ const EmployeesPage = () => {
   };
 
   const handleChange = (e) => {
-  const { name, value } = e.target;
-  setFormData(prev => ({ ...prev, [name]: value }));
-};
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
 
   const handleCreateSubmit = async (e) => {
     e.preventDefault();
@@ -323,9 +325,8 @@ const EmployeesPage = () => {
   }, []);
 
   useEffect(() => {
-  setCurrentPage(1);
-}, [searchTerm, statusFilter]);
-
+    setCurrentPage(1);
+  }, [searchTerm, statusFilter]);
 
   useEffect(() => {
     const fetchCountries = async () => {
@@ -478,7 +479,7 @@ const EmployeesPage = () => {
               <div className="flex items-center">
                 <button
                   onClick={toggleNotificationPanel}
-                  className="flex-shrink-0 p-1 text-gray-400 rounded-full hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                  className="shrink-0 p-1 text-gray-400 rounded-full hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                 >
                   <span className="sr-only">View notifications</span>
                   {notifications && notifications.length > 0 ? (
@@ -489,9 +490,14 @@ const EmployeesPage = () => {
                 </button>
                 <div className="ml-3 relative">
                   <div>
-                    <button className="flex items-center max-w-xs bg-gray-100 p-1 rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                      <span className="sr-only">Open user menu</span>
-                      <UserIcon className="h-8 w-8 rounded-full p-1" />
+                    <button className="h-10 w-10 rounded-full bg-linear-to-br from-blue-500 to-indigo-600 p-0.5 shadow-md hover:shadow-lg transition-shadow">
+                      <div className="h-full w-full rounded-full bg-white flex items-center justify-center overflow-hidden">
+                        {user.profileImage ? (
+                          <ProfileImage src={user.profileImage} />
+                        ) : (
+                          <User className="text-blue-600" size={20} />
+                        )}
+                      </div>
                     </button>
                   </div>
                 </div>
@@ -719,7 +725,7 @@ const EmployeesPage = () => {
                           value={formData.bio}
                           onChange={handleChange}
                           placeholder="Short description about the employee..."
-                          className={`min-h-[80px] resize-y ${inputClass}`}
+                          className={`min-h-20 resize-y ${inputClass}`}
                         />
                       </div>
 

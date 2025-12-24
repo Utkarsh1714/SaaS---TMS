@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState } from "react";
 import {
   BellIcon,
   SearchIcon,
@@ -9,13 +9,18 @@ import {
   MailIcon,
   PhoneIcon,
   BellDot,
-} from 'lucide-react'
-import Sidebar from '@/components/Layout/Sidebar'
-import NotificationPanel from '@/components/Dashboard/NotificationPanel'
-import { useNotifications } from '@/context/NotificationContext'
+  User,
+} from "lucide-react";
+import Sidebar from "@/components/Layout/Sidebar";
+import NotificationPanel from "@/components/Dashboard/NotificationPanel";
+import { useNotifications } from "@/context/NotificationContext";
+import ProfileImage from "@/components/ui/ProfileImage";
+import { useAuth } from "@/context/AuthContext";
 const HelpSupportPage = () => {
+  const { user } = useAuth();
+
   const { toggleNotificationPanel, notifications } = useNotifications();
-  const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   return (
     <div className="flex h-screen bg-gray-50">
       <Sidebar isOpen={sidebarOpen} setIsOpen={setSidebarOpen} />
@@ -51,7 +56,7 @@ const HelpSupportPage = () => {
               <div className="flex items-center">
                 <button
                   onClick={toggleNotificationPanel}
-                  className="flex-shrink-0 p-1 text-gray-400 rounded-full hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                  className="shrink-0 p-1 text-gray-400 rounded-full hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                 >
                   <span className="sr-only">View notifications</span>
                   {notifications && notifications.length > 0 ? (
@@ -62,9 +67,14 @@ const HelpSupportPage = () => {
                 </button>
                 <div className="ml-3 relative">
                   <div>
-                    <button className="flex items-center max-w-xs bg-gray-100 p-1 rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                      <span className="sr-only">Open user menu</span>
-                      <UserIcon className="h-8 w-8 rounded-full p-1" />
+                    <button className="h-10 w-10 rounded-full bg-linear-to-br from-blue-500 to-indigo-600 p-0.5 shadow-md hover:shadow-lg transition-shadow">
+                      <div className="h-full w-full rounded-full bg-white flex items-center justify-center overflow-hidden">
+                        {user.profileImage ? (
+                          <ProfileImage src={user.profileImage} />
+                        ) : (
+                          <User className="text-blue-600" size={20} />
+                        )}
+                      </div>
                     </button>
                   </div>
                 </div>
@@ -144,33 +154,33 @@ const HelpSupportPage = () => {
             <div className="bg-white shadow rounded-lg divide-y divide-gray-200">
               {[
                 {
-                  title: 'Getting Started with WorkSpace',
-                  category: 'Getting Started',
+                  title: "Getting Started with WorkSpace",
+                  category: "Getting Started",
                   views: 1234,
                 },
                 {
-                  title: 'How to Create and Manage Tasks',
-                  category: 'Tasks',
+                  title: "How to Create and Manage Tasks",
+                  category: "Tasks",
                   views: 987,
                 },
                 {
-                  title: 'Setting Up Your Team',
-                  category: 'Teams',
+                  title: "Setting Up Your Team",
+                  category: "Teams",
                   views: 856,
                 },
                 {
-                  title: 'Managing Departments and Employees',
-                  category: 'Organization',
+                  title: "Managing Departments and Employees",
+                  category: "Organization",
                   views: 743,
                 },
                 {
-                  title: 'Scheduling and Managing Meetings',
-                  category: 'Meetings',
+                  title: "Scheduling and Managing Meetings",
+                  category: "Meetings",
                   views: 621,
                 },
                 {
-                  title: 'Using the Messaging System',
-                  category: 'Communication',
+                  title: "Using the Messaging System",
+                  category: "Communication",
                   views: 589,
                 },
               ].map((article, idx) => (
@@ -220,24 +230,24 @@ const HelpSupportPage = () => {
             <div className="bg-white shadow rounded-lg divide-y divide-gray-200">
               {[
                 {
-                  question: 'How do I add new team members?',
+                  question: "How do I add new team members?",
                   answer:
                     'Navigate to the Employees page and click the "Add Employee" button. Fill in the required information and assign them to the appropriate department.',
                 },
                 {
-                  question: 'Can I customize my dashboard?',
+                  question: "Can I customize my dashboard?",
                   answer:
-                    'Yes, you can customize your dashboard by clicking on the Settings icon and selecting Dashboard Preferences. You can choose which widgets to display and their arrangement.',
+                    "Yes, you can customize your dashboard by clicking on the Settings icon and selecting Dashboard Preferences. You can choose which widgets to display and their arrangement.",
                 },
                 {
-                  question: 'How do I export reports?',
+                  question: "How do I export reports?",
                   answer:
                     'Go to the Reports page, select your desired filters and date range, then click the "Export Report" button in the top right corner. You can export in PDF, Excel, or CSV formats.',
                 },
                 {
-                  question: 'What are the different subscription plans?',
+                  question: "What are the different subscription plans?",
                   answer:
-                    'We offer three plans: Starter ($12/user/month), Professional ($29/user/month), and Enterprise ($79/user/month). Visit our Pricing page for detailed feature comparisons.',
+                    "We offer three plans: Starter ($12/user/month), Professional ($29/user/month), and Enterprise ($79/user/month). Visit our Pricing page for detailed feature comparisons.",
                 },
               ].map((faq, idx) => (
                 <div key={idx} className="px-6 py-4">
@@ -253,7 +263,7 @@ const HelpSupportPage = () => {
           <div className="max-w-7xl mx-auto">
             <div className="bg-blue-50 rounded-lg p-6">
               <div className="flex">
-                <div className="flex-shrink-0">
+                <div className="shrink-0">
                   <svg
                     className="h-6 w-6 text-blue-600"
                     fill="none"
@@ -297,6 +307,6 @@ const HelpSupportPage = () => {
       </div>
       <NotificationPanel />
     </div>
-  )
-}
-export default HelpSupportPage
+  );
+};
+export default HelpSupportPage;
