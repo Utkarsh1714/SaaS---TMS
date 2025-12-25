@@ -144,8 +144,8 @@ export const getMeetings = async (req, res) => {
     // This allows you to see history, but be careful with large datasets.
 
     const meetings = await Meeting.find(query)
-      .populate("host", "username email profileImage")
-      .populate("participants", "username email profileImage")
+      .populate("host", "firstName middleName lastName email profileImage")
+      .populate("participants", "firstName middleName lastName email profileImage")
       .populate("roomId", "name capacity")
       .sort({ startTime: 1 }); // Sort by date ascending
 

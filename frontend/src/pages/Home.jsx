@@ -59,12 +59,9 @@ const Home = () => {
 
   return (
     <div className="flex h-screen bg-slate-50 font-sans text-slate-900 overflow-hidden">
-      {/* Sidebar */}
       <Sidebar isOpen={sidebarOpen} setIsOpen={setSidebarOpen} />
 
-      {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-hidden relative w-full">
-        {/* Header */}
         <header className="bg-white/80 backdrop-blur-md border-b border-slate-200 sticky top-0 z-20">
           <div className="px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
             <div className="flex items-center gap-4 flex-1">
@@ -115,10 +112,8 @@ const Home = () => {
           </div>
         </header>
 
-        {/* Scrollable Dashboard Content */}
         <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 scroll-smooth">
           <div className="max-w-7xl mx-auto space-y-8 pb-12">
-            {/* Welcome / Title Section */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
                 <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">
@@ -133,7 +128,6 @@ const Home = () => {
               </div>
             </div>
 
-            {/* Stats Grid */}
             <StatsCards
               taskCount={overviewData.totalTaskCount}
               activeUser={overviewData.activeEmployeeCount}
@@ -141,31 +135,24 @@ const Home = () => {
               averageCompletionDays={overviewData.avgTaskCompletionDays}
             />
 
-            {/* Charts Row */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <TasksChart monthlyTaskCompletion={monthlyTaskCompletion} />
               <DepartmentsChart departmentCounts={departmentCount} />
             </div>
 
-            {/* Middle Section: Employees & Meetings */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               <div className="lg:col-span-2 flex flex-col gap-6">
                 <EmployeeTable />
               </div>
               <div className="flex flex-col gap-6">
                 <MeetingsCard />
-                <UpcomingDeadline />{" "}
-                {/* Moved Deadline here for better layout on large screens */}
+                <UpcomingDeadline />
               </div>
             </div>
-
-            {/* Bottom Section: Activity Feed */}
             <ActivityFeed />
           </div>
         </main>
       </div>
-
-      {/* Slide-over Panels */}
       <NotificationPanel />
     </div>
   );
