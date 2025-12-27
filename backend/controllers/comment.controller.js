@@ -1,5 +1,6 @@
 import Comment from "../models/comment.model.js";
 import Task from "../models/task.model.js";
+import { logRecentActivity } from "../utils/logRecentActivity.js";
 
 export const addComment = async (req, res) => {
   try {
@@ -20,6 +21,11 @@ export const addComment = async (req, res) => {
 
     task.comments.push(newComment._id);
     task.save();
+
+    await logRecentActivity(req, "POST_COMMENT", "Comment", `Added a comment to task ${task.title}`, {
+      taskId: task._id,
+      commentId: newComment._id,
+    });
 
     res
       .status(201)

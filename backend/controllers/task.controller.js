@@ -4,6 +4,7 @@ import User from "../models/user.model.js";
 import { sendTaskNotificationEmail } from "../utils/sendGrid.mail.js";
 import Team from "../models/team.model.js";
 import Department from "../models/department.model.js";
+import { logRecentActivity } from '../utils/logRecentActivity.js';
 
 const applyTaskFilters = async (
   baseQuery,
@@ -313,6 +314,8 @@ export const createTask = async (req, res) => {
       $push: { task: task._id },
     });
 
+    await logRecentActivity(req, "CREATE", 'Task', `Created a new task: "${task.title}"`)
+
     const username = `${firstName} ${lastName}`
 
     await sendTaskNotificationEmail({
@@ -342,6 +345,8 @@ export const updateTitleAndDesc = async (req, res) => {
     const { title, description } = req.body;
 
     const task = await Task.findByIdAndUpdate(id, { title, description });
+
+    await logRecentActivity(req, "UPDATE", "Task", `Updated task: "${task.title}"`)
 
     res.status(200).json({ task, message: "Task updated successfully!" });
   } catch (error) {
@@ -424,6 +429,8 @@ export const assignTaskToTeam = async (req, res) => {
       .populate("assignedManager", "firstName middleName lastName email jobTitle _id")
       .populate("department", "name _id")
       .populate("team", "name _id");
+
+      await logRecentActivity(req, "ASSIGN_TEAM", "Task", `Assigned task: "${task.title}" to team: "${team.name}"`)
 
     res.status(200).json({
       message: "Task successfully assigned to team",
@@ -529,6 +536,8 @@ export const updateTaskStatus = async (req, res) => {
       return res.status(404).json({ message: "Task not found" });
     }
 
+    await logRecentActivity(req, "UPDATE_TASK_STATUS", "Task", `Updated status of task: "${updatedTask.title}" to "${status}"`)
+
     res.status(200).json(updatedTask);
   } catch (error) {
     console.error(error);
@@ -560,6 +569,8 @@ export const addMilestones = async (req, res) => {
     if (!updatedTask) {
       return res.status(404).json({ message: "Task not found" });
     }
+
+    await logRecentActivity(req, "ADD_MILESTONES", "Task", `Added milestones to task: "${updatedTask.title}"`)
 
     res.status(200).json(updatedTask);
   } catch (error) {
@@ -598,6 +609,10 @@ export const updateMilestone = async (req, res) => {
       return res.status(404).json({ message: "Milestone not found" });
     }
 
+    const completed = completed ? "Completed" : "Incomplete";
+
+    await logRecentActivity(req, "UPDATE_MILESTONE", "Task", `Updated milestone of task: "${task.title}" to: ${completed}`)
+
     res.status(200).json({ message: "Milestone updated successfully" });
   } catch (error) {
     console.log(error);
@@ -625,6 +640,8 @@ export const deleteTask = async (req, res) => {
         $pull: { tasks: taskId }, // 'tasks' is the array name in your Team schema
       });
     }
+
+    await logRecentActivity(req, "DELETE", "Task", `Deleted task: "${task.title}"`)
 
     // 4. Now, permanently delete the task
     await Task.findByIdAndDelete(taskId);
@@ -694,30 +711,3 @@ export const getTasks = async (req, res) => {
 
   await applyTaskFilters(baseQuery, req, res, "No tasks found");
 };
-
-// export const getTasksByBoss = async (req, res) => {
-//   await applyTaskFilters(
-//     { createdBy: req.user._id },
-//     req,
-//     res,
-//     "No tasks created by boss found"
-//   );
-// };
-
-// export const getTasksByManager = async (req, res) => {
-//   await applyTaskFilters(
-//     { assignedManager: req.user._id },
-//     req,
-//     res,
-//     "No tasks assigned to manager found"
-//   );
-// };
-
-// export const getTasksByEmployee = async (req, res) => {
-//   await applyTaskFilters(
-//     { assignedEmployees: req.user._id },
-//     req,
-//     res,
-//     "No tasks assigned to employee found"
-//   );
-// };

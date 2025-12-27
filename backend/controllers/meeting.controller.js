@@ -1,5 +1,6 @@
 import Meeting from "../models/meeting.model.js";
 import Room from "../models/room.model.js";
+import { logRecentActivity } from "../utils/logRecentActivity.js";
 
 const checkRoomConflict = async (
   roomId,
@@ -100,6 +101,10 @@ export const createMeeting = async (req, res) => {
 
     await newMeeting.save();
 
+    await logRecentActivity(req, "CREATE_MEETING", "Meeting", `Scheduled meeting: ${title}`, {
+      meetingId: newMeeting._id,
+    });
+
     res.status(201).json({
       message: "Meeting scheduled successfully",
       meeting: newMeeting,
@@ -113,12 +118,10 @@ export const createMeeting = async (req, res) => {
 export const getMeetings = async (req, res) => {
   try {
     const organizationId = req.user.organizationId;
-    // Extract query params
     const { date, view, startDate, endDate } = req.query;
 
     let query = { organizationId };
 
-    // 1. Filter: Specific Date (e.g. clicked on a calendar day)
     if (date) {
       const startOfDay = new Date(date);
       startOfDay.setHours(0, 0, 0, 0);
@@ -128,26 +131,22 @@ export const getMeetings = async (req, res) => {
 
       query.startTime = { $gte: startOfDay, $lte: endOfDay };
     } 
-    // 2. Filter: Date Range (Perfect for Month View in Calendar)
     else if (startDate && endDate) {
        query.startTime = { 
            $gte: new Date(startDate), 
            $lte: new Date(endDate) 
        };
     }
-    // 3. Filter: Upcoming only (For Dashboard widgets)
     else if (view === 'upcoming') {
         query.startTime = { $gte: new Date() };
         query.status = "Scheduled";
     }
-    // 4. Default: If nothing passed, returns ALL history (Past & Future)
-    // This allows you to see history, but be careful with large datasets.
 
     const meetings = await Meeting.find(query)
       .populate("host", "firstName middleName lastName email profileImage")
       .populate("participants", "firstName middleName lastName email profileImage")
       .populate("roomId", "name capacity")
-      .sort({ startTime: 1 }); // Sort by date ascending
+      .sort({ startTime: 1 });
 
     res.status(200).json(meetings);
   } catch (error) {
@@ -205,6 +204,11 @@ export const updateMeeting = async (req, res) => {
       .populate("host", "firstName middleName lastName")
       .populate("roomId", "name");
 
+      await logRecentActivity(req, "UPDATE_MEETING", "Meeting", `Updated meeting: ${updatedMeeting.title}`, {
+        newMeeting: updatedMeeting,
+        previousMeeting: existingMeeting,
+      });
+
     res
       .status(200)
       .json({ message: "Meeting updated", meeting: updatedMeeting });
@@ -228,6 +232,10 @@ export const cancelMeeting = async (req, res) => {
     if (!meeting) {
       return res.status(404).json({ message: "Meeting not found" });
     }
+
+    await logRecentActivity(req, "CANCEL_MEETING", "Meeting", `Cancelled meeting: ${meeting.title}`, {
+      meetingId: meeting._id,
+    });
 
     res
       .status(200)
